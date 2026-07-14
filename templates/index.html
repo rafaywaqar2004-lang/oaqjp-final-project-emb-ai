@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detector</title>
+    <script src="/static/mywebscript.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 640px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #textToAnalyze {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 12px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #system_response {
+            margin-top: 20px;
+            font-size: 1.05rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Emotion Detector</h1>
+    <p>Enter customer feedback below to identify the dominant emotion expressed.</p>
+    <label for="textToAnalyze">Text to analyze:</label>
+    <input type="text" id="textToAnalyze" name="textToAnalyze"
+           placeholder="e.g. I am so happy with this product!">
+    <br>
+    <button onclick="RunEmotionDetection()">Analyze</button>
+    <div id="system_response"></div>
+</body>
+</html>
