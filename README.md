@@ -1,4 +1,6 @@
-# Emotion Detector
+# Final Project: Emotion Detector
+
+**Project name:** Final Project - Emotion Detector (AI-Based Web Application Development and Deployment)
 
 An AI-based web application that analyzes customer feedback text and identifies
 the dominant emotion expressed (anger, disgust, fear, joy, or sadness), built
