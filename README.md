@@ -1,8 +1,11 @@
 # Gulf AI & Tech-Bloc Alignment Tracker
 
-A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plus Pakistan and Turkey as
-smaller-scale, non-Gulf comparators -- are navigating the US-China AI/chip competition, and what that
-means for regional stability and Western strategic interests.
+A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plus a wider set of 11
+non-Gulf regional states and comparators -- are navigating the US-China AI/chip competition, and what that
+means for regional stability and Western strategic interests. Started as an 8-country Gulf-focused tracker
+and later grew to 17 countries so the Overview map's neighboring states, originally shown only as unscored
+gray context, are properly scored too -- see "Country set" below for exactly which countries were added
+when and why.
 
 **Status: all four phases built** -- composite index, choropleth map, radar/bar comparison view, a
 chronological sourced feed of chip-policy events, per-country deep-dive pages with an auto-generated
@@ -28,10 +31,43 @@ as fact -- the same principle the MENASA Risk Monitor applies to Iran-sanctions 
 ## Country set
 
 **Gulf (6):** Saudi Arabia, United Arab Emirates, Qatar, Bahrain, Kuwait, Oman
-**Non-Gulf comparators (2):** Pakistan, Turkey -- both navigating similar US/China balancing acts on a
-smaller scale (Pakistan via CPEC/Huawei telecom integration alongside a new, cabinet-approved National AI
-Policy; Turkey via a decades-long Huawei/Turkcell partnership alongside NATO membership and the 2020 CAATSA
-sanctions precedent over its S-400 purchase from Russia).
+**Original non-Gulf comparators (2):** Pakistan, Turkey -- both navigating similar US/China balancing acts
+on a smaller scale (Pakistan via CPEC/Huawei telecom integration alongside a new, cabinet-approved National
+AI Policy; Turkey via a decades-long Huawei/Turkcell partnership alongside NATO membership and the 2020
+CAATSA sanctions precedent over its S-400 purchase from Russia).
+**Regional (9), added later:** Israel, Egypt, Jordan, Iraq, Lebanon, Syria, Iran, Yemen, Afghanistan.
+
+### Why the regional 9 were added
+
+The Overview map's GeoJSON originally held only the 8 tracked countries, so Turkey, the Gulf peninsula, and
+Pakistan rendered as three disconnected landmasses on the map with the space between them -- Iran, Iraq,
+Syria, etc. -- left empty. A first fix added those 9 countries to the map as unscored gray "geographic
+context only" filler, purely so the map read as one contiguous region. The project owner's direct follow-up
+("include data for all those countries as well") turned that filler into 9 more fully scored countries,
+researched and cited to the same standard as the original 8 -- not a cosmetic map fix, an actual expansion
+of what this tracker measures. Every one of the 9 new countries' rows in `data/curated/*.csv` carries the
+same dated source, confidence tag (High/Medium/Low), and rationale format as the original 8; nothing was
+estimated or invented, and several sub-factors are honestly marked `not_found`/`N/A` where no qualifying
+disclosed figure exists (exactly the discipline the original 8 already applied to Qatar/Bahrain/Kuwait/
+Oman's thin investment and compute data).
+
+This changes what "Gulf AI & Tech-Bloc Alignment Tracker" measures in practice: it is now a wider
+Middle-East/South-Asia tracker with a Gulf core, not a Gulf-only tool. The name and portfolio branding were
+kept as-is (this is a live, linked, shared project) rather than renamed mid-stream -- worth knowing if a
+reader expects "Gulf" to mean strictly the 6 GCC states.
+
+Two of the 9 needed real judgment calls worth flagging explicitly:
+- **Israel** scores the highest Net Alignment in the whole set (US Integration Depth from a Dec 2025 "Pax
+  Silica" multilateral chip-supply declaration and zero Chinese telecom-vendor presence -- Huawei/ZTE were
+  structurally excluded from Israel's core networks under direct US pressure in 2019), which is a genuinely
+  different profile from every Gulf state in this dataset and worth sanity-checking against the Country
+  Comparison page's raw factor table before citing.
+- **Syria** required reading a live, two-sided 2025-2026 sanctions picture rather than assuming its
+  pre-Assad-fall comprehensive-embargo status still holds: most Syria sanctions were lifted in 2025 (EO
+  14312, OFAC delisting, Caesar Act repeal), but BIS guidance dated 31 May 2026 explicitly confirmed the
+  advanced-computing/AI-chip license requirement (Country Group D:5) remains in force regardless -- so
+  Syria still scores a 0 on export-control tier specifically, not because the research is stale, but because
+  that particular restriction did not move even as the broader sanctions regime did.
 
 ## Methodology
 
@@ -150,7 +186,7 @@ for between "automatable" and "requires manual research/curation."
 
 ### Non-oil diversification: a documented proxy, not a literal figure
 
-The World Bank does not cleanly expose "non-oil share of GDP" as a single indicator across all 8 countries.
+The World Bank does not cleanly expose "non-oil share of GDP" as a single indicator across all countries in this set.
 This tracker uses **`100 - Oil rents (% of GDP)`** (`NY.GDP.PETR.RT.ZS`) as a standard analyst proxy (the
 same approximation used in IMF Article IV coverage of GCC economies) -- it is *not* a literal non-oil GDP
 share, and is labeled as a proxy everywhere it appears in the app and the data files.
@@ -186,7 +222,7 @@ data/
     policy_events.csv               # The Policy Event Tracker's sourced event record
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
-  geo/region_countries.geojson      # Bundled country boundaries: 8 tracked + 9 regional-context (see note below)
+  geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
   sovereign-debt-and-political-instability.md  # Case-study brief (Pakistan/Sri Lanka/Bangladesh), MENASA-linked
@@ -220,14 +256,15 @@ control. `src/mapping.py` renders the choropleth as filled `go.Scatter` polygons
 derivative) -- zero runtime network calls, verified in a fully network-restricted sandbox during
 development.
 
-The bundled GeoJSON carries 17 countries, not just the 8 this index scores: Iran, Iraq, Syria, Jordan,
-Lebanon, Israel, Yemen, Egypt, and Afghanistan are included purely as unscored geographic context (rendered
-in a muted, unbordered gray, with a hover label that says explicitly they aren't tracked), so the Overview
-map reads as a contiguous regional map instead of three disconnected landmasses (Turkey / the Gulf
-peninsula / Pakistan) floating in empty space. `build_choropleth_figure()`'s `context_ids` parameter is
-what distinguishes "not tracked at all" (light, unbordered gray) from "tracked but the data was too thin to
-score" (the darker, bordered gray used for a real data gap among the 8 scored countries) -- the map
-shouldn't make those two very different situations look the same.
+The bundled GeoJSON carries all 17 tracked countries -- Iran, Iraq, Syria, Jordan, Lebanon, Israel, Yemen,
+Egypt, and Afghanistan were added specifically so the Overview map read as a contiguous regional map instead
+of three disconnected landmasses (Turkey / the Gulf peninsula / Pakistan) floating in empty space, and were
+then researched and scored rather than left as gray filler (see "Country set" above). `build_choropleth_
+figure()` still has a `context_ids` parameter, which currently renders nothing (every bundled country is
+scored) -- kept for the same reason: if a future country is added to the map's geometry before it's
+researched, this is what distinguishes "not tracked at all" (light, unbordered gray) from "tracked but the
+data was too thin to score" (the darker, bordered gray still used if any of the 17 develops a real data
+gap) -- two different situations the map shouldn't make look the same.
 
 ### Visual design: matching the standalone briefs, not default Streamlit
 
@@ -287,11 +324,26 @@ gate before the scheduled World Bank refresh commits anything (`.github/workflow
   same Country Group D:3/D:4 bucket the UAE was confirmed removed from in July 2026, but this is not
   independently verified. Turkey's export-control tier is likewise still `Low` confidence. See the
   `confidence` and `rationale` columns in `data/curated/*.csv` for the current state of every row.
+- **The 9 regional countries added later inherit the same `bis.gov`/primary-source access gap.** The
+  research session that added Israel, Egypt, Jordan, Iraq, Lebanon, Syria, Iran, Yemen, and Afghanistan
+  hit the identical `EGRESS_BLOCKED` wall on `bis.gov`, the Federal Register, and several law-firm client-
+  alert domains, and relied on WebSearch-synthesized secondary reporting instead -- every one of those nine
+  countries' export-control-tier rows is marked `Medium` or `Low` confidence for exactly this reason, never
+  silently upgraded to `High`. Two specific judgment calls are worth a reader's attention: **Israel**'s
+  export-control tier (4/5) rests on a single Israeli outlet's characterization of the Dec 2025 "Pax Silica"
+  declaration, not a confirmed BIS regulatory text change; **Syria**'s tier (0/5) required reconciling a
+  major 2025 sanctions-relief wave with a BIS guidance document (dated 31 May 2026) that separately confirms
+  the advanced-computing license requirement specifically was *not* relaxed -- both rows' `rationale` columns
+  spell out the reasoning in full. **Egypt is a live, unresolved situation as of this dataset's research
+  date**: a Huawei bid to build Egypt's national AI data center and a competing US-backed counter-offer were
+  both still pending as of Xi Jinping's Sept 2026 Cairo visit, so Egypt's China-exposure and export-control
+  scores are the single most likely to move in this dataset's next research pass.
 - **Investment and compute figures are undercounts, by design.** Only deals this research could attribute
-  to a specific country with a specific dollar/MW figure and a citable source are scored. Qatar, Bahrain,
-  Kuwait, Oman, Pakistan, and Turkey show `N/A` on these two factors not because nothing is happening, but
-  because nothing at this level of specificity was found in this research pass -- see the `not_found` rows
-  in `data/curated/ai_investment_deals.csv` and `compute_capacity_deals.csv` for exactly what was checked.
+  to a specific country with a specific dollar/MW figure and a citable source are scored. Afghanistan,
+  Bahrain, Iran, Kuwait, Oman, Pakistan, Qatar, Turkey, and Yemen show `N/A` on these two factors not
+  because nothing is happening, but because nothing at this level of specificity was found in this research
+  pass -- see the `not_found` rows in `data/curated/ai_investment_deals.csv` and `compute_capacity_deals.csv`
+  for exactly what was checked.
 - **This is a fast-moving policy space.** The two BIS decisions this index's export-control tier is built
   around (UAE, Saudi Arabia) are both less than a year old at time of writing (Sept 2026), and the framework
   itself only stabilized after the AI Diffusion Rule's rescission in May 2025. Treat the export-control

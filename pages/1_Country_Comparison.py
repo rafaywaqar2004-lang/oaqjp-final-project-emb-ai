@@ -1,5 +1,5 @@
 """
-Country Comparison -- factor-by-factor radar and bar views across all 8 countries.
+Country Comparison -- factor-by-factor radar and bar views across all tracked countries.
 """
 
 import sys

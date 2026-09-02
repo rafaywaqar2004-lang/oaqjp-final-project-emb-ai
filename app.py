@@ -1,10 +1,10 @@
 """
 Gulf AI & Tech-Bloc Alignment Tracker -- Overview page.
 
-Companion piece to the MENASA Risk Monitor: tracks how Gulf states (plus
-Pakistan and Turkey as non-Gulf comparators) are navigating the US-China
-AI/chip competition, via a Net Alignment Score built from 6 factors.
-See README.md for full methodology.
+Companion piece to the MENASA Risk Monitor: tracks how Gulf states, plus a
+wider set of non-Gulf regional states and comparators, are navigating the
+US-China AI/chip competition, via a Net Alignment Score built from 6 factors.
+See README.md for full methodology and country-set history.
 """
 
 import json
@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
 from ui import inject_base_css, kpi_card, kpi_row, footer  # noqa: E402
+from constants import GULF_COUNTRIES, COMPARATOR_COUNTRIES  # noqa: E402
 
 GEOJSON_PATH = Path(__file__).resolve().parent / "data" / "geo" / "region_countries.geojson"
 
@@ -28,7 +29,13 @@ st.set_page_config(
     layout="wide",
 )
 
-GULF = {"Saudi Arabia", "United Arab Emirates", "Qatar", "Bahrain", "Kuwait", "Oman"}
+
+def country_tag(country: str) -> str:
+    if country in GULF_COUNTRIES:
+        return "🌊 Gulf"
+    if country in COMPARATOR_COUNTRIES:
+        return "🔶 Comparator"
+    return "🗺️ Regional"
 
 
 @st.cache_data(ttl=3600)
@@ -58,7 +65,7 @@ def main() -> None:
     inject_base_css()
     st.title("Gulf AI & Tech-Bloc Alignment Tracker")
     st.caption(
-        "How Gulf states -- plus Pakistan and Turkey as smaller-scale comparators -- are navigating "
+        "How Gulf states -- plus a wider set of non-Gulf regional states and comparators -- are navigating "
         "the US-China AI/chip competition, and what it means for regional stability and Western strategic interests."
     )
 
@@ -110,13 +117,21 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
   are *not* folded into the alignment score, since a mature AI regulator or a diversified economy doesn't inherently
   mean pro-US or pro-China.
 - Where public data was too thin to support a number, that cell is **explicitly marked missing**, not estimated.
-  Qatar, Bahrain, Kuwait, Oman, Pakistan, and Turkey currently have no disclosed investment/compute figures that met
-  this project's sourcing bar -- see the Methodology page and README for what was and wasn't found.
+  Afghanistan, Bahrain, Iran, Kuwait, Oman, Pakistan, Qatar, Turkey, and Yemen currently have no disclosed
+  investment/compute figures that met this project's sourcing bar -- see the Methodology page and README for
+  what was and wasn't found.
+- **This started as an 8-country Gulf tracker** (Saudi Arabia, UAE, Qatar, Bahrain, Kuwait, Oman, plus
+  Pakistan and Turkey as comparators) and later grew to 17 countries so the map's neighboring states --
+  originally shown only as unscored gray context -- are properly scored too, not just filler. All 17 use
+  the identical methodology; see README.md for exactly when and why each group was added.
             """
         )
 
     st.subheader("Net Alignment Score by country")
     geojson = load_geojson()
+    # All 17 countries in the bundled GeoJSON are scored; context_ids stays wired up in
+    # build_choropleth_figure() in case a future country is added to the map before it's
+    # researched and scored (see the pattern this project already went through once).
     context_ids = frozenset(f["id"] for f in geojson["features"] if not f["properties"].get("scored"))
     context_names = {f["id"]: f["properties"]["name"] for f in geojson["features"] if f["id"] in context_ids}
     scores = {row["iso3"]: (None if pd.isna(row["net_alignment_score"]) else row["net_alignment_score"]) for _, row in df.iterrows()}
@@ -144,10 +159,8 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
     st.plotly_chart(fig, use_container_width=True)
     st.caption(
         "**65-100** deep US integration &middot; **50-64** US-leaning, hedging &middot; "
-        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. Light gray "
-        "(Iran, Iraq, Syria, Jordan, Lebanon, Israel, Yemen, Egypt, Afghanistan) is shown for "
-        "regional geographic context only -- not tracked by this index. Hover a tracked country "
-        "for the US/China sub-score breakdown.",
+        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. All 17 countries on "
+        "this map are scored -- hover any of them for the US/China sub-score breakdown.",
         unsafe_allow_html=True,
     )
     missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, "net_alignment_score"]).all()])
@@ -164,7 +177,7 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         for col, (_, row) in zip(cols, ranked_rows[start:start + 4]):
             with col:
                 score = row["net_alignment_score"]
-                tag = "🌊 Gulf" if row["country"] in GULF else "🔶 Comparator"
+                tag = country_tag(row["country"])
                 with st.container(border=True):
                     st.caption(f"{tag}")
                     st.markdown(f"**{row['country']}**")

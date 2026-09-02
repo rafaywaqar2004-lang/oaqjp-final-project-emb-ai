@@ -2,8 +2,11 @@
 Shared constants for the Gulf AI & Tech-Bloc Alignment Tracker.
 """
 
-# Country set: 6 Gulf states + 2 non-Gulf comparators (Pakistan, Turkey),
-# both navigating similar US/China balancing acts on a smaller scale.
+# Country set: 6 Gulf states + 2 original non-Gulf comparators (Pakistan, Turkey)
+# + 9 wider-region countries added later so the Overview map's neighboring
+# countries (originally shown as unscored gray context) are fully scored too,
+# not just Gulf-adjacent filler. All three groups use the identical methodology
+# and rubrics -- "regional" is a map/labeling distinction, not a scoring one.
 COUNTRIES = {
     "Saudi Arabia": "SAU",
     "United Arab Emirates": "ARE",
@@ -13,10 +16,22 @@ COUNTRIES = {
     "Oman": "OMN",
     "Pakistan": "PAK",
     "Turkey": "TUR",
+    "Israel": "ISR",
+    "Egypt": "EGY",
+    "Jordan": "JOR",
+    "Iraq": "IRQ",
+    "Lebanon": "LBN",
+    "Syria": "SYR",
+    "Iran": "IRN",
+    "Yemen": "YEM",
+    "Afghanistan": "AFG",
 }
 
 GULF_COUNTRIES = {"Saudi Arabia", "United Arab Emirates", "Qatar", "Bahrain", "Kuwait", "Oman"}
 COMPARATOR_COUNTRIES = {"Pakistan", "Turkey"}
+REGIONAL_COUNTRIES = {
+    "Israel", "Egypt", "Jordan", "Iraq", "Lebanon", "Syria", "Iran", "Yemen", "Afghanistan",
+}
 
 ISO3_TO_COUNTRY = {v: k for k, v in COUNTRIES.items()}
 

@@ -64,9 +64,9 @@ class TestBuildComposite:
     def df(self, composite_df):
         return composite_df
 
-    def test_all_eight_countries_present(self, df):
+    def test_all_countries_present(self, df):
         assert set(df["country"]) == set(COUNTRIES.keys())
-        assert len(df) == 8
+        assert len(df) == len(COUNTRIES)
 
     def test_iso3_codes_match_constants(self, df):
         for _, row in df.iterrows():

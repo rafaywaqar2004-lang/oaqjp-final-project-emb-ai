@@ -1,7 +1,7 @@
 """
 Country Deep Dive -- an auto-generated analyst-style brief per country
 (BLUF + key judgments, exactly like the standalone Gulf-wide brief, but
-templated from the live dataset for any of the 8 countries) plus an
+templated from the live dataset for any tracked country) plus an
 investment/compute timeline and a downloadable PDF version.
 """
 

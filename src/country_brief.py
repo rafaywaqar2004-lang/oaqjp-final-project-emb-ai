@@ -7,7 +7,7 @@ changes only when the underlying data changes, and every claim in it is
 traceable back to a specific sourced row.
 
 This is the Phase 3 "downloadable PDF brief" pattern, generalized to run
-for any of the 8 countries rather than hand-written once.
+for any of this project's tracked countries rather than hand-written once.
 """
 
 from __future__ import annotations

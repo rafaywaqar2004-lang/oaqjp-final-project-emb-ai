@@ -74,7 +74,7 @@ def main() -> None:
     # coverage), NOT a literal "non-oil share of GDP" figure -- true
     # non-oil GDP accounts are reported inconsistently across these
     # countries' national statistics agencies and are not cleanly
-    # available via the World Bank API for all 8 countries in this set.
+    # available via the World Bank API for all tracked countries in this set.
     # This approximation is documented in the README's limitations section.
     for row in summary_rows:
         oil_rents = row.get("oil_rents_pct_gdp_value")

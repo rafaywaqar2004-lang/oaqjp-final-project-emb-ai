@@ -5,7 +5,59 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Immediately after the visual-design pass below, a direct follow-up: "include all the countries in
+**Immediately after the map-fill-in pass below, a further direct follow-up: "include date [data] for all
+those countries as well."** The 9 countries just added to the map as unscored gray context (Iran, Iraq,
+Syria, Jordan, Lebanon, Israel, Yemen, Egypt, Afghanistan) are now fully scored, real countries in this
+tracker -- 17 total, up from 8. This is a genuine scope expansion, not a cosmetic map fix, and was treated
+with the same research rigor as the original 8: three parallel research agents (Israel/Egypt/Jordan,
+Iraq/Lebanon/Syria, Iran/Yemen/Afghanistan) each read the existing CSVs first to match format and
+confidence-tagging discipline, then used WebSearch/WebFetch against real, dated, named sources for every
+one of the 5 curated data files (export-control tier, Chinese tech penetration, governance maturity,
+AI investment deals, compute capacity deals) -- see "Country set" in README.md for the full writeup,
+including the two hardest judgment calls (Israel's export-control tier, Syria's post-2025-sanctions-relief
+but still-D:5-for-chips status) and the one live/unresolved situation (Egypt's pending Huawei-vs-US AI
+data-center bidding war).
+
+Mechanically:
+- All 9 countries' research came back as JSON (not raw CSV text) from the research agents, matching each
+  CSV's exact column schema, then integrated via a small Python script using `csv.writer` (never
+  hand-built string concatenation) to guarantee correct quoting/escaping given how many rationale fields
+  contain commas, quotes, and dollar signs.
+- `src/constants.py`: `COUNTRIES` grew from 8 to 17 entries; added a `REGIONAL_COUNTRIES` set alongside the
+  existing `GULF_COUNTRIES`/`COMPARATOR_COUNTRIES` (a map/labeling distinction only -- all three groups use
+  the identical scoring methodology).
+- `data/geo/region_countries.geojson`: every feature's `scored` property flipped from `false` to `true`,
+  which automatically empties `context_ids` in `app.py`/`src/mapping.py` -- the muted-gray "not tracked"
+  rendering path is still wired up (for a future country added before it's researched) but currently
+  renders nothing, since all 17 bundled countries are now scored.
+- `app.py`: KPI "composite score coverage" card, country-ranking tag logic (now 3-way: Gulf/Comparator/
+  Regional, sourced from `constants.py` instead of a second hardcoded set), map caption, and the caveats
+  expander's "no disclosed investment/compute" country list were all updated to reflect the real 17-country
+  picture rather than left stale.
+- `data/computed/composite_scores.csv` regenerated via `PYTHONPATH=src python3 src/scoring.py` -- all 17
+  countries produce a real (non-`N/A`) Net Alignment Score, since every one of them now has at least an
+  export-control tier and a Chinese-tech-penetration score (the two inputs that can never be missing under
+  this project's renormalization rule).
+- `tests/test_scoring.py`'s `test_all_eight_countries_present` (hardcoded `len(df) == 8`) renamed to
+  `test_all_countries_present` and now asserts against `len(COUNTRIES)` instead of a literal -- the kind of
+  hardcoded assumption a country-count expansion is exactly designed to catch. Several stray "8 countries"
+  mentions in docstrings/comments (`country_brief.py`, `fetch_worldbank.py`, both country-comparison pages)
+  were also swept for accuracy, though none were load-bearing.
+- Verified in-browser with a local Streamlit server + Playwright across every page (Overview top/bottom,
+  Country Comparison, Country Deep Dive, Scenario Explorer, Methodology) before calling this done, plus a
+  direct Python check that `generate_brief()` and `build_country_pdf()` succeed for all 9 new countries
+  (the Deep Dive page's country dropdown is a Streamlit BaseWeb widget that has repeatedly resisted reliable
+  Playwright automation earlier in this project -- same known flakiness, same decision to trust the
+  equivalent direct-function-call check plus the full pytest suite instead of fighting the locator). All 48
+  tests pass (up from 39 -- the country-count expansion grew some parametrized-style coverage along with
+  the dataset).
+- One visible, expected side effect: the Country Comparison page's radar chart is visually dense with all
+  17 countries selected by default (it was already the multiselect default-to-all behavior at 8 countries;
+  17 overlapping polygons is a real readability cost of that same design choice, not a new bug). The
+  multiselect already lets a reader narrow it down; not treated as blocking, but worth a future look if the
+  project owner wants a smaller default selection now that the country count has roughly doubled.
+
+**Before that, a direct follow-up: "include all the countries in
 between so the map looks full."** The Overview map's original GeoJSON held only the 8 tracked countries,
 so Turkey, the Gulf peninsula, and Pakistan rendered as three disconnected landmasses with large empty gaps
 where Iran, Iraq, Syria, and Afghanistan should be -- geographically correct, but it reads as broken or
