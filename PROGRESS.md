@@ -16,8 +16,42 @@ owner returning after a break. It's meant to make re-explaining the project unne
 - README.md written covering methodology, weights/rationale, sourcing, and limitations.
 - GitHub Actions workflow for the scheduled World Bank refresh; `render.yaml` for deployment.
 
+**Written companion product also done:** `briefs/gulf-ai-ambitions-and-geopolitical-risk.md` -- a full
+analytic-tradecraft risk brief (BLUF, 6 numbered Key Judgments with confidence levels, a 3-hypothesis
+alternative-analysis section, implications for Western strategic interests, and dated indicators to watch),
+built strictly from the tracker's already-cited dataset -- no new unsourced claims. Also published as a
+designed, standalone page: https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20 (currently
+private; the project owner needs to share it from the page's share menu before linking it publicly from the
+portfolio site). See "Sequencing decision" below for why this came before Phase 2.
+
 **Not yet started:** Phase 2 (Policy Event Tracker), Phase 3 (country deep-dives + PDF export), Phase 4
-(scenario reweighting toggle). Build in that order per the original brief.
+(scenario reweighting toggle). See "Sequencing decision" for the current view on when to pick Phase 2 back up.
+
+## Sequencing decision: why the written brief came before Phase 2
+
+Checked the project owner's live portfolio (`rafaywaqar2004-lang/rafaywaqar-portfolio`) mid-project. Two
+things came out of that worth recording:
+
+1. **This dashboard already fulfills a project slot the owner had planned for himself** --
+   "Gulf States Vision 2030 & AI Investment Tracker" (listed as `Planned -- Q3 2028`) -- and exceeds its
+   original scope (8 countries instead of 2, an alignment-scoring methodology instead of a flat KPI
+   tracker). Once deployed, that portfolio entry should point here instead of sitting as a separate
+   "planned" placeholder; the placeholder year also reads as stale next to a 2026 copyright footer.
+2. **A second planned entry, "Gulf AI Ambitions and Geopolitical Risk," was explicitly scoped by the owner
+   himself as a *written* analytic narrative** meant to "pair with" the quantitative dashboard --
+   i.e. he had already identified, independently, the exact gap this project's earlier discussion flagged:
+   a dashboard alone doesn't demonstrate analytic-tradecraft writing (BLUF, confidence language,
+   alternative-hypothesis reasoning), which is what CIA/CFR/CSIS/PIIE-type screening actually looks for,
+   and which his 12+ published op-eds don't fully cover (journalistic register, not analytic-memo register).
+
+Given that, the agreed plan was: **pause the dashboard roadmap and write the brief next**, rather than
+proceeding straight to Phase 2. That's now done (see above). The agreed rule for what comes after: **build
+Phase 2 (Policy Event Tracker) only if a future written piece specifically needs a sourced chip-policy
+timeline to cite** -- treat it as an appendix the writing calls for, not a fixed next roadmap step. If no
+such need arises, the next unit of work should be another written piece (the monthly MENA risk brief series
+or the sovereign-debt/political-instability brief, both already listed as "Planned" on the portfolio) rather
+than more dashboard features, on the logic that 2-3 written analytic pieces will do more for this specific
+career goal than a third dashboard.
 
 ## Key decisions made, and why
 
