@@ -4,8 +4,9 @@ A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plu
 smaller-scale, non-Gulf comparators -- are navigating the US-China AI/chip competition, and what that
 means for regional stability and Western strategic interests.
 
-**Status: Phase 1 (MVP) + Phase 3 (country deep-dives)** -- composite index, choropleth map, radar/bar
-comparison view, and per-country deep-dive pages with an auto-generated analyst brief and downloadable PDF.
+**Status: Phase 1 (MVP) + Phase 2 (policy event tracker) + Phase 3 (country deep-dives)** -- composite
+index, choropleth map, radar/bar comparison view, a chronological sourced feed of chip-policy events, and
+per-country deep-dive pages with an auto-generated analyst brief and downloadable PDF.
 This repo's `briefs/` folder also holds three written analytic pieces produced alongside this dashboard:
 [`gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md) (this
 project's own companion brief), plus two pieces that belong to the MENASA Risk Monitor project instead --
@@ -169,6 +170,7 @@ app.py                              # Streamlit entry point (Overview: index, ma
 pages/
   1_Country_Comparison.py           # Radar + bar comparison across all 6 factors
   2_Country_Deep_Dive.py            # Per-country auto-generated brief + timelines + PDF export
+  3_Policy_Event_Tracker.py         # Chronological, sourced feed of chip-policy events
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
@@ -178,12 +180,15 @@ src/
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
+    policy_events.csv               # The Policy Event Tracker's sourced event record
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/gulf_countries.geojson        # Bundled country boundaries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
+tests/                              # pytest suite -- see "Running tests" below
 .github/workflows/refresh_worldbank_data.yml
+.github/workflows/test.yml
 render.yaml                         # Render deployment config
 ```
 
@@ -275,8 +280,9 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. In brief:
 - **Phase 1:** Composite index, choropleth, radar/bar comparison. ✅
 - **Phase 3:** Country deep-dive pages -- auto-generated brief, investment/compute timelines, downloadable
   PDF brief. ✅ (built ahead of Phase 2 -- see `PROGRESS.md` for why)
-- **Phase 2:** Policy Event Tracker tab -- chronological, sourced feed (Nov 2025 chip approvals, smuggling
-  enforcement cases, the March 2026 Chip Security Act, etc.). Not yet built; the working rule is to build
-  it when a written piece specifically needs a sourced policy timeline to cite, not on a fixed schedule.
+- **Phase 2:** Policy Event Tracker tab -- a chronological, sourced feed of 8 chip-policy events (the AI
+  Diffusion Rule's issuance and rescission, the Chip Security Act's introduction and committee markup, the
+  Nov 2025 Saudi/UAE chip authorizations, the March 2026 smuggling indictments, the UAE's July 2026 Country
+  Group upgrade). ✅
 - **Phase 4 (stretch):** Scenario toggle -- reweight the index live against a hypothetical tightening/
-  loosening of export controls. Lowest priority -- see `PROGRESS.md`.
+  loosening of export controls. Deliberately not built -- see `PROGRESS.md` for why this one stays deprioritized.

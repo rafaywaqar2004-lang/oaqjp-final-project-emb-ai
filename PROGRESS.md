@@ -5,7 +5,36 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Also added this session: a real automated test suite** (`tests/`, 27 tests, all passing) -- nothing
+**Latest session: everything from prior sessions was deployed and made publicly visible, and Phase 2 was
+built.**
+
+- **Deployment/sharing (the "your side" items from prior sessions) are done**: the tracker is live at
+  https://oaqjp-final-project-emb-ai-c8u6.onrender.com (Render free tier, deployed from this branch); all
+  three brief artifacts were shared publicly; the portfolio site's 4 relevant project cards were updated
+  from "Planned" to "Live" with working links -- this was done directly by a session with push access to
+  `rafaywaqar-portfolio` (see `add_repo`/`register_repo_root` in that session's tool history), not just
+  handed off as instructions. Verified the live portfolio actually renders the updated cards via a local
+  Playwright screenshot before pushing.
+- **Phase 2 (Policy Event Tracker) is now built**, reversing the earlier "only if a brief needs it" default
+  -- reconsidered when directly asked to evaluate Phase 2 vs. Phase 4 on their merits: Phase 2 gives
+  feature parity with the MENASA Risk Monitor's own "Live Conflicts" tab (one of that project's strongest
+  features, and this tracker had nothing analogous), and most of the sourcing was already sitting in this
+  session's own research from earlier work on the Gulf brief and the export-control confidence-gap pass --
+  building it was assembly, not a fresh research project. Phase 4 (scenario toggle) was evaluated the same
+  way and stayed deprioritized: it's an interaction feature, not an analytic one.
+  - `data/curated/policy_events.csv`: 8 dated, sourced events, Jan 2025 - Jul 2026 (AI Diffusion Rule
+    issued and rescinded, Chip Security Act introduced and marked up in committee, the Nov 2025 Saudi
+    HUMAIN/UAE G42 authorizations, two March 2026 chip-smuggling indictments, the UAE's July 2026 Country
+    Group A:5 upgrade). Every row has a real, checked source URL -- verified via fresh web searches in this
+    session, not carried over from memory.
+  - `pages/3_Policy_Event_Tracker.py`: filterable timeline cards (by category), a by-category count chart,
+    explicit "not a live feed, last reviewed [date]" framing -- same honesty pattern as the rest of this
+    project.
+  - `tests/test_policy_events.py`: data-quality tests for the new dataset (no future-dated events, every
+    row sourced, no duplicate titles) -- extends the test-suite pattern to the new data file rather than
+    leaving it uncovered.
+
+**Also added in an earlier session: a real automated test suite** (`tests/`, 27 tests, all passing) -- nothing
 existed before this. `tests/test_scoring.py` covers the normalization bounds (including a regression test
 for the exact min-max bug caught and fixed during the original build -- two data points must not collapse
 to a 100-vs-0 spread), the missing-data-as-NaN-never-zero rule, weight renormalization when a US Integration
@@ -101,8 +130,8 @@ dataset (14 historical-context entries for Pakistan alone, going back to 2013). 
 read access to that repo, so the brief's markdown source lives in this repo's `briefs/` folder with a note
 that it should move to the MENASA repo when convenient -- flagged again in "Open questions" below.
 
-**Not yet started:** Phase 2 (Policy Event Tracker), Phase 4 (scenario reweighting toggle). See "Sequencing
-decision" below, and its update after Phase 3 shipped, for the current view on both.
+**Not yet started:** Phase 4 (scenario reweighting toggle) only -- Phase 2 was built in the latest session
+(see "Where things stand" above). Phase 4 stays deliberately deprioritized; see "Sequencing decision" below.
 
 ## Sequencing decision: why the written brief (and then Phase 3) came before Phase 2
 
@@ -262,30 +291,28 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
 3. Confirm the fixed normalization ceilings ($50bn / 6000MW) still feel right, or would you rather they be
    configurable/documented differently (e.g. tied to a specific benchmark like "2x the current leader"
    instead of a static number)?
-4. **Five things only you can do, blocking visibility of what's already built:** share all three brief
-   artifacts publicly (all currently private -- Gulf brief: https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20,
-   sovereign-debt brief: https://claude.ai/code/artifact/8908bad9-96cc-48e4-8aa1-752d37f7968d, MENA Issue No. 1:
-   https://claude.ai/code/artifact/9203fd21-1872-464b-94cb-b72b3b9143a7), deploy the tracker to Render, and
-   update the portfolio site's four now-complete project cards ("Gulf States Vision 2030 & AI Investment
-   Tracker," "Gulf AI Ambitions and Geopolitical Risk," "Policy Brief -- Sovereign Debt and Political
-   Instability," and "MENA Geopolitical Risk Brief Series" -- all four currently show as "Planned"). This
-   session only has read access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you
-   grant push access or paste in the copy/links yourself.
+4. **Resolved this session.** The tracker is deployed (https://oaqjp-final-project-emb-ai-c8u6.onrender.com),
+   all three brief artifacts are shared publicly, and the portfolio's 4 relevant cards are updated and live.
+   A session was granted push access to `rafaywaqar-portfolio` directly (via `add_repo` with `access:
+   "push"`) rather than working around read-only access -- worth remembering that's available if a similar
+   situation comes up again with another of the project owner's repos (e.g. the MENASA repo, item 5 below).
 5. **Move both South-Asia/MENA briefs into the actual MENASA Risk Monitor repo**
-   (`rafaywaqar2004-lang/overeign-risk-index`) once you have push access available in a session --
-   `briefs/sovereign-debt-and-political-instability.md` and `briefs/mena-geopolitical-risk-brief-issue-01.md`
-   both live in this repo only because that's the one this session could write to. Worth adding a matching
-   `briefs/` folder there so future written pieces about that project (including Issue No. 2 of the MENA
-   series) live alongside it, the way this repo's `briefs/` folder works for the Gulf tracker.
+   (`rafaywaqar2004-lang/overeign-risk-index`) -- `briefs/sovereign-debt-and-political-instability.md` and
+   `briefs/mena-geopolitical-risk-brief-issue-01.md` both still live in this repo only because it's the one
+   a session had write access to at the time. Given item 4 above worked by requesting push access directly,
+   the same approach should work here too -- `add_repo(owner=..., repo="overeign-risk-index", access="push")`
+   -- rather than continuing to treat this as blocked.
 6. **Issue No. 2 of the MENA series** needs an actual month to pass with new developments before it's worth
    writing -- it's a monthly series, not something to produce back-to-back with Issue No. 1. When it's time,
    its outlook section already sets the agenda: the Iran-Israel-US war's ceasefire durability, the Houthi-
    Saudi blockade's status, Turkey's risk trajectory (flagged but not analyzed in Issue No. 1), and Syria's
    investment-versus-risk-score divergence.
-7. **With all four originally-planned written pieces now done**, the next session's time is probably better
-   spent closing the confidence gaps (open question 2 above) than starting further new content -- worth
-   deciding whether more breadth (a fifth brief, a topic not yet on the portfolio) or more depth (fixing the
-   `Low`-confidence rows, actually deploying what's built) is the better use of the next block of time.
+7. **With all four originally-planned written pieces done, Phase 2 built, and everything deployed and
+   shared**, the next session's highest-value work is closing the confidence gaps (open question 2 above)
+   -- specifically the still-unverified export-control tier for Qatar, Bahrain, Kuwait, Oman, and Turkey,
+   which needs a session that can actually reach `bis.gov`. Phase 4 remains deliberately out of scope (see
+   "Sequencing decision" below). A fifth written piece is a reasonable option too, but depth on what already
+   exists is the stronger use of time at this point, not more breadth.
 
 ## Environment note for whoever picks this up next
 
