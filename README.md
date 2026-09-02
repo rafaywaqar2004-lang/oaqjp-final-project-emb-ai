@@ -236,23 +236,26 @@ app.py                              # Thin router: grouped st.navigation() only,
 app_pages/
   regional_dashboard.py             # Flagship page: bottom line, KPIs, US-China scatterplot, map, ranking
   country_comparison.py             # Radar + bar comparison across all 6 scored factors
-  country_deep_dive.py              # Per-country auto-generated brief + timelines + PDF export
-  policy_events.py                  # Chronological, sourced feed of chip-policy events + model-impact links
+  country_deep_dive.py              # Country intelligence profile: drivers, trend, what changed, implications, watch, PDF export
+  policy_events.py                  # Chronological, sourced feed of chip-policy events + direction + model-impact links
   scenario_lab.py                   # Live reweighting (incl. China Exposure sub-weights) + robustness / rank-stability analysis
   methodology.py                    # In-app weights/rubrics/limitations reference (mirrors this README)
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
+  momentum.py                       # Score Momentum -- honest "Insufficient data" until >=2 dated snapshots exist
+  watch_next.py                     # Loads/filters data/curated/watch_indicators.csv for the Watch Next component
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
-  ui.py                             # Design tokens, page header, bottom-line/KPI/evidence cards, footer
+  ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, footer
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
-    policy_events.csv               # The Policy Event Tracker's sourced event record
+    policy_events.csv               # The Policy Event Tracker's sourced event record (incl. direction column)
     major_cities.csv                # Map reference layer: one city per country, geographic orientation only
     ai_hubs.csv                     # Map reference layer: named, cited AI/compute/telecom infrastructure sites
+    watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -460,6 +463,22 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   weighted-average pattern already used for US Integration Depth. Closes the project's longest-standing
   documented methodology limitation (a single-factor China axis). See the Methodology section above for
   the rubric and the research notes on specific country judgment calls.
+- **Executive Key Findings, Score Momentum, Watch Next, and a rebuilt Country Deep Dive** (a "credibility
+  upgrade" pass): the Overview's bottom-line callout became a 4-part KEY FINDINGS card (Bottom Line / Key
+  Judgment / Confidence / Why It Matters, all computed from live data -- `ui.key_findings_card()`); a new
+  `src/momentum.py` module computes Score Momentum from `composite_scores_history.csv`, correctly returning
+  `Insufficient data` while only one dated snapshot exists rather than fabricating a trend, and is wired
+  into both the Overview and Country Deep Dive; a new reusable `Watch Next` component
+  (`data/curated/watch_indicators.csv`, 6 leading indicators, each tied to a specific already-cited
+  pending/target/unresolved item elsewhere in the curated data -- e.g. Egypt's unresolved Huawei/iFlytek AI
+  data-center bid, Jordan's not-yet-built Al-Risha 400MW target) appears on the Overview and every Country
+  Deep Dive; and Country Deep Dive was restructured into a full intelligence-profile hierarchy (Current
+  Position, Key Judgments, Key Drivers factor table, Trend, What Changed, Strategic Implications for
+  policymakers/investors/corporates, What to Watch, Data Quality, Sources). The Policy Event Tracker gained
+  country and date-range filters plus a `direction` classification (Loosening/Tightening, analyst judgment
+  applied to each event's already-cited, already-summarized effect -- never a numeric score fabrication) on
+  every event card. See PROGRESS.md for the full scope decision (a prioritized subset of a much larger
+  brief) and what was deliberately not built this round.
 
 ### How the Scenario Lab stays honest
 

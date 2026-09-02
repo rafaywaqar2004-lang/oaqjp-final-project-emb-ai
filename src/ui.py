@@ -106,6 +106,38 @@ def inject_base_css() -> None:
             margin-top: 2.5rem; padding-top: 0.9rem; border-top: 1px solid {LINE};
             font-size: 0.75rem; color: {GRAY}; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;
         }}
+
+        .key-findings {{
+            background: {SURFACE}; border: 1px solid {LINE}; border-top: 4px solid {NAVY};
+            border-radius: 0.25rem; padding: 1.1rem 1.3rem; margin: 0.8rem 0 1.4rem;
+        }}
+        .key-findings-label {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em; color: {NAVY}; margin-bottom: 0.6rem;
+        }}
+        .key-findings-row {{ margin-top: 0.7rem; }}
+        .key-findings-row-label {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em; color: {GRAY}; margin-bottom: 0.15rem;
+        }}
+
+        .watch-item {{
+            display: flex; gap: 0.8rem; align-items: baseline; padding: 0.55rem 0;
+            border-bottom: 1px solid {LINE};
+        }}
+        .watch-item:last-child {{ border-bottom: none; }}
+        .watch-indicator {{ font-weight: 600; color: {TEXT}; flex: 1 1 auto; }}
+        .watch-why {{ font-size: 0.82rem; color: {GRAY}; }}
+        .watch-signal {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 700;
+            white-space: nowrap; text-transform: uppercase;
+        }}
+
+        .momentum-badge {{
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.03em; padding: 0.1rem 0.5rem;
+            border-radius: 3px; display: inline-block;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -186,6 +218,71 @@ def evidence_card(title: str, subtitle: str, source_type: str, supports: str, co
         """,
         unsafe_allow_html=True,
     )
+
+
+def key_findings_card(bottom_line_text: str, key_judgment: str, confidence: str, why_it_matters: str) -> None:
+    """The 'Analyst's Bottom Line' / 'Key Findings' executive summary block.
+    All four fields must be generated from the actual current data or a
+    fixed, defensible analytical framing -- never hard-coded example
+    findings presented as live output."""
+    st.markdown(
+        f"""
+        <div class="key-findings">
+            <div class="key-findings-label">KEY FINDINGS &middot; ANALYST'S BOTTOM LINE</div>
+            <div>{bottom_line_text}</div>
+            <div class="key-findings-row">
+                <div class="key-findings-row-label">Key Judgment</div>
+                <div>{key_judgment}</div>
+            </div>
+            <div class="key-findings-row">
+                <div class="key-findings-row-label">Confidence</div>
+                <div>{confidence_pill(confidence)}</div>
+            </div>
+            <div class="key-findings-row">
+                <div class="key-findings-row-label">Why It Matters</div>
+                <div style="color:{GRAY};">{why_it_matters}</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+_MOMENTUM_COLORS = {
+    "Accelerating": (GREEN_SOFT, GREEN),
+    "Increasing": (GREEN_SOFT, GREEN),
+    "Stable": (GRAY_SOFT, GRAY),
+    "Declining": (RED_SOFT, RED),
+    "Rapidly declining": (RED_SOFT, RED),
+    "Insufficient data": (GRAY_SOFT, GRAY),
+    "Watching": (GOLD_SOFT, GOLD),
+}
+
+
+def momentum_badge(direction: str) -> str:
+    bg, fg = _MOMENTUM_COLORS.get(direction, (GRAY_SOFT, GRAY))
+    return f'<span class="momentum-badge" style="background:{bg}; color:{fg};">{direction}</span>'
+
+
+def watch_item(indicator: str, why_it_matters: str, current_signal: str, direction: str, confidence: str) -> str:
+    """One row for the reusable 'Watch Next' component -- a leading
+    indicator, never framed as a forecast or probability."""
+    return (
+        '<div class="watch-item">'
+        f'<div style="flex:2;"><div class="watch-indicator">{indicator}</div>'
+        f'<div class="watch-why">{why_it_matters}</div></div>'
+        f'<div style="flex:1; text-align:right;"><div class="watch-signal">{current_signal}</div>'
+        f'{momentum_badge(direction)} {confidence_pill(confidence)}</div>'
+        '</div>'
+    )
+
+
+def watch_next(items: list[str], label: str = "WATCH NEXT") -> None:
+    """Renders a list of watch_item() rows. `items` must already be the
+    rendered HTML strings from watch_item() -- keeps this a pure display
+    component with no data logic of its own."""
+    st.markdown(f'<div class="key-findings-row-label" style="margin-bottom:0.4rem;">{label}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="evidence-card">{"".join(items)}</div>', unsafe_allow_html=True)
 
 
 def footer(last_updated: str = "September 2026") -> None:

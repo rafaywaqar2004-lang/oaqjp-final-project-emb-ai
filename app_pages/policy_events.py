@@ -13,7 +13,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import CURATED_DIR, COUNTRIES  # noqa: E402
-from ui import inject_base_css, footer, confidence_pill  # noqa: E402
+from ui import inject_base_css, footer, confidence_pill, GREEN, GOLD  # noqa: E402
 
 
 _CATEGORY_COLOR = {
@@ -28,6 +28,7 @@ _CATEGORY_ICON = {
     "Enforcement Action": "\U0001F6A8",
     "Legislation": "\U0001F3DB",
 }
+_DIRECTION_COLOR = {"Loosening": GREEN, "Tightening": GOLD}
 
 
 def esc(text) -> str:
@@ -100,9 +101,35 @@ def main() -> None:
     events = load_events()
     tier_df = load_tier_scores()
 
-    categories = sorted(events["category"].unique())
-    selected = st.multiselect("Filter by category", options=categories, default=categories)
-    filtered = events[events["category"].isin(selected)]
+    st.caption(
+        "**Direction** is an analyst judgment of whether an event tends to loosen or tighten the US "
+        "export-control regime generally (or for the specific country/countries it authorizes) -- it is "
+        "not a numeric score effect. See 'Model impact & source' on each card for what, if anything, "
+        "actually moves in this tracker's composite score."
+    )
+
+    f1, f2, f3 = st.columns([1, 1, 1])
+    with f1:
+        categories = sorted(events["category"].unique())
+        selected_categories = st.multiselect("Filter by category", options=categories, default=categories)
+    with f2:
+        selected_countries = st.multiselect("Filter by country", options=list(COUNTRIES.keys()), default=[])
+    with f3:
+        directions = sorted(events["direction"].unique())
+        selected_directions = st.multiselect("Filter by direction", options=directions, default=directions)
+
+    min_date, max_date = events["date"].min().date(), events["date"].max().date()
+    date_range = st.slider(
+        "Date range", min_value=min_date, max_value=max_date, value=(min_date, max_date), format="DD MMM YYYY",
+    )
+
+    filtered = events[
+        events["category"].isin(selected_categories)
+        & events["direction"].isin(selected_directions)
+        & events["date"].dt.date.between(date_range[0], date_range[1])
+    ]
+    if selected_countries:
+        filtered = filtered[filtered["countries"].apply(lambda c: bool(set(_affected_countries(c)) & set(selected_countries)))]
 
     if filtered.empty:
         st.warning("No events match the selected filters.")
@@ -127,10 +154,17 @@ def main() -> None:
         for _, row in filtered.iterrows():
             color = _CATEGORY_COLOR.get(row["category"], "#7c8188")
             icon = _CATEGORY_ICON.get(row["category"], "\U0001F4CC")
+            direction_color = _DIRECTION_COLOR.get(row["direction"], "#7c8188")
             with st.container(border=True):
                 c1, c2 = st.columns([5, 1])
                 with c1:
-                    st.markdown(f"**{row['date']:%d %B %Y}** &nbsp; {icon} <span style='color:{color}; font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em;'>{esc(row['category'])}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"**{row['date']:%d %B %Y}** &nbsp; {icon} "
+                        f"<span style='color:{color}; font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em;'>{esc(row['category'])}</span>"
+                        f"&nbsp;&middot;&nbsp; "
+                        f"<span style='color:{direction_color}; font-weight:700; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; font-family:\"IBM Plex Mono\", monospace;'>{esc(row['direction'])}</span>",
+                        unsafe_allow_html=True,
+                    )
                     st.markdown(f"##### {esc(row['title'])}")
                 st.write(esc(row["summary"]))
                 st.caption(f"**Countries:** {esc(row['countries'])}")
