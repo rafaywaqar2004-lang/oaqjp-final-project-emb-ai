@@ -1,6 +1,17 @@
 [browser]
 gatherUsageStats = false
 
+[client]
+# Hides Streamlit Cloud's own "Deploy"/Fork/GitHub/hamburger-menu chrome
+# layered on top of the app -- platform UI, not app branding.
+toolbarMode = "minimal"
+
+[server]
+# Serves ./static/ at /app/static/<filename> -- hosts og-image.png, which
+# patch_analytics.py points link-preview crawlers (LinkedIn, Slack, iMessage)
+# at, since they don't execute JS and can't see anything set via Python.
+enableStaticServing = true
+
 [theme]
 base = "light"
 primaryColor = "#2454a6"

@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import CURATED_DIR  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
-st.set_page_config(page_title="Policy Event Tracker | Gulf AI Tracker", page_icon="\U0001F5DE", layout="wide")
+st.set_page_config(page_title="Policy Event Tracker | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 _CATEGORY_COLOR = {
     "Regulatory Framework": "#2454a6",

@@ -13,8 +13,9 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
+from constants import GULF_COUNTRIES  # noqa: E402
 
-st.set_page_config(page_title="Country Comparison | Gulf AI Tracker", page_icon="\U0001F4CA", layout="wide")
+st.set_page_config(page_title="Country Comparison | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 FACTOR_COLUMNS = {
     "us_tier_score_100": "US Export-Control Access",
@@ -33,14 +34,18 @@ def load_data() -> pd.DataFrame:
 def main() -> None:
     inject_base_css()
     st.title("Country Comparison")
-    st.caption("All factors normalized to 0-100 for comparability. Hover a bar/vertex for the underlying raw value.")
+    st.caption(
+        "All factors normalized to 0-100 for comparability. Hover a bar/vertex for the underlying raw value. "
+        "Defaults to the 6 Gulf states for a readable radar -- add more from the dropdown to compare further."
+    )
 
     df = load_data()
 
+    default_countries = [c for c in df["country"] if c in GULF_COUNTRIES]
     countries = st.multiselect(
         "Countries to compare",
         options=list(df["country"]),
-        default=list(df["country"]),
+        default=default_countries,
     )
     view_df = df[df["country"].isin(countries)]
 

@@ -25,7 +25,7 @@ GEOJSON_PATH = Path(__file__).resolve().parent / "data" / "geo" / "region_countr
 
 st.set_page_config(
     page_title="Gulf AI & Tech-Bloc Alignment Tracker",
-    page_icon="\U0001F310",
+    page_icon="assets/favicon.png",
     layout="wide",
 )
 

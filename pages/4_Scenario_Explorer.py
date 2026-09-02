@@ -19,7 +19,7 @@ from constants import COUNTRIES  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
-st.set_page_config(page_title="Scenario Explorer | Gulf AI Tracker", page_icon="\U0001F39B️", layout="wide")
+st.set_page_config(page_title="Scenario Explorer | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 PRESETS = {
     "Default (as scored)": {

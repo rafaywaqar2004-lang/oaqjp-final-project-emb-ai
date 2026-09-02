@@ -5,7 +5,51 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Immediately after the map-fill-in pass below, a further direct follow-up: "include date [data] for all
+**Most recent session: four "quick win" polish items, asked for directly after a project/site rating
+request.** Prompted by an honest rating exchange (content 9/10, technical 8/10, visual design 7/10 up from
+an earlier 3/10, but with the Render free-tier cold start flagged as the single biggest remaining risk to a
+recruiter's first impression) -- the project owner asked for suggestions, then said "yep" to doing the four
+free/quick ones:
+
+1. **Real favicon.** `assets/favicon.png` (512x512 PNG, generated with PIL -- a simple blue/red split
+   circle in the project's own palette, echoing the "two blocs" theme) replaces the generic 🌐 emoji as
+   `page_icon` on every page. Streamlit accepts a local image path there, not just an emoji or a Unicode
+   codepoint.
+2. **Open Graph / Twitter Card tags**, so sharing this link (LinkedIn, Slack, iMessage) actually renders a
+   preview card instead of a bare URL. Needed a real card image too: `static/og-image.png` (1200x630,
+   generated with PIL + IBM Plex Serif/Work Sans, matching the app's paper/ink theme), served via
+   `[server] enableStaticServing = true`.
+3. **Country Comparison's radar chart no longer defaults to all 17 countries.** It was genuinely unreadable
+   at that density (flagged in the project rating). Now defaults to the original 6 Gulf states; the
+   multiselect still lets a reader add any of the other 11.
+4. **The MENASA-style branded cold-start loading screen**, so a Render free-tier wake-up (~20-30s) reads as
+   "loading," not "broken."
+
+Items 1, 2, and 4 all came from porting a pattern the companion MENASA Risk Monitor had already built and
+proven: `patch_og_tags.py`, a script that patches Streamlit's own shipped `index.html` directly as a Render
+build step (`pip install -r requirements.txt && python patch_og_tags.py`), because Streamlit is a
+client-rendered SPA with no `<head>` a running Python/JS snippet can actually reach -- `st.markdown` content
+gets iframe-sandboxed and link-preview crawlers don't execute JS at all. This tracker's version was renamed
+to match MENASA's filename (was `patch_analytics.py`, a narrower GA-only version added earlier this
+session) once it grew OG tags and the loader too, so a reader who's seen one project recognizes the pattern
+immediately in the other. It also reuses MENASA's GA4 property (`G-QP9RPS41KJ`) rather than a separate one
+-- see the GA section below, which predates this entry.
+
+Verified end to end before calling this done: ran the patch script against the actually-installed Streamlit
+package and confirmed via `curl` that the served page's `<head>` contains the real OG meta tags pointing at
+a `static/og-image.png` URL that itself returns `200` (i.e. the image is actually reachable, not just
+referenced), that the custom favicon is served as the page's icon (not the Streamlit default), and with a
+Playwright screenshot that the Country Comparison page's radar chart is legible with the new 6-country
+default. All 48 tests still pass.
+
+**Not done, and worth a future look:** an equivalent OG-image/favicon pass on the standalone Claude Artifact
+briefs (they're static HTML files with their own design already, not Streamlit -- a different, unrelated
+technique would be needed there, and it wasn't asked for). Also not done: the sidebar's first nav entry
+still literally reads "app" (a Streamlit filename quirk flagged in an earlier session entry) -- fixing that
+needs a move to Streamlit's newer `st.navigation()` entrypoint API, a bigger structural change than any of
+this session's quick wins.
+
+**Before that, a further direct follow-up: "include date [data] for all
 those countries as well."** The 9 countries just added to the map as unscored gray context (Iran, Iraq,
 Syria, Jordan, Lebanon, Israel, Yemen, Egypt, Afghanistan) are now fully scored, real countries in this
 tracker -- 17 total, up from 8. This is a genuine scope expansion, not a cosmetic map fix, and was treated

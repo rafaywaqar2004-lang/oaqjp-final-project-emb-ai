@@ -227,7 +227,10 @@ briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
   sovereign-debt-and-political-instability.md  # Case-study brief (Pakistan/Sri Lanka/Bangladesh), MENASA-linked
   mena-geopolitical-risk-brief-issue-01.md     # Monthly digest series, Issue No. 1, MENASA-linked
-.streamlit/config.toml              # Custom theme -- paper/ink palette shared with the briefs
+.streamlit/config.toml              # Custom theme + static-serving config -- paper/ink palette shared with the briefs
+assets/favicon.png                  # Generated browser-tab icon (page_icon on every page)
+static/og-image.png                 # Generated link-preview card image (see note below)
+patch_og_tags.py                    # Patches GA/OG tags/cold-start loader into Streamlit's shell (see note below)
 tests/                              # pytest suite -- see "Running tests" below
 .github/workflows/refresh_worldbank_data.yml
 .github/workflows/test.yml
@@ -278,16 +281,32 @@ consistent `footer()` every page calls at the bottom. This exists because the un
 Streamlit chrome were, before this pass, visually indistinguishable from an unstyled homework submission --
 see PROGRESS.md for the before/after reasoning.
 
-### Traffic analytics (Google Analytics 4)
+### Traffic analytics, link previews, and the cold-start loader
 
 Streamlit is a client-rendered single-page app with no `<head>` a running script can reach, so a normal
-`st.markdown`/GA snippet gets sandboxed in an iframe and never fires a real pageview. `patch_analytics.py`
-patches Streamlit's own shipped `index.html` directly (adds the GA4 script tag and a real page title) as a
-Render build step, right after `pip install` -- the same technique already proven in the companion MENASA
-Risk Monitor's `patch_og_tags.py`. Reuses MENASA's GA4 property (`G-QP9RPS41KJ`) rather than a separate one,
-so this tracker's traffic shows up alongside the portfolio's and MENASA's in one place. Wired into
-`render.yaml`'s `buildCommand`; nothing to configure locally (`streamlit run app.py` skips the patch, which
-only matters for the deployed site).
+`st.markdown` GA/OG snippet gets sandboxed in an iframe and never fires a real pageview or shows up to a
+link-preview crawler (LinkedIn, Slack, iMessage -- none of which execute JS). `patch_og_tags.py` patches
+Streamlit's own shipped `index.html` directly as a Render build step, right after `pip install` -- the same
+technique already proven in the companion MENASA Risk Monitor's own `patch_og_tags.py`. One script now
+handles three things:
+
+1. **Google Analytics.** Reuses MENASA's GA4 property (`G-QP9RPS41KJ`) rather than standing up a separate
+   one, so this tracker's traffic reports alongside the portfolio's and MENASA's in one place.
+2. **Open Graph / Twitter Card tags**, so sharing the link actually renders a preview card -- title,
+   description, and `static/og-image.png` (a generated 1200x630 card in the app's own paper/ink palette,
+   served at `/app/static/og-image.png` via `[server] enableStaticServing = true` in `.streamlit/config.toml`).
+3. **A branded cold-start loading screen.** Render's free tier spins the service down after a few idle
+   minutes; the first visitor after a quiet spell hits a genuine ~20-30s wait while Streamlit's JS bundle
+   loads, connects its websocket, and runs the script -- during which the browser would otherwise show a
+   blank page. This static (no-JS-bundle-required) block renders instantly and removes itself once
+   `[data-testid="stAppViewContainer"]` actually has content, so the wait reads as "loading," not "broken."
+
+`assets/favicon.png` (also a generated image, a simple blue/red split circle in the same palette) is set as
+`page_icon` on every page -- Streamlit accepts a local image path there, not just an emoji, and MENASA
+already establishes this as the pattern for a real browser-tab icon rather than a generic emoji every other
+Streamlit app on Render shares. Wired into `render.yaml`'s `buildCommand` and a `SITE_URL` env var; nothing
+to configure locally (`streamlit run app.py` skips the patch entirely, which only matters for the deployed
+site -- link previews and the cold-start loader are meaningless when running locally with no cold start).
 
 ## Running locally
 

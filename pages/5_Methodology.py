@@ -15,7 +15,7 @@ from constants import CURATED_DIR  # noqa: E402
 from scoring import COMPUTE_CEILING_MW, INVESTMENT_CEILING_USD_BN  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
-st.set_page_config(page_title="Methodology | Gulf AI Tracker", page_icon="\U0001F4D0", layout="wide")
+st.set_page_config(page_title="Methodology | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 
 def main() -> None:
