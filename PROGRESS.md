@@ -47,6 +47,23 @@ dashboard, the per-country brief is a second written-analysis output (8 short co
 BLUF/Key-Judgments format as the standalone Gulf-wide brief) that happens to live inside the dashboard --
 which was the whole point of prioritizing it over Phase 2 and Phase 4 (see below).
 
+**A third written product is also done**, per the "next content decision" from the sequencing discussion:
+`briefs/sovereign-debt-and-political-instability.md` -- the "Policy Brief -- Sovereign Debt and Political
+Instability" already listed as "Planned" on the portfolio, examining feedback loops between fiscal crises
+and governance breakdown across Pakistan, Sri Lanka, and Bangladesh (with India, Nepal, Bhutan, Maldives,
+and Afghanistan as comparative data points), same BLUF/Key-Judgments/alternative-analysis format as the
+other two briefs. Published as a matching designed page:
+https://claude.ai/code/artifact/8908bad9-96cc-48e4-8aa1-752d37f7968d (also private by default -- needs
+sharing). **This one required pulling data from a second repository**: `rafaywaqar2004-lang/overeign-risk-index`
+(the MENASA Risk Monitor's actual repo -- note the typo in the repo name itself, "overeign" not
+"sovereign," worth knowing if searching for it later), cloned read-only the same way as the portfolio repo.
+Every figure in this brief traces to that repo's `scored_data.csv` (composite scores, debt-to-GDP,
+governance indicators) and `context_data.py` (the curated IMF-program histories, protest/collapse
+narratives, and creditor-relationship summaries) -- which turned out to be a genuinely rich, well-sourced
+dataset (14 historical-context entries for Pakistan alone, going back to 2013). This session only had
+read access to that repo, so the brief's markdown source lives in this repo's `briefs/` folder with a note
+that it should move to the MENASA repo when convenient -- flagged again in "Open questions" below.
+
 **Not yet started:** Phase 2 (Policy Event Tracker), Phase 4 (scenario reweighting toggle). See "Sequencing
 decision" below, and its update after Phase 3 shipped, for the current view on both.
 
@@ -183,15 +200,24 @@ reader (or a future research pass) should hit first.
 3. Confirm the fixed normalization ceilings ($50bn / 6000MW) still feel right, or would you rather they be
    configurable/documented differently (e.g. tied to a specific benchmark like "2x the current leader"
    instead of a static number)?
-4. **Three things only you can do, blocking visibility of what's already built:** share the brief artifact
-   publicly (currently private -- https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20),
-   deploy the tracker to Render, and update the portfolio site's two Gulf project cards (this session only
-   has read access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you grant push
-   access or paste in the copy/links yourself).
-5. **Next content decision**, per the sequencing update above: another written piece (monthly MENA brief
-   series, or the sovereign-debt/political-instability brief pairing with the MENASA Risk Monitor the same
-   way this project's brief pairs with this tracker) rather than Phase 2, unless a specific need for the
-   policy timeline comes up first.
+4. **Four things only you can do, blocking visibility of what's already built:** share both brief artifacts
+   publicly (both currently private -- Gulf brief: https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20,
+   sovereign-debt brief: https://claude.ai/code/artifact/8908bad9-96cc-48e4-8aa1-752d37f7968d), deploy the
+   tracker to Render, and update the portfolio site's three now-complete project cards ("Gulf States Vision
+   2030 & AI Investment Tracker," "Gulf AI Ambitions and Geopolitical Risk," and "Policy Brief -- Sovereign
+   Debt and Political Instability" -- all three currently show as "Planned"). This session only has read
+   access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you grant push access or
+   paste in the copy/links yourself.
+5. **Move `briefs/sovereign-debt-and-political-instability.md` into the actual MENASA Risk Monitor repo**
+   (`rafaywaqar2004-lang/overeign-risk-index`) once you have push access available in a session -- it lives
+   in this repo only because that's the one this session could write to. Worth adding a matching `briefs/`
+   folder there so future written pieces about that project live alongside it, the way this repo's `briefs/`
+   folder works for the Gulf tracker.
+6. **Next content decision**: with the sovereign-debt brief done, the remaining "Planned" written piece on
+   the portfolio is the monthly MENA Geopolitical Risk Brief Series. Worth deciding whether to start that
+   series next, or whether three standalone analytic briefs plus two dashboards is enough breadth for now
+   and the next session's time is better spent closing the confidence gaps (open question 2) or building
+   Phase 2 if a specific need for the policy timeline comes up.
 
 ## Environment note for whoever picks this up next
 
