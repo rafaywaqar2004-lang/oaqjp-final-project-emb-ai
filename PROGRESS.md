@@ -498,12 +498,12 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
    A session was granted push access to `rafaywaqar-portfolio` directly (via `add_repo` with `access:
    "push"`) rather than working around read-only access -- worth remembering that's available if a similar
    situation comes up again with another of the project owner's repos (e.g. the MENASA repo, item 5 below).
-5. **Move both South-Asia/MENA briefs into the actual MENASA Risk Monitor repo**
-   (`rafaywaqar2004-lang/overeign-risk-index`) -- `briefs/sovereign-debt-and-political-instability.md` and
-   `briefs/mena-geopolitical-risk-brief-issue-01.md` both still live in this repo only because it's the one
-   a session had write access to at the time. Given item 4 above worked by requesting push access directly,
-   the same approach should work here too -- `add_repo(owner=..., repo="overeign-risk-index", access="push")`
-   -- rather than continuing to treat this as blocked.
+5. **Resolved.** Both South-Asia/MENA briefs moved into the actual MENASA Risk Monitor repo
+   (`rafaywaqar2004-lang/overeign-risk-index`, `briefs/` folder there) via the same `add_repo(access="push")`
+   approach that worked for the portfolio in item 4 -- confirming that pattern generalizes to any of the
+   project owner's repos, not just the one it happened to be tried on first. Removed from this repo's own
+   `briefs/` folder (`git rm`) rather than left duplicated; this repo's `briefs/` now holds only its own
+   companion piece, `gulf-ai-ambitions-and-geopolitical-risk.md`.
 6. **Issue No. 2 of the MENA series** needs an actual month to pass with new developments before it's worth
    writing -- it's a monthly series, not something to produce back-to-back with Issue No. 1. When it's time,
    its outlook section already sets the agenda: the Iran-Israel-US war's ceasefire durability, the Houthi-

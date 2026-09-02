@@ -10,12 +10,12 @@ when and why.
 **Status: all four phases built** -- composite index, choropleth map, radar/bar comparison view, a
 chronological sourced feed of chip-policy events, per-country deep-dive pages with an auto-generated
 analyst brief and downloadable PDF, and a live scenario-reweighting explorer.
-This repo's `briefs/` folder also holds three written analytic pieces produced alongside this dashboard:
-[`gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md) (this
-project's own companion brief), plus two pieces that belong to the MENASA Risk Monitor project instead --
-[`sovereign-debt-and-political-instability.md`](briefs/sovereign-debt-and-political-instability.md) and
-[`mena-geopolitical-risk-brief-issue-01.md`](briefs/mena-geopolitical-risk-brief-issue-01.md) -- written here
-only because this was the session's one writable repo; see `PROGRESS.md` for why and where they should move.
+This repo's `briefs/` folder holds this project's own written analytic companion piece:
+[`gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md). Two other
+briefs were drafted here early on but are grounded in the *MENASA Risk Monitor's* data, not this tracker's
+-- they've since moved to that project's own repo
+([`rafaywaqar2004-lang/overeign-risk-index`](https://github.com/rafaywaqar2004-lang/overeign-risk-index)),
+where they now actually belong; see `PROGRESS.md` for the history.
 See [`PROGRESS.md`](PROGRESS.md) for what's built, what's next, and open questions for the project owner.
 
 ---
@@ -225,8 +225,6 @@ data/
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
-  sovereign-debt-and-political-instability.md  # Case-study brief (Pakistan/Sri Lanka/Bangladesh), MENASA-linked
-  mena-geopolitical-risk-brief-issue-01.md     # Monthly digest series, Issue No. 1, MENASA-linked
 .streamlit/config.toml              # Custom theme + static-serving config -- paper/ink palette shared with the briefs
 assets/favicon.png                  # Generated browser-tab icon (page_icon on every page)
 static/og-image.png                 # Generated link-preview card image (see note below)
