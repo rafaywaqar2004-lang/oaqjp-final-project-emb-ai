@@ -223,6 +223,20 @@ python src/data_pipeline/fetch_worldbank.py
 PYTHONPATH=src python src/scoring.py
 ```
 
+### Running tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests/ -v
+```
+
+`tests/` covers the scoring methodology (normalization bounds, the missing-data-as-NaN-not-zero rule, the
+Net Alignment formula, weight renormalization when a factor is unavailable) and the country-brief generator
+(every country produces a valid brief; a country with no scored deals gets an explicit "Data gap" judgment,
+never a silently wrong number). Runs automatically on every push via `.github/workflows/test.yml`, and as a
+gate before the scheduled World Bank refresh commits anything (`.github/workflows/refresh_worldbank_data.yml`)
+-- a broken data change should fail CI before it reaches `main`, not get auto-committed by the weekly job.
+
 ## Known limitations
 
 - **China Exposure Depth is a single-factor axis.** It currently rests entirely on Chinese tech

@@ -5,7 +5,18 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Latest session: a dedicated confidence-gap research pass**, per the "depth over breadth" call at the end
+**Also added this session: a real automated test suite** (`tests/`, 27 tests, all passing) -- nothing
+existed before this. `tests/test_scoring.py` covers the normalization bounds (including a regression test
+for the exact min-max bug caught and fixed during the original build -- two data points must not collapse
+to a 100-vs-0 spread), the missing-data-as-NaN-never-zero rule, weight renormalization when a US Integration
+factor is unavailable, and the Net Alignment formula itself. `tests/test_country_brief.py` runs the brief
+generator against all 8 countries and checks a country with no scored deals gets an explicit "Data gap"
+judgment rather than a silently wrong number. Wired into two GitHub Actions workflows:
+`.github/workflows/test.yml` runs on every push/PR, and `refresh_worldbank_data.yml` now runs the suite as
+a gate before the scheduled weekly refresh commits anything -- a broken data change should fail CI, not get
+auto-committed. `requirements-dev.txt` added for the pytest-only dev dependency.
+
+**Latest research-pass session: a dedicated confidence-gap research pass**, per the "depth over breadth" call at the end
 of the prior session (all four planned written pieces were already done -- see below). Results:
 - **Upgraded:** Turkey's governance-maturity score (Low -> Medium confidence, fresh 2026 sourcing: an
   active "Turkiye 2026 AI Strategy" leveraging TUBITAK BILGEM/ASELSAN, concrete 2030 targets, a TBMM AI

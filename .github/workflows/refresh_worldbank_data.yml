@@ -34,6 +34,11 @@ jobs:
           pip install -r requirements.txt
           PYTHONPATH=src python src/scoring.py
 
+      - name: Run test suite before committing
+        run: |
+          pip install -r requirements-dev.txt
+          python -m pytest tests/ -v
+
       - name: Commit updated data if changed
         run: |
           git config user.name "github-actions[bot]"
