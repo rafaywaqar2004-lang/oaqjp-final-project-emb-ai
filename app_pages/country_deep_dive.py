@@ -223,14 +223,6 @@ def main() -> None:
     m3.metric("China Exposure Depth", f"{row['china_exposure_depth']:.0f}" if pd.notna(row["china_exposure_depth"]) else "N/A")
     st.caption(f"Positioning: **{band}**. See the Regional Dashboard's US-China positioning chart for this country plotted against all others.")
 
-    pdf_bytes = build_country_pdf(brief)
-    st.download_button(
-        "\U0001F4C4 Download country brief (PDF)",
-        data=pdf_bytes,
-        file_name=f"{country.replace(' ', '_').lower()}_ai_alignment_brief.pdf",
-        mime="application/pdf",
-    )
-
     st.divider()
     st.subheader("Bottom Line Up Front")
     st.info(esc(brief.bluf))
@@ -337,7 +329,8 @@ def main() -> None:
 
     st.divider()
     st.subheader("Data Quality")
-    st.dataframe(_data_quality_summary(row, curated, country), hide_index=True, use_container_width=True)
+    data_quality_df = _data_quality_summary(row, curated, country)
+    st.dataframe(data_quality_df, hide_index=True, use_container_width=True)
     st.caption(
         "Confidence labels are pulled directly from each curated row's own `confidence` column -- never a "
         "separately invented composite score. 'Insufficient' means no sourced row exists for that factor at all."
@@ -351,6 +344,27 @@ def main() -> None:
     st.caption(
         "This is a research/portfolio product, not a commissioned or institutional assessment. "
         "See the tracker's README for full methodology and the standalone brief for the region-wide analysis."
+    )
+
+    pdf_bytes = build_country_pdf(
+        brief,
+        current_position={
+            "Net Alignment Score": f"{row['net_alignment_score']:.0f}/100" if pd.notna(row["net_alignment_score"]) else "N/A",
+            "US Integration Depth": f"{row['us_integration_depth']:.0f}/100" if pd.notna(row["us_integration_depth"]) else "N/A",
+            "China Exposure Depth": f"{row['china_exposure_depth']:.0f}/100" if pd.notna(row["china_exposure_depth"]) else "N/A",
+            "Positioning": band,
+        },
+        key_drivers=_key_drivers_table(row, curated, country),
+        what_changed=[{"date": f"{ev['date']:%Y-%m-%d}", "title": ev["title"]} for _, ev in country_events.head(5).iterrows()],
+        strategic_implications=implications,
+        watch_items=watch_df,
+        data_quality=data_quality_df,
+    )
+    st.download_button(
+        "\U0001F4C4 Download full country brief (PDF)",
+        data=pdf_bytes,
+        file_name=f"{country.replace(' ', '_').lower()}_ai_alignment_brief.pdf",
+        mime="application/pdf",
     )
 
     footer()

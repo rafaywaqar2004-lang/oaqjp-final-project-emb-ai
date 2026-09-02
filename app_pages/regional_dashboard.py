@@ -20,9 +20,13 @@ from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
 from momentum import load_history, regional_momentum  # noqa: E402
 from watch_next import load_watch_indicators, watch_items_for  # noqa: E402
+from strategic_risk_engine import assess_all  # noqa: E402
+from pdf_export import build_executive_pdf  # noqa: E402
+from country_brief import load_curated  # noqa: E402
 from ui import (  # noqa: E402
     inject_base_css, page_header, key_findings_card, kpi_card, kpi_row, footer,
-    watch_item, watch_next, BLUE, RED, NAVY, GRAY, GOLD,
+    watch_item, watch_next, sequential_map_scale, BLUE, RED, NAVY, GRAY, GOLD,
+    NET_ALIGNMENT_DIVERGING_SCALE,
 )
 from constants import GULF_COUNTRIES, COMPARATOR_COUNTRIES  # noqa: E402
 
@@ -52,6 +56,31 @@ def load_geojson() -> dict:
 @st.cache_data(ttl=3600)
 def load_major_cities() -> pd.DataFrame:
     return pd.read_csv(CURATED_DIR / "major_cities.csv")
+
+
+@st.cache_data(ttl=3600)
+def load_policy_events_for_pdf() -> list[dict]:
+    df = pd.read_csv(CURATED_DIR / "policy_events.csv").sort_values("date", ascending=False)
+    return df.to_dict("records")
+
+
+@st.cache_data(ttl=3600)
+def _cached_curated() -> dict[str, pd.DataFrame]:
+    return load_curated()
+
+
+@st.cache_data(ttl=3600)
+def _build_executive_pdf_cached(composite: pd.DataFrame, findings: dict) -> bytes:
+    """Wraps build_executive_pdf() (a nontrivial ReportLab render) behind
+    Streamlit's cache -- without this it would re-render on every script
+    rerun (e.g. toggling the map's city/hub checkboxes), not just when the
+    underlying data actually changes."""
+    return build_executive_pdf(
+        key_findings=findings,
+        composite=composite,
+        what_changed=load_policy_events_for_pdf(),
+        risk_matrix=assess_all(composite, _cached_curated()),
+    )
 
 
 @st.cache_data(ttl=3600)
@@ -178,6 +207,14 @@ def main() -> None:
     findings = _key_findings(df)
     key_findings_card(findings["bottom_line"], findings["key_judgment"], findings["confidence"], findings["why_it_matters"])
 
+    exec_pdf_bytes = _build_executive_pdf_cached(df, findings)
+    st.download_button(
+        "\U0001F4C4 Download executive strategic assessment (PDF)",
+        data=exec_pdf_bytes,
+        file_name="gulf_ai_alignment_strategic_assessment.pdf",
+        mime="application/pdf",
+    )
+
     regional_trend = regional_momentum(load_history())
     if regional_trend.direction == "Insufficient data":
         st.caption(
@@ -300,14 +337,14 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
 
     st.subheader("Map by factor")
     MAP_METRICS = {
-        "Net Alignment Score": dict(col="net_alignment_score", range=(0, 100), colorscale=[RED, "#f0e6c8", "#a9c4de", BLUE], unit="", cb="0=China-leaning<br>100=US-integrated"),
-        "US Integration Depth": dict(col="us_integration_depth", range=(0, 100), colorscale=["#f0e6c8", BLUE], unit="", cb="US Integration Depth"),
-        "China Exposure Depth": dict(col="china_exposure_depth", range=(0, 100), colorscale=["#f0e6c8", RED], unit="", cb="China Exposure Depth"),
-        "Chinese Telecom Penetration (0-5)": dict(col="china_penetration_raw", range=(0, 5), colorscale=["#f0e6c8", RED], unit="/5", cb="Telecom penetration (0-5)"),
-        "Chinese AI/Cloud/Digital Ties (0-5)": dict(col="china_digital_raw", range=(0, 5), colorscale=["#f0e6c8", RED], unit="/5", cb="AI/cloud/digital ties (0-5)"),
-        "AI Investment ($bn, scored deals)": dict(col="investment_usd_bn", range=(0, max(1.0, df["investment_usd_bn"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="bn", cb="Disclosed AI investment ($bn)"),
-        "Compute Capacity (MW, scored deals)": dict(col="compute_mw", range=(0, max(1.0, df["compute_mw"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="MW", cb="Compute capacity (MW)"),
-        "AI Governance Maturity (0-5)": dict(col="governance_raw", range=(0, 5), colorscale=["#f0e6c8", GOLD], unit="/5", cb="Governance maturity (0-5)"),
+        "Net Alignment Score": dict(col="net_alignment_score", range=(0, 100), colorscale=NET_ALIGNMENT_DIVERGING_SCALE, unit="", cb="0=China-leaning<br>100=US-integrated"),
+        "US Integration Depth": dict(col="us_integration_depth", range=(0, 100), colorscale=sequential_map_scale(BLUE), unit="", cb="US Integration Depth"),
+        "China Exposure Depth": dict(col="china_exposure_depth", range=(0, 100), colorscale=sequential_map_scale(RED), unit="", cb="China Exposure Depth"),
+        "Chinese Telecom Penetration (0-5)": dict(col="china_penetration_raw", range=(0, 5), colorscale=sequential_map_scale(RED), unit="/5", cb="Telecom penetration (0-5)"),
+        "Chinese AI/Cloud/Digital Ties (0-5)": dict(col="china_digital_raw", range=(0, 5), colorscale=sequential_map_scale(RED), unit="/5", cb="AI/cloud/digital ties (0-5)"),
+        "AI Investment ($bn, scored deals)": dict(col="investment_usd_bn", range=(0, max(1.0, df["investment_usd_bn"].max(skipna=True) or 1.0)), colorscale=sequential_map_scale(BLUE), unit="bn", cb="Disclosed AI investment ($bn)"),
+        "Compute Capacity (MW, scored deals)": dict(col="compute_mw", range=(0, max(1.0, df["compute_mw"].max(skipna=True) or 1.0)), colorscale=sequential_map_scale(BLUE), unit="MW", cb="Compute capacity (MW)"),
+        "AI Governance Maturity (0-5)": dict(col="governance_raw", range=(0, 5), colorscale=sequential_map_scale(GOLD), unit="/5", cb="Governance maturity (0-5)"),
     }
     map_col1, map_col2, map_col3 = st.columns([2, 1, 1])
     metric_name = map_col1.selectbox("Metric", options=list(MAP_METRICS.keys()))

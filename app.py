@@ -29,6 +29,10 @@ pg = st.navigation(
         "Forecasting": [
             st.Page("app_pages/scenario_lab.py", title="Scenario Lab"),
         ],
+        "Risk & Outlook": [
+            st.Page("app_pages/strategic_risk.py", title="Strategic Risk"),
+            st.Page("app_pages/outlook.py", title="12-Month Outlook"),
+        ],
         "Research": [
             st.Page("app_pages/methodology.py", title="Methodology"),
             st.Page("app_pages/economic_analysis.py", title="Economic Analysis"),

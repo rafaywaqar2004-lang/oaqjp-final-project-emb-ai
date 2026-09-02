@@ -24,7 +24,7 @@ from scoring import (  # noqa: E402
     COMPUTE_CEILING_MW,
     INVESTMENT_CEILING_USD_BN,
 )
-from ui import inject_base_css, footer, GREEN, GOLD, GRAY  # noqa: E402
+from ui import inject_base_css, footer, GREEN, GOLD, GRAY, CHART_BASELINE, CHART_SCENARIO  # noqa: E402
 
 N_ROBUSTNESS_SAMPLES = 150
 ROBUSTNESS_SEED = 42
@@ -252,11 +252,11 @@ def main() -> None:
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=merged["country"], x=merged["baseline"], name="Baseline (as scored)",
-        orientation="h", marker_color="#c3c0b3", opacity=0.85,
+        orientation="h", marker_color=CHART_BASELINE, opacity=0.85,
     ))
     fig.add_trace(go.Bar(
         y=merged["country"], x=merged["scenario"], name=preset_name,
-        orientation="h", marker_color="#2454a6",
+        orientation="h", marker_color=CHART_SCENARIO,
     ))
     fig.update_layout(
         barmode="group", height=420, margin=dict(l=0, r=0, t=10, b=0),

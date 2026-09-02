@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from economic_analysis import CANDIDATE_RELATIONSHIPS, diversification_vs_china_exposure, robustness_checks  # noqa: E402
+from economic_analysis_engine import CANDIDATE_RELATIONSHIPS, diversification_vs_china_exposure, robustness_checks  # noqa: E402
 from constants import CURATED_DIR  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, page_header, footer, NAVY, GRAY  # noqa: E402

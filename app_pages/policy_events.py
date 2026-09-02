@@ -13,7 +13,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import CURATED_DIR, COUNTRIES  # noqa: E402
-from ui import inject_base_css, footer, confidence_pill, GREEN, GOLD  # noqa: E402
+from ui import inject_base_css, footer, confidence_pill, GREEN, GOLD, GRAY  # noqa: E402
 
 
 _CATEGORY_COLOR = {
@@ -152,9 +152,9 @@ def main() -> None:
     with col_timeline:
         st.subheader(f"Timeline ({len(filtered)} of {len(events)} events)")
         for _, row in filtered.iterrows():
-            color = _CATEGORY_COLOR.get(row["category"], "#7c8188")
+            color = _CATEGORY_COLOR.get(row["category"], GRAY)
             icon = _CATEGORY_ICON.get(row["category"], "\U0001F4CC")
-            direction_color = _DIRECTION_COLOR.get(row["direction"], "#7c8188")
+            direction_color = _DIRECTION_COLOR.get(row["direction"], GRAY)
             with st.container(border=True):
                 c1, c2 = st.columns([5, 1])
                 with c1:
