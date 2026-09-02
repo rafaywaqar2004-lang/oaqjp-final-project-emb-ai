@@ -172,6 +172,7 @@ pages/
   2_Country_Deep_Dive.py            # Per-country auto-generated brief + timelines + PDF export
   3_Policy_Event_Tracker.py         # Chronological, sourced feed of chip-policy events
   4_Scenario_Explorer.py            # Live reweighting of the methodology (never touches curated data)
+  5_Methodology.py                  # In-app weights/rubrics/limitations reference (mirrors this README)
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code

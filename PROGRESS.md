@@ -5,6 +5,16 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
+**Also added beyond the original 4-phase brief: an in-app Methodology page** (`pages/5_Methodology.py`),
+after being asked generally to make the project "much better and more detailed and more professional."
+The gap: methodology, weights, and rubrics only lived in the GitHub README -- someone browsing the live
+Streamlit app (a recruiter, most realistically) would never see any of that. MENASA's own README describes
+an in-app "Methodology & Data" tab as one of its features; this tracker had nothing analogous. The new page
+mirrors the README's methodology section (weights table with rationale, both ordinal rubrics in tabs,
+missing-data handling) plus one thing that couldn't exist in a static README: a live confidence-level
+breakdown table computed fresh from the actual curated CSVs each load, so it can never drift out of sync
+with the data the way a hand-written summary could.
+
 **All four phases from the original brief are now built.** Phase 4 (Scenario Explorer) was added after
 being directly asked to re-evaluate it against Phase 2 on the merits, not by default -- the reconsideration
 that changed the earlier "skip it" call: MENASA's own Scenario Explorer (live sliders + named shock
