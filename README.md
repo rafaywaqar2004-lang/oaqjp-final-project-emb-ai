@@ -4,9 +4,9 @@ A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plu
 smaller-scale, non-Gulf comparators -- are navigating the US-China AI/chip competition, and what that
 means for regional stability and Western strategic interests.
 
-**Status: Phase 1 (MVP) + Phase 2 (policy event tracker) + Phase 3 (country deep-dives)** -- composite
-index, choropleth map, radar/bar comparison view, a chronological sourced feed of chip-policy events, and
-per-country deep-dive pages with an auto-generated analyst brief and downloadable PDF.
+**Status: all four phases built** -- composite index, choropleth map, radar/bar comparison view, a
+chronological sourced feed of chip-policy events, per-country deep-dive pages with an auto-generated
+analyst brief and downloadable PDF, and a live scenario-reweighting explorer.
 This repo's `briefs/` folder also holds three written analytic pieces produced alongside this dashboard:
 [`gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md) (this
 project's own companion brief), plus two pieces that belong to the MENASA Risk Monitor project instead --
@@ -171,6 +171,7 @@ pages/
   1_Country_Comparison.py           # Radar + bar comparison across all 6 factors
   2_Country_Deep_Dive.py            # Per-country auto-generated brief + timelines + PDF export
   3_Policy_Event_Tracker.py         # Chronological, sourced feed of chip-policy events
+  4_Scenario_Explorer.py            # Live reweighting of the methodology (never touches curated data)
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
@@ -275,7 +276,7 @@ gate before the scheduled World Bank refresh commits anything (`.github/workflow
 
 ## Roadmap
 
-See [`PROGRESS.md`](PROGRESS.md) for full detail. In brief:
+See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the original brief are built:
 
 - **Phase 1:** Composite index, choropleth, radar/bar comparison. ✅
 - **Phase 3:** Country deep-dive pages -- auto-generated brief, investment/compute timelines, downloadable
@@ -284,5 +285,18 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. In brief:
   Diffusion Rule's issuance and rescission, the Chip Security Act's introduction and committee markup, the
   Nov 2025 Saudi/UAE chip authorizations, the March 2026 smuggling indictments, the UAE's July 2026 Country
   Group upgrade). ✅
-- **Phase 4 (stretch):** Scenario toggle -- reweight the index live against a hypothetical tightening/
-  loosening of export controls. Deliberately not built -- see `PROGRESS.md` for why this one stays deprioritized.
+- **Phase 4:** Scenario Explorer -- live reweighting of the US Integration Depth sub-weights and the
+  US-vs-China axis balance, with 5 named presets each carrying a stated analytical rationale (mirrors the
+  MENASA Risk Monitor's own Scenario Explorer). Operates purely on `build_composite()`'s in-memory output;
+  never writes to `data/curated/*.csv`. ✅
+
+### How the Scenario Explorer stays honest
+
+`src/scoring.py`'s `build_composite()` takes optional weight-override parameters (`tier_weight`,
+`investment_weight`, `compute_weight`, `axis_balance`), all defaulting to the exact values used everywhere
+else in this tracker -- calling it with no arguments is guaranteed identical to the scored methodology
+(covered by a dedicated test). The Scenario Explorer page is the only caller that ever passes overrides.
+Presets are named, dated design choices with a stated rationale shown inline (e.g. "Export-control-centric"
+weights BIS status at 70% because an analyst might treat the regulatory label as stickier than capital
+commitments) -- not arbitrary slider positions, and never a claim that any one configuration is more
+"correct" than the scored default.

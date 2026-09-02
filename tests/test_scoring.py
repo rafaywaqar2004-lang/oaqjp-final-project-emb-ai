@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -121,3 +122,68 @@ class TestBuildComposite:
                 # only the tier factor was available -- the weighted average
                 # over one factor must equal that factor's own value exactly
                 assert row["us_integration_depth"] == pytest.approx(row["us_tier_score_100"])
+
+
+class TestScenarioOverrides:
+    """Covers the Scenario Explorer's override parameters (pages/4_Scenario_Explorer.py).
+    These must never touch data/curated/*.csv -- only change how the same
+    curated numbers are combined."""
+
+    def test_default_params_reproduce_baseline_exactly(self):
+        baseline = build_composite()
+        overridden = build_composite(
+            tier_weight=US_TIER_WEIGHT, investment_weight=US_INVESTMENT_WEIGHT,
+            compute_weight=US_COMPUTE_WEIGHT, axis_balance=0.5,
+        )
+        pd.testing.assert_frame_equal(baseline, overridden)
+
+    def test_weights_are_renormalized_not_required_to_sum_to_one(self):
+        """Scenario presets pass human-friendly numbers like 70/15/15, not
+        fractions that already sum to 1 -- the function must renormalize."""
+        df_raw = build_composite(tier_weight=70, investment_weight=15, compute_weight=15)
+        df_fraction = build_composite(tier_weight=0.70, investment_weight=0.15, compute_weight=0.15)
+        pd.testing.assert_series_equal(df_raw["us_integration_depth"], df_fraction["us_integration_depth"])
+
+    def test_tier_heavy_weighting_moves_scores_toward_tier_factor(self):
+        """A country whose tier score differs a lot from its investment/compute
+        scores should visibly shift when tier is weighted much more heavily."""
+        baseline = build_composite().set_index("country")
+        tier_heavy = build_composite(tier_weight=100, investment_weight=1, compute_weight=1).set_index("country")
+        # Saudi Arabia has real investment/compute data in the curated set, so
+        # its US Integration Depth composition actually changes under this reweighting.
+        assert not math.isclose(
+            baseline.loc["Saudi Arabia", "us_integration_depth"],
+            tier_heavy.loc["Saudi Arabia", "us_integration_depth"],
+            abs_tol=0.01,
+        )
+
+    def test_axis_balance_zero_ignores_us_integration(self):
+        """axis_balance=0 should make Net Alignment depend only on China
+        Exposure Depth (inverted, since higher China exposure still means
+        lower alignment): 50 - China Exposure Depth, clipped to [0, 100]."""
+        df = build_composite(axis_balance=0.0)
+        for _, row in df.iterrows():
+            if pd.notna(row["china_exposure_depth"]):
+                expected = max(0, min(100, 50 - row["china_exposure_depth"]))
+                assert row["net_alignment_score"] == pytest.approx(expected)
+
+    def test_axis_balance_one_ignores_china_exposure(self):
+        """axis_balance=1 should make Net Alignment depend only on US
+        Integration Depth: 50 + US Integration Depth, clipped to [0, 100]."""
+        df = build_composite(axis_balance=1.0)
+        for _, row in df.iterrows():
+            if pd.notna(row["us_integration_depth"]):
+                expected = max(0, min(100, 50 + row["us_integration_depth"]))
+                assert row["net_alignment_score"] == pytest.approx(expected)
+
+    def test_scenario_never_mutates_curated_csvs_on_disk(self, tmp_path):
+        """A regression guard: scenario overrides operate purely in memory on
+        DataFrames built fresh each call -- running one must not write
+        anything back to data/curated/."""
+        import os
+
+        curated_dir = Path(__file__).resolve().parents[1] / "data" / "curated"
+        before = {f: os.path.getmtime(curated_dir / f) for f in os.listdir(curated_dir)}
+        build_composite(tier_weight=99, investment_weight=1, compute_weight=1, axis_balance=0.1)
+        after = {f: os.path.getmtime(curated_dir / f) for f in os.listdir(curated_dir)}
+        assert before == after

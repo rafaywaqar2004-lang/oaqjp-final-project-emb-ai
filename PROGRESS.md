@@ -5,7 +5,28 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Latest session: everything from prior sessions was deployed and made publicly visible, and Phase 2 was
+**All four phases from the original brief are now built.** Phase 4 (Scenario Explorer) was added after
+being directly asked to re-evaluate it against Phase 2 on the merits, not by default -- the reconsideration
+that changed the earlier "skip it" call: MENASA's own Scenario Explorer (live sliders + named shock
+presets) is one of that project's headline features, and this tracker had nothing analogous; it's also a
+small lift given `scoring.py`'s weights were already isolated as named constants.
+
+- `src/scoring.py`'s `build_composite()` now takes optional overrides (`tier_weight`, `investment_weight`,
+  `compute_weight`, `axis_balance`), all defaulting to the exact scored values -- verified with a dedicated
+  test (`test_default_params_reproduce_baseline_exactly`) that calling it with no args is byte-for-byte
+  identical to before this change. `axis_balance` generalizes the previously-hardcoded 50/50 split in the
+  Net Alignment formula (`50 + (US - China) / 2`) into `50 + axis_balance*US - (1-axis_balance)*China`,
+  which reduces to the exact original formula at `axis_balance=0.5`.
+- `pages/4_Scenario_Explorer.py`: 3 sliders for the US Integration sub-weights (renormalized to sum to 100%
+  automatically, so presets can pass human-friendly numbers like 70/15/15 rather than pre-normalized
+  fractions), 1 slider for axis balance, 5 named presets each with a one-sentence stated rationale (not
+  arbitrary positions), and a scenario-vs-baseline grouped bar chart plus a "biggest movers" readout.
+- 6 new tests in `tests/test_scoring.py` (`TestScenarioOverrides`) cover: default-reproduces-baseline,
+  weight renormalization, a tier-heavy scenario actually moving a country with real investment/compute data,
+  both axis-balance extremes (0 and 1) reducing to the expected simplified formula, and a regression guard
+  that scenario overrides never write back to `data/curated/*.csv` (checked via file mtimes). 39 tests total.
+
+**Previous session: everything from prior sessions was deployed and made publicly visible, and Phase 2 was
 built.**
 
 - **Deployment/sharing (the "your side" items from prior sessions) are done**: the tracker is live at
@@ -130,8 +151,9 @@ dataset (14 historical-context entries for Pakistan alone, going back to 2013). 
 read access to that repo, so the brief's markdown source lives in this repo's `briefs/` folder with a note
 that it should move to the MENASA repo when convenient -- flagged again in "Open questions" below.
 
-**Not yet started:** Phase 4 (scenario reweighting toggle) only -- Phase 2 was built in the latest session
-(see "Where things stand" above). Phase 4 stays deliberately deprioritized; see "Sequencing decision" below.
+**Nothing from the original 4-phase brief remains unbuilt.** See "Where things stand" above for Phase 4
+(Scenario Explorer), built after being directly reconsidered -- "Sequencing decision" below still records
+the original reasoning for deprioritizing it, kept as a record of the judgment call and how it changed.
 
 ## Sequencing decision: why the written brief (and then Phase 3) came before Phase 2
 
@@ -165,6 +187,14 @@ rather than build order:
 - **Phase 4 (scenario reweighting toggle) is deprioritized, possibly permanently.** It's an interaction
   feature, not an analytic one -- wiring a slider to a recompute function doesn't demonstrate judgment the
   way the rest of this project does. Lowest priority; fine to skip if time is short.
+  - **Reversed in a later session** when directly asked "why is Phase 4 skipped, won't it make this
+    better" -- rather than just re-asserting the above, reconsidered on the merits: the MENASA Risk
+    Monitor's own Scenario Explorer (live sliders + named shock presets) is one of that project's headline
+    features, and this tracker had nothing analogous, which is a real inconsistency for anyone comparing
+    the two projects directly. Built it; see "Where things stand" above. The original reasoning wasn't
+    wrong exactly (it genuinely demonstrates less analytical judgment than the writing does), it was just
+    incomplete -- it didn't weigh the feature-parity argument or the fact that the underlying weights were
+    already isolated as named constants, making it a cheap addition, not a big one.
 - **Phase 2 (Policy Event Tracker) stays on the "build when a brief needs it" rule above** -- not
   reprioritized, just reaffirmed.
 - **Phase 3 (this session's work) turned out to be worth doing *before* Phase 2 after all**, once reframed:
@@ -307,12 +337,12 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
    its outlook section already sets the agenda: the Iran-Israel-US war's ceasefire durability, the Houthi-
    Saudi blockade's status, Turkey's risk trajectory (flagged but not analyzed in Issue No. 1), and Syria's
    investment-versus-risk-score divergence.
-7. **With all four originally-planned written pieces done, Phase 2 built, and everything deployed and
-   shared**, the next session's highest-value work is closing the confidence gaps (open question 2 above)
-   -- specifically the still-unverified export-control tier for Qatar, Bahrain, Kuwait, Oman, and Turkey,
-   which needs a session that can actually reach `bis.gov`. Phase 4 remains deliberately out of scope (see
-   "Sequencing decision" below). A fifth written piece is a reasonable option too, but depth on what already
-   exists is the stronger use of time at this point, not more breadth.
+7. **With all four originally-planned written pieces done, all 4 dashboard phases built, and everything
+   deployed and shared**, the tracker itself is feature-complete against its original brief. The next
+   session's highest-value work is closing the confidence gaps (open question 2 above) -- specifically the
+   still-unverified export-control tier for Qatar, Bahrain, Kuwait, Oman, and Turkey, which needs a session
+   that can actually reach `bis.gov`. A fifth written piece is a reasonable option too, but depth on what
+   already exists is the stronger use of time at this point, not more breadth.
 
 ## Environment note for whoever picks this up next
 

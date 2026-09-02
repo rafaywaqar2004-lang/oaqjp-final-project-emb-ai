@@ -93,7 +93,25 @@ def _aggregate_compute(deals: pd.DataFrame) -> pd.Series:
     return totals
 
 
-def build_composite() -> pd.DataFrame:
+def build_composite(
+    tier_weight: float = US_TIER_WEIGHT,
+    investment_weight: float = US_INVESTMENT_WEIGHT,
+    compute_weight: float = US_COMPUTE_WEIGHT,
+    axis_balance: float = 0.5,
+) -> pd.DataFrame:
+    """
+    tier_weight / investment_weight / compute_weight: relative weights within
+    US Integration Depth (renormalized to sum to 1 -- pass any positive
+    numbers, e.g. 40/30/30 or 70/15/15, not necessarily already summing to 1).
+    Defaults reproduce the scored methodology exactly.
+
+    axis_balance: how much Net Alignment Score weighs US Integration Depth
+    vs. China Exposure Depth, in [0, 1]. Default 0.5 reproduces the scored
+    formula (50 + (US - China) / 2) exactly. Used by the Scenario Explorer
+    (pages/4_Scenario_Explorer.py) to let a viewer ask "what if I weighted
+    China exposure more heavily than US integration" -- never changes the
+    underlying curated data, only how it's combined.
+    """
     curated = load_curated()
     wb = load_worldbank()
 
@@ -130,9 +148,9 @@ def build_composite() -> pd.DataFrame:
     # penalize a country -- it's just excluded, and we track how many
     # of the 3 factors were available for transparency.
     weights = {
-        "us_tier_score_100": US_TIER_WEIGHT,
-        "investment_score_100": US_INVESTMENT_WEIGHT,
-        "compute_score_100": US_COMPUTE_WEIGHT,
+        "us_tier_score_100": tier_weight,
+        "investment_score_100": investment_weight,
+        "compute_score_100": compute_weight,
     }
 
     def weighted_us_integration(row: pd.Series) -> tuple[float | None, int]:
@@ -151,7 +169,7 @@ def build_composite() -> pd.DataFrame:
 
     df["net_alignment_score"] = df.apply(
         lambda r: (
-            50 + (r["us_integration_depth"] - r["china_exposure_depth"]) / 2
+            50 + axis_balance * r["us_integration_depth"] - (1 - axis_balance) * r["china_exposure_depth"]
             if pd.notna(r["us_integration_depth"]) and pd.notna(r["china_exposure_depth"])
             else float("nan")
         ),
