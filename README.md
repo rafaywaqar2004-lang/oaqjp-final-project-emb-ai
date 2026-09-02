@@ -6,7 +6,12 @@ means for regional stability and Western strategic interests.
 
 **Status: Phase 1 (MVP) + Phase 3 (country deep-dives)** -- composite index, choropleth map, radar/bar
 comparison view, and per-country deep-dive pages with an auto-generated analyst brief and downloadable PDF.
-Also has a standalone written companion piece: [`briefs/gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md).
+This repo's `briefs/` folder also holds three written analytic pieces produced alongside this dashboard:
+[`gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md) (this
+project's own companion brief), plus two pieces that belong to the MENASA Risk Monitor project instead --
+[`sovereign-debt-and-political-instability.md`](briefs/sovereign-debt-and-political-instability.md) and
+[`mena-geopolitical-risk-brief-issue-01.md`](briefs/mena-geopolitical-risk-brief-issue-01.md) -- written here
+only because this was the session's one writable repo; see `PROGRESS.md` for why and where they should move.
 See [`PROGRESS.md`](PROGRESS.md) for what's built, what's next, and open questions for the project owner.
 
 ---

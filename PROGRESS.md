@@ -187,6 +187,29 @@ reader (or a future research pass) should hit first.
   decision #5) -- worth a quick sanity check that the custom renderer still looks right once viewed from an
   unrestricted environment, though nothing about it depends on that environment being restricted.
 
+**A fourth written product, the first of a series, is also done:**
+`briefs/mena-geopolitical-risk-brief-issue-01.md` -- Issue No. 1 of the "MENA Geopolitical Risk Brief Series"
+(the last remaining "Planned" written piece on the portfolio). Different shape from the other three briefs
+deliberately: a monthly digest format (regional snapshot stats, a risk-movers table, 3 spotlighted conflicts,
+a shorter "Also Watching" roundup, an outlook section that explicitly carries open questions into "Issue
+No. 2") rather than a single-topic analytic argument, because a recurring series and a one-off assessment
+are different products and shouldn't be forced into the same template. Published as a matching page:
+https://claude.ai/code/artifact/9203fd21-1872-464b-94cb-b72b3b9143a7 (also private by default).
+
+Grounded the same way as the sovereign-debt brief -- pulled from `rafaywaqar2004-lang/overeign-risk-index`,
+this time its `LIVE_CONFLICTS` list in `context_data.py` (13 tracked conflicts, each with real casualty/
+economic-impact figures and sources) plus `scored_data.csv` for the regional snapshot and risk-mover
+figures (computed fresh: regional average, score spread, and conflict-exposure share, none of which existed
+as a single number anywhere in the source repo -- these were derived directly from the raw per-country rows
+via a quick Python pass, then cited back to the underlying dataset). Scoped to the 20 MENA countries only
+(excluded the South Asia and Horn of Africa conflicts in the same dataset, noted explicitly rather than
+silently dropped, since the portfolio's own description names this series "MENA," not "MENASA").
+
+**With this, all four "Planned" written pieces originally listed on the portfolio are now written**
+(Gulf AI Ambitions, the sovereign-debt/political-instability brief, and this MENA series' first issue --
+plus the Gulf dashboard itself fulfilling the fifth "Planned" entry). The portfolio site itself still shows
+all of them as "Planned" until the project owner updates it -- see "Open questions" below, item 4.
+
 ## Open questions for the project owner
 
 1. **Should China Exposure Depth stay a single-factor axis, or is it worth the research time to add a
@@ -200,24 +223,30 @@ reader (or a future research pass) should hit first.
 3. Confirm the fixed normalization ceilings ($50bn / 6000MW) still feel right, or would you rather they be
    configurable/documented differently (e.g. tied to a specific benchmark like "2x the current leader"
    instead of a static number)?
-4. **Four things only you can do, blocking visibility of what's already built:** share both brief artifacts
-   publicly (both currently private -- Gulf brief: https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20,
-   sovereign-debt brief: https://claude.ai/code/artifact/8908bad9-96cc-48e4-8aa1-752d37f7968d), deploy the
-   tracker to Render, and update the portfolio site's three now-complete project cards ("Gulf States Vision
-   2030 & AI Investment Tracker," "Gulf AI Ambitions and Geopolitical Risk," and "Policy Brief -- Sovereign
-   Debt and Political Instability" -- all three currently show as "Planned"). This session only has read
-   access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you grant push access or
-   paste in the copy/links yourself.
-5. **Move `briefs/sovereign-debt-and-political-instability.md` into the actual MENASA Risk Monitor repo**
-   (`rafaywaqar2004-lang/overeign-risk-index`) once you have push access available in a session -- it lives
-   in this repo only because that's the one this session could write to. Worth adding a matching `briefs/`
-   folder there so future written pieces about that project live alongside it, the way this repo's `briefs/`
-   folder works for the Gulf tracker.
-6. **Next content decision**: with the sovereign-debt brief done, the remaining "Planned" written piece on
-   the portfolio is the monthly MENA Geopolitical Risk Brief Series. Worth deciding whether to start that
-   series next, or whether three standalone analytic briefs plus two dashboards is enough breadth for now
-   and the next session's time is better spent closing the confidence gaps (open question 2) or building
-   Phase 2 if a specific need for the policy timeline comes up.
+4. **Five things only you can do, blocking visibility of what's already built:** share all three brief
+   artifacts publicly (all currently private -- Gulf brief: https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20,
+   sovereign-debt brief: https://claude.ai/code/artifact/8908bad9-96cc-48e4-8aa1-752d37f7968d, MENA Issue No. 1:
+   https://claude.ai/code/artifact/9203fd21-1872-464b-94cb-b72b3b9143a7), deploy the tracker to Render, and
+   update the portfolio site's four now-complete project cards ("Gulf States Vision 2030 & AI Investment
+   Tracker," "Gulf AI Ambitions and Geopolitical Risk," "Policy Brief -- Sovereign Debt and Political
+   Instability," and "MENA Geopolitical Risk Brief Series" -- all four currently show as "Planned"). This
+   session only has read access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you
+   grant push access or paste in the copy/links yourself.
+5. **Move both South-Asia/MENA briefs into the actual MENASA Risk Monitor repo**
+   (`rafaywaqar2004-lang/overeign-risk-index`) once you have push access available in a session --
+   `briefs/sovereign-debt-and-political-instability.md` and `briefs/mena-geopolitical-risk-brief-issue-01.md`
+   both live in this repo only because that's the one this session could write to. Worth adding a matching
+   `briefs/` folder there so future written pieces about that project (including Issue No. 2 of the MENA
+   series) live alongside it, the way this repo's `briefs/` folder works for the Gulf tracker.
+6. **Issue No. 2 of the MENA series** needs an actual month to pass with new developments before it's worth
+   writing -- it's a monthly series, not something to produce back-to-back with Issue No. 1. When it's time,
+   its outlook section already sets the agenda: the Iran-Israel-US war's ceasefire durability, the Houthi-
+   Saudi blockade's status, Turkey's risk trajectory (flagged but not analyzed in Issue No. 1), and Syria's
+   investment-versus-risk-score divergence.
+7. **With all four originally-planned written pieces now done**, the next session's time is probably better
+   spent closing the confidence gaps (open question 2 above) than starting further new content -- worth
+   deciding whether more breadth (a fifth brief, a topic not yet on the portfolio) or more depth (fixing the
+   `Low`-confidence rows, actually deploying what's built) is the better use of the next block of time.
 
 ## Environment note for whoever picks this up next
 
