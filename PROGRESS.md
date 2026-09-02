@@ -5,6 +5,32 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
+**Latest session: a dedicated confidence-gap research pass**, per the "depth over breadth" call at the end
+of the prior session (all four planned written pieces were already done -- see below). Results:
+- **Upgraded:** Turkey's governance-maturity score (Low -> Medium confidence, fresh 2026 sourcing: an
+  active "Turkiye 2026 AI Strategy" leveraging TUBITAK BILGEM/ASELSAN, concrete 2030 targets, a TBMM AI
+  Research Commission report due late 2026) -- score itself moved 2 -> 3. Saudi Arabia's Chinese-tech-
+  penetration score (Low -> Medium confidence, fresh STC-Huawei sourcing: SuperLink Nov 2024, Saudi
+  Arabia's first Full Duplex deployment 2026) -- score unchanged at 3, but now properly evidenced as a
+  three-vendor (Nokia/Huawei/Ericsson) picture with Huawei leading advanced-feature rollouts specifically.
+- **Corrected, not just upgraded:** Bahrain's Chinese-tech-penetration score actually changed (3 -> 2) once
+  a Bahrain-specific source (AGBI, on Batelco) showed the current deployed 5G vendor is Ericsson, with
+  Huawei only in early-stage, unconfirmed 6G talks -- the prior score rested on a regional-only citation
+  that didn't actually establish Bahrain's current vendor. This moved Bahrain's Net Alignment Score from
+  40 to 50. **This is the kind of thing a "close the confidence gaps" pass is supposed to catch** -- a
+  score that was wrong, not just under-sourced.
+- **Still unresolved, and now explicitly documented as such:** Qatar, Bahrain, Kuwait, and Oman's
+  export-control tier, and Turkey's export-control tier, remain `Low` confidence. A follow-up attempt to
+  check BIS's own Country Group table directly (`bis.gov`, `beta.bis.gov`) hit `EGRESS_BLOCKED` from this
+  session's network policy -- same class of restriction that blocked `api.worldbank.org` and `cdn.plot.ly`
+  in the original build session (see "Environment note" below). Each affected row's rationale now states
+  this explicitly (what's confirmed -- the UAE's own D:3/D:4 removal, corroborated by multiple law-firm
+  sources -- versus what's inferred -- the other four Gulf states plausibly remaining in that same
+  pre-upgrade bucket -- versus what's simply unverified this session) rather than leaving a vague "Low
+  confidence" label with no explanation of what was tried. **Next session with unrestricted network
+  access should check BIS's Interactive Country Groups tool directly** -- that's the one concrete
+  unblocking step left on this front.
+
 **Phase 1 (MVP) is built and working end-to-end**, tested in a network-restricted sandbox:
 - Composite index (`src/scoring.py`) computing US Integration Depth, China Exposure Depth, and a derived
   Net Alignment Score for all 8 countries.
@@ -216,10 +242,12 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
    second China-tie factor** (e.g. disclosed Chinese AI model deployments, CPEC/BRI-style digital
    financing) before Phase 2? Flagged as a known limitation in the README; not blocking, but worth a
    decision before this is shown to anyone who'd press on it.
-2. **The `Low`-confidence rows above are the biggest credibility risk in the current build.** Worth a
-   dedicated research pass on Qatar/Bahrain/Kuwait/Oman's export-control status and Turkey's current AI
-   governance apparatus before presenting this project, or worth flagging live as "known gap, actively
-   being researched" if shown sooner.
+2. **Partially resolved this session** -- see "Where things stand" above. Turkey's governance score and
+   Saudi Arabia's China-penetration score are now `Medium` confidence with fresh sources; Bahrain's
+   China-penetration score was corrected outright. **Still open:** Qatar/Bahrain/Kuwait/Oman's and Turkey's
+   export-control tier remain `Low` confidence, blocked on checking BIS's own Country Group table (network
+   access to `bis.gov` was blocked in this session -- worth trying again in an unrestricted environment
+   before presenting this project to a critical reader).
 3. Confirm the fixed normalization ceilings ($50bn / 6000MW) still feel right, or would you rather they be
    configurable/documented differently (e.g. tied to a specific benchmark like "2x the current leader"
    instead of a static number)?

@@ -229,13 +229,18 @@ PYTHONPATH=src python src/scoring.py
   penetration (Huawei). A stronger version would add a second, independent China-tie factor (e.g.
   disclosed Chinese AI model deployments, BRI/CPEC-style financing tied to digital infrastructure) if and
   when that data becomes available with the same sourcing bar as the rest of this project.
-- **Several curated scores are `Low` confidence and flagged for follow-up**, specifically: Qatar, Bahrain,
-  Kuwait, and Oman's export-control tier (no BIS rule or entity authorization was found for any of them in
-  this research pass -- scored via analyst judgment, not a documented designation); Turkey's export-control
-  tier and governance-maturity score (a fresh 2025/2026 source was not located this session); Saudi Arabia's
-  and Bahrain's Chinese-tech-penetration score (regional-level sourcing, not country-specific this pass).
-  See the `confidence` and `rationale` columns in `data/curated/*.csv` for exactly which rows need a fresh
-  source before this project is presented to a critical reader.
+- **A dedicated follow-up research pass closed some, not all, of the original `Low`-confidence gaps.**
+  Turkey's governance-maturity score and Saudi Arabia's Chinese-tech-penetration score were upgraded to
+  `Medium` confidence with fresh, country-specific 2025/2026 sources. Bahrain's Chinese-tech-penetration
+  score was corrected (down from 3 to 2) once a Bahrain-specific source showed its current 5G vendor is
+  Ericsson, with Huawei only in early-stage 6G talks -- a case of better sourcing changing the actual score,
+  not just the confidence label. **Qatar, Bahrain, Kuwait, and Oman's export-control tier remains `Low`
+  confidence** -- a follow-up attempt to check BIS's own Country Group table directly (`bis.gov`,
+  `beta.bis.gov`) was blocked by this session's network policy (`EGRESS_BLOCKED`), not resolved either way.
+  The working inference (documented in each row's rationale) is that these four most likely remain in the
+  same Country Group D:3/D:4 bucket the UAE was confirmed removed from in July 2026, but this is not
+  independently verified. Turkey's export-control tier is likewise still `Low` confidence. See the
+  `confidence` and `rationale` columns in `data/curated/*.csv` for the current state of every row.
 - **Investment and compute figures are undercounts, by design.** Only deals this research could attribute
   to a specific country with a specific dollar/MW figure and a citable source are scored. Qatar, Bahrain,
   Kuwait, Oman, Pakistan, and Turkey show `N/A` on these two factors not because nothing is happening, but
