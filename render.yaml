@@ -3,7 +3,7 @@ services:
     name: gulf-ai-tech-bloc-tracker
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python patch_analytics.py
     startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
     envVars:
       - key: PYTHON_VERSION

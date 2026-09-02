@@ -278,6 +278,17 @@ consistent `footer()` every page calls at the bottom. This exists because the un
 Streamlit chrome were, before this pass, visually indistinguishable from an unstyled homework submission --
 see PROGRESS.md for the before/after reasoning.
 
+### Traffic analytics (Google Analytics 4)
+
+Streamlit is a client-rendered single-page app with no `<head>` a running script can reach, so a normal
+`st.markdown`/GA snippet gets sandboxed in an iframe and never fires a real pageview. `patch_analytics.py`
+patches Streamlit's own shipped `index.html` directly (adds the GA4 script tag and a real page title) as a
+Render build step, right after `pip install` -- the same technique already proven in the companion MENASA
+Risk Monitor's `patch_og_tags.py`. Reuses MENASA's GA4 property (`G-QP9RPS41KJ`) rather than a separate one,
+so this tracker's traffic shows up alongside the portfolio's and MENASA's in one place. Wired into
+`render.yaml`'s `buildCommand`; nothing to configure locally (`streamlit run app.py` skips the patch, which
+only matters for the deployed site).
+
 ## Running locally
 
 ```bash
