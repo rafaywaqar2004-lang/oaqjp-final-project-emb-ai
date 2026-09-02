@@ -42,6 +42,8 @@ def build_choropleth_figure(
     context_color: str = "#eeede6",
     context_line_color: str = "#c3c0b3",
     colorbar_title: str = "0=China-leaning<br>100=US-integrated",
+    city_markers: list[dict] | None = None,
+    hub_markers: list[dict] | None = None,
 ) -> go.Figure:
     """
     geojson: FeatureCollection with each feature's `id` matching the keys of `scores`/`hover_text`.
@@ -50,6 +52,10 @@ def build_choropleth_figure(
     context_ids: feature ids rendered as muted geographic context (e.g. neighboring countries not
         tracked by this index at all) rather than "tracked but missing data" -- a lighter fill and a
         softer border than `missing_color`, so a reader doesn't read them as data gaps.
+    city_markers: optional list of {lat, lon, name, hover} dicts -- small reference dots + labels for
+        geographic orientation (e.g. each country's major city). Drawn under hub_markers.
+    hub_markers: optional list of {lat, lon, name, hover} dicts -- distinct-symbol markers for specific,
+        cited AI/compute/telecom infrastructure sites (see data/curated/ai_hubs.csv). Drawn on top.
     """
     lo, hi = value_range
     fig = go.Figure()
@@ -81,6 +87,37 @@ def build_choropleth_figure(
                     showlegend=False,
                 )
             )
+
+    if city_markers:
+        fig.add_trace(
+            go.Scatter(
+                x=[m["lon"] for m in city_markers],
+                y=[m["lat"] for m in city_markers],
+                mode="markers+text",
+                text=[m["name"] for m in city_markers],
+                textposition="bottom center",
+                textfont=dict(size=9, color="#4a4a45"),
+                marker=dict(size=5, color="#4a4a45", symbol="circle", line=dict(width=0.5, color="white")),
+                hoverinfo="text",
+                hovertext=[m.get("hover", m["name"]) for m in city_markers],
+                name="Major cities",
+                showlegend=False,
+            )
+        )
+
+    if hub_markers:
+        fig.add_trace(
+            go.Scatter(
+                x=[m["lon"] for m in hub_markers],
+                y=[m["lat"] for m in hub_markers],
+                mode="markers",
+                marker=dict(size=11, color="#397A5B", symbol="star", line=dict(width=1, color="white")),
+                hoverinfo="text",
+                hovertext=[m.get("hover", m["name"]) for m in hub_markers],
+                name="AI / compute hubs",
+                showlegend=False,
+            )
+        )
 
     # Invisible marker trace purely to render a shared colorbar legend.
     fig.add_trace(

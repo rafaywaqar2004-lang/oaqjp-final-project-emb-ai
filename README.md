@@ -207,6 +207,7 @@ ties score instead reflects the mainstream-reported, still-unresolved Huawei/iFl
 | Non-oil diversification proxy, FDI net inflows | **Live, automated** | Weekly (GitHub Actions, Mondays) | World Bank API v2, `src/data_pipeline/fetch_worldbank.py` → `data/worldbank/` |
 | US export-control tier, Chinese telecom penetration, Chinese AI/cloud/digital ties, AI governance maturity | **Manually curated** | Ad hoc, as bilateral deals/policy events are disclosed | `data/curated/*.csv`, one row per country with `source_name`, `source_url`, `confidence`, `as_of_date`, `rationale` |
 | AI investment deals, compute-capacity deals | **Manually curated**, long-format (one row per deal) | Ad hoc | `data/curated/ai_investment_deals.csv`, `data/curated/compute_capacity_deals.csv` |
+| Map reference layers: major cities, named AI/compute hub sites | **Manually curated** (map display only, not scored) | Ad hoc | `data/curated/major_cities.csv`, `data/curated/ai_hubs.csv` |
 
 **The manually curated layer is never touched by the scheduled GitHub Actions refresh.** Only
 `data/worldbank/` and the recomputed `data/computed/composite_scores.csv` are auto-committed. Updating a
@@ -250,6 +251,8 @@ src/
 data/
   curated/                          # Manually researched, cited, dated
     policy_events.csv               # The Policy Event Tracker's sourced event record
+    major_cities.csv                # Map reference layer: one city per country, geographic orientation only
+    ai_hubs.csv                     # Map reference layer: named, cited AI/compute/telecom infrastructure sites
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -438,6 +441,20 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   switches between Net Alignment, US Integration Depth, China Exposure Depth, Chinese Telecom Penetration,
   Chinese AI/Cloud/Digital Ties, disclosed AI Investment, disclosed Compute Capacity, and AI Governance
   Maturity, each with its own color scale and colorbar label.
+- **Overview map gained two optional marker layers, both toggleable and on by default:**
+  - **Major cities** (`data/curated/major_cities.csv`) -- one reference dot per tracked country, for
+    geographic orientation. Deliberately framed as "major city," never "capital," to sidestep disputed
+    political-status questions: Israel is labeled with Tel Aviv (its tech/financial hub) rather than the
+    internationally disputed designation of Jerusalem, and Yemen is labeled with Sana'a as the
+    constitutional capital, independent of which government currently controls it.
+  - **AI / compute hubs** (`data/curated/ai_hubs.csv`) -- 9 specific, named infrastructure sites (NEOM;
+    Ashdod, Mevo Carmel, and Kiryat Tivon in Israel; Cairo/Maadi Technology Park; Baghdad; the Al-Risha gas
+    field in eastern Jordan; Tartus, Syria; and Istanbul), each geocoded from a site name **already
+    explicitly named** in this project's existing sourced deal data (`ai_investment_deals.csv`,
+    `compute_capacity_deals.csv`, or `chinese_digital_ties.csv`'s rationale) -- never inferred from a
+    company's headquarters or an announcement venue. Hovering a star shows the deal, its scale, and its
+    source. Jordan's marker is explicitly flagged as an approximate regional location, not a precise site
+    coordinate, since only the gas field's general area (not exact coordinates) is disclosed in reporting.
 - **China Exposure Depth gained a second factor** -- Chinese AI/cloud/digital-infrastructure ties, scored
   0-5 and blended 50/50 with the existing telecom-penetration factor via the same renormalizing
   weighted-average pattern already used for US Integration Depth. Closes the project's longest-standing

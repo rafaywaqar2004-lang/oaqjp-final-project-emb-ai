@@ -2,7 +2,7 @@
 Regional Dashboard -- the flagship page. Companion piece to the MENASA Risk
 Monitor: tracks how Gulf states, plus a wider set of non-Gulf regional
 states and comparators, are navigating the US-China AI/chip competition, via
-a Net Alignment Score built from 6 factors. See README.md for full
+a Net Alignment Score built from 7 factors. See README.md for full
 methodology and country-set history.
 """
 
@@ -22,6 +22,7 @@ from ui import inject_base_css, page_header, bottom_line, kpi_card, kpi_row, foo
 from constants import GULF_COUNTRIES, COMPARATOR_COUNTRIES  # noqa: E402
 
 GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "region_countries.geojson"
+CURATED_DIR = Path(__file__).resolve().parents[1] / "data" / "curated"
 
 
 def country_tag(country: str) -> str:
@@ -41,6 +42,44 @@ def load_data() -> pd.DataFrame:
 def load_geojson() -> dict:
     with open(GEOJSON_PATH) as f:
         return json.load(f)
+
+
+@st.cache_data(ttl=3600)
+def load_major_cities() -> pd.DataFrame:
+    return pd.read_csv(CURATED_DIR / "major_cities.csv")
+
+
+@st.cache_data(ttl=3600)
+def load_ai_hubs() -> pd.DataFrame:
+    return pd.read_csv(CURATED_DIR / "ai_hubs.csv")
+
+
+def _city_markers(cities: pd.DataFrame) -> list[dict]:
+    return [
+        {
+            "lat": row["lat"],
+            "lon": row["lon"],
+            "name": row["city_name"],
+            "hover": f"<b>{row['city_name']}</b> ({row['country']})<br>{row['notes']}",
+        }
+        for _, row in cities.iterrows()
+    ]
+
+
+def _hub_markers(hubs: pd.DataFrame) -> list[dict]:
+    markers = []
+    for _, row in hubs.iterrows():
+        precision_note = "<br><i>Approximate location, not a precise site coordinate</i>" if row["location_precision"] == "approximate" else ""
+        markers.append({
+            "lat": row["lat"],
+            "lon": row["lon"],
+            "name": row["hub_name"],
+            "hover": (
+                f"<b>{row['hub_name']}</b> ({row['country']})<br>{row['label']}<br>{row['amount_label']}"
+                f"<br>Source: {row['source_name']}{precision_note}"
+            ),
+        })
+    return markers
 
 
 def alignment_label(score: float) -> str:
@@ -140,8 +179,9 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
   blocs can score near the middle for the same reason as a state doing little on either front -- read the two
   sub-scores together, not the headline number alone (see the positioning chart below).
 - **US Integration Depth** blends 3 factors (US export-control access tier, disclosed in-country AI investment,
-  disclosed compute/data-center capacity). **China Exposure Depth** currently rests on a single factor (Chinese tech
-  penetration, chiefly Huawei's telecom footprint) -- a documented limitation, not an oversight.
+  disclosed compute/data-center capacity). **China Exposure Depth** blends 2 factors (Chinese telecom-vendor
+  penetration -- chiefly Huawei's footprint -- and Chinese AI/cloud/digital-infrastructure ties), weighted
+  50/50. See the Scenario Lab to test sensitivity to that weighting.
 - Two more factors -- **AI governance maturity** and **non-oil economic diversification** -- are shown as context and
   are *not* folded into the alignment score, since a mature AI regulator or a diversified economy doesn't inherently
   mean pro-US or pro-China.
@@ -218,7 +258,10 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         "Compute Capacity (MW, scored deals)": dict(col="compute_mw", range=(0, max(1.0, df["compute_mw"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="MW", cb="Compute capacity (MW)"),
         "AI Governance Maturity (0-5)": dict(col="governance_raw", range=(0, 5), colorscale=["#f0e6c8", GOLD], unit="/5", cb="Governance maturity (0-5)"),
     }
-    metric_name = st.selectbox("Metric", options=list(MAP_METRICS.keys()))
+    map_col1, map_col2, map_col3 = st.columns([2, 1, 1])
+    metric_name = map_col1.selectbox("Metric", options=list(MAP_METRICS.keys()))
+    show_cities = map_col2.checkbox("Major cities", value=True)
+    show_hubs = map_col3.checkbox("AI / compute hubs", value=True)
     metric = MAP_METRICS[metric_name]
     metric_col = metric["col"]
 
@@ -249,9 +292,27 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         value_range=metric["range"],
         context_ids=context_ids,
         colorbar_title=metric["cb"],
+        city_markers=_city_markers(load_major_cities()) if show_cities else None,
+        hub_markers=_hub_markers(load_ai_hubs()) if show_hubs else None,
     )
     fig.update_layout(height=560)
     st.plotly_chart(fig, use_container_width=True)
+    if show_cities:
+        st.caption(
+            "**Major cities** are shown for geographic orientation only -- each country's largest city or "
+            "primary economic/tech hub, not a statement on political capital status. Israel is labeled with "
+            "Tel Aviv (its tech/financial center) rather than the disputed designation of Jerusalem; Yemen is "
+            "labeled with Sana'a as the constitutional capital, independent of which government currently "
+            "controls it."
+        )
+    if show_hubs:
+        st.caption(
+            "★ **AI / compute hubs** mark specific, named sites tied to a disclosed deal already cited in "
+            "this tracker's curated data (`data/curated/ai_hubs.csv`) -- hover a star for the deal, its scale, "
+            "and its source. This is not an exhaustive map of every data center in the region, only the ones "
+            "with a specific, sourced site name. Jordan's marker (Al-Risha gas field) is flagged as an "
+            "approximate regional location, not a precise site coordinate."
+        )
     if metric_col in ("investment_usd_bn", "compute_mw"):
         st.caption(
             f"Only deals counted in the score are shown (see Methodology) -- gray/darker-gray countries may "
