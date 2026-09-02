@@ -107,7 +107,7 @@ def build_composite(
 
     axis_balance: how much Net Alignment Score weighs US Integration Depth
     vs. China Exposure Depth, in [0, 1]. Default 0.5 reproduces the scored
-    formula (50 + (US - China) / 2) exactly. Used by the Scenario Explorer
+    formula (50 + (US - China) / 2) exactly. Used by the Scenario Lab
     (pages/4_Scenario_Explorer.py) to let a viewer ask "what if I weighted
     China exposure more heavily than US integration" -- never changes the
     underlying curated data, only how it's combined.

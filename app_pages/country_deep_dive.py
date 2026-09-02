@@ -18,7 +18,6 @@ from pdf_export import build_country_pdf  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, confidence_pill, footer  # noqa: E402
 
-st.set_page_config(page_title="Country Deep Dive | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 
 def esc(text) -> str:

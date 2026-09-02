@@ -5,7 +5,104 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: four "quick win" polish items, asked for directly after a project/site rating
+**Most recent session: a scoped subset of a 56-section "master upgrade brief"** the project owner pasted
+(sourced from an outside consultant's advice), aimed at turning the tracker into a CSIS/CFR/PIIE-style
+professional geopolitical-intelligence product rather than a "Streamlit demo." The brief itself says to
+implement in phases, not all at once, and names its own top 3 highest-value items -- this session did
+exactly those three, plus the foundational design-system work they depend on, and explicitly declined
+several other sections rather than build them dishonestly. Full reasoning below; see the brief's own
+sections (numbered) referenced throughout.
+
+**The one hard blocker, flagged before writing any code:** sections on Score Momentum, historical trend
+charts, and a 12-Month Outlook all require comparing a country's score against a *past* snapshot. This
+tracker stores exactly one point-in-time value per country -- no `scored_history.csv` equivalent exists
+(unlike MENASA, which has one). Building those sections honestly would mean every single cell reads
+"Insufficient data," per the brief's own rule ("never calculate momentum when there is insufficient
+historical data"). Rather than fabricate a trend, or build a UI for data that doesn't exist yet, this
+session skipped them entirely -- flagged as the top honest follow-up (see Open Questions).
+
+**What was built, in the order the brief itself prioritized:**
+
+1. **Design tokens (Section 4-7).** `.streamlit/config.toml` and `src/ui.py` adopted the brief's exact
+   palette (`#F5F4EF` paper, `#17202A` ink, `#2463A5` blue = US integration, `#B5473A` red = China exposure,
+   `#A77B20` gold = caution/uncertainty, `#397A5B` green = confirmed, `#6B7280` gray = neutral/unavailable)
+   -- deliberately *not* "blue = good, red = bad," per the brief's own explicit instruction. `src/ui.py`
+   gained `page_header()` (title + subtitle + right-aligned mono metadata, e.g. "17 COUNTRIES", "DATA AS OF:
+   SEPTEMBER 2026"), `bottom_line()`, and `evidence_card()` components alongside the existing KPI cards and
+   confidence pills.
+2. **Navigation restructure (Section 6-7).** Migrated off Streamlit's classic `pages/` folder onto
+   `st.navigation()` with grouped sections (Overview / Country Intelligence / Policy Monitor / Forecasting /
+   Research), matching the brief's proposed IA. This is a real structural change, not cosmetic: `app.py`
+   is now a ~25-line router (`st.set_page_config()` + `st.navigation({...}).run()`), and every page's actual
+   content moved into a new `app_pages/` folder (`pages/` was a magic auto-discovered folder under the old
+   system and had to be vacated to avoid Streamlit rendering both navigation systems at once). This also
+   fixes a long-standing known issue flagged in earlier sessions: the sidebar's top entry no longer reads
+   the literal, un-styled word "app" -- it now reads "Regional Dashboard" under an "Overview" heading, same
+   fix work previously deferred as "needs `st.navigation()` migration, bigger than a quick pass."
+3. **US-vs-China positioning scatterplot (Section 11)**, the brief's #1-ranked highest-value item -- added
+   to the renamed "Regional Dashboard" (formerly the Overview page). X = China Exposure Depth, Y = US
+   Integration Depth, quadrant divider lines at 50/50, quadrant labels ("Strategic hedgers," "US-oriented,"
+   etc.), hover tooltips with the full score breakdown. **Caught and fixed a real bug during verification**:
+   the first draft had the top-left/bottom-right quadrant labels swapped (mixed up which corner is
+   low-China/high-US vs. high-China/low-US) -- caught by actually reading the rendered screenshot against
+   the axis definitions, not just trusting the code. Also switched from permanent on-chart country-name
+   labels to hover-only once 17 overlapping labels turned out to be unreadable in practice (with a
+   collapsed data table underneath as a non-hover fallback for a reader who wants exact values without
+   hovering each point).
+4. **Evidence -> Model Impact chain (Section 15-17)**, the brief's #2-ranked item -- every Policy Event
+   Tracker card now has a "Model impact & source" expander showing which of this tracker's scoring
+   components the event connects to (currently always US export-control tier -- every event in this
+   8-event dataset is chip/export-policy news) and the tagged countries' *current* scored tier with
+   confidence. **Deliberately does not show a fabricated numeric delta** ("+6.2" style, as the brief's own
+   example shows) -- there is no pre-event historical score to compute a real one from, and the brief
+   itself says to show "qualitative relevance" instead of inventing a number in exactly this situation.
+   `_affected_countries()` parses the curated `policy_events.csv`'s free-text `countries` column against
+   the tracked-country list, handling the "Global (incl. all N tracked countries)" case explicitly.
+5. **Model Robustness / Rank Stability (Section 23)**, the brief's #3-ranked item -- added to the renamed
+   "Scenario Lab" (formerly "Scenario Explorer," per Section 21). Samples 150 random-but-valid weight
+   configurations (documented fixed seed, uniform draws across each slider's actual valid range) and
+   reruns the exact same `build_composite()` used everywhere else in this tracker for each one, reporting
+   median/best/worst rank and a rank-range-based robustness label (HIGH/MODERATE/LOW) per country.
+   Deliberately labeled **"scenario/rank stability," never "statistical significance" or "confidence
+   interval"** -- per the brief's own explicit warning against overclaiming what a sensitivity sweep can
+   support. Gated behind a button (initial version auto-ran on every page load at 300 samples and took
+   ~6 seconds; reduced to 150 samples and made opt-in after measuring the actual cost, not guessing at it).
+   Also fixed the "top-3 frequency" framing bug this design invites: a country that reliably ranks *last*
+   regardless of weighting is exactly as rank-*stable* as one that reliably ranks first, so robustness is
+   computed from rank-range width, not proximity to the top -- documented inline so a reader doesn't
+   mistake "0% top-3" for "unstable."
+
+**Verification, not just writing the code:** ran the full pytest suite before and after (48 -> 68 tests,
+20 new: rank-range consistency and reproducibility for the robustness sampler, `_affected_countries()`
+resolution against real `policy_events.csv` rows including the "Global" special case, and the bottom-line
+generator's behavior on both the real dataset and an empty edge case). Booted the restructured app with a
+local Streamlit server and screenshotted every single page via Playwright -- this is what caught the
+quadrant-label swap in item 3 above; reading the rendered output, not just the code, is what found it.
+
+**Deliberately not built, and why (the brief itself asks for this list rather than a bare "10/10" claim):**
+
+- **Score Momentum, historical trend charts, 12-Month Outlook, "What Changed" deltas (Sections 10, 18, 24-25)**
+  -- blocked on the no-historical-data problem above. The honest fix is capturing a dated snapshot of
+  `data/computed/composite_scores.csv` going forward (a small addition to the existing `src/scoring.py`
+  `__main__` block) so this becomes buildable in a few months, not fabricating a trend today.
+- **Investor / Policymaker / Corporate view tabs, Strategic Investment Risk page (Sections 26-27)** -- real
+  scope-creep and overclaiming risk: this tracker's data supports a technology-alignment assessment, not
+  financial risk scoring or investment recommendations, and dressing the same 6 factors up as "financial
+  risk dimensions" without new, defensibly-sourced data would be exactly the kind of unsupported-precision
+  problem the brief itself warns against in Section 30 ("every variable must have... a defensible
+  definition... If those conditions cannot be met, retain the existing variable").
+- **Separate "Sources & Data" page (Section 28)** distinct from the existing Methodology page -- the
+  existing single Methodology page already covers this content; splitting it was judged to add navigation
+  complexity without adding real information, not skipped from laziness.
+- **PDF export redesign, "Research Brief" per-country export upgrade (Sections 36-37)** -- the existing
+  PDF export (via `reportlab`, see `src/pdf_export.py`) already works and is already reasonably clean;
+  a redesign pass wasn't part of the top-3-prioritized scope and wasn't requested beyond the original brief.
+- **Full emoji/decorative-noise purge across every remaining page** (Section 49) -- the four
+  brief-implementation items above got the new design language; the Country Deep Dive and Policy Event
+  Tracker pages' pre-existing emoji category icons were left as-is rather than doing a cosmetic-only sweep
+  unrelated to the four functional items actually requested.
+
+**Before that, four "quick win" polish items, asked for directly after a project/site rating
 request.** Prompted by an honest rating exchange (content 9/10, technical 8/10, visual design 7/10 up from
 an earlier 3/10, but with the Render free-tier cold start flagged as the single biggest remaining risk to a
 recruiter's first impression) -- the project owner asked for suggestions, then said "yep" to doing the four
@@ -515,6 +612,13 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
    still-unverified export-control tier for Qatar, Bahrain, Kuwait, Oman, and Turkey, which needs a session
    that can actually reach `bis.gov`. A fifth written piece is a reasonable option too, but depth on what
    already exists is the stronger use of time at this point, not more breadth.
+8. **Start capturing dated score snapshots** (a small addition to `src/scoring.py`'s `__main__` block: on
+   each refresh, append the current `data/computed/composite_scores.csv` output to a
+   `data/computed/composite_scores_history.csv`, dated, alongside the existing overwrite-in-place file) so
+   that Score Momentum, historical trend charts, and a real 12-Month Outlook -- all explicitly scoped out of
+   this session's redesign work for lack of any historical data to compute them from -- become buildable
+   honestly in a few months rather than staying permanently blocked. Low effort, no risk, purely additive;
+   just wasn't in scope for a session that was implementing a specific, already-large prioritized brief.
 
 ## Environment note for whoever picks this up next
 

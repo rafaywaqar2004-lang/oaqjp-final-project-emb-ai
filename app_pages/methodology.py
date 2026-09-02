@@ -15,7 +15,6 @@ from constants import CURATED_DIR  # noqa: E402
 from scoring import COMPUTE_CEILING_MW, INVESTMENT_CEILING_USD_BN  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
-st.set_page_config(page_title="Methodology | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 
 def main() -> None:
@@ -39,7 +38,7 @@ built in two layers:
    limitation, not an oversight (see below).
 3. **Net Alignment Score** (0-100, 50 = neutral), *derived*: `50 + (US Integration Depth − China Exposure Depth) / 2`.
    **50 does not mean "inactive"** — a country maxing out both axes and a country doing little on either
-   can both land near 50. Try the **Scenario Explorer** page to see how sensitive this reading is to how
+   can both land near 50. Try the **Scenario Lab** page to see how sensitive this reading is to how
    the two axes are weighted against each other.
         """
     )

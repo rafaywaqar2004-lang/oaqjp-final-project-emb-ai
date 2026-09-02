@@ -202,20 +202,21 @@ visible for context, excluded from the number, so ambition is never silently cou
 ## Repository structure
 
 ```
-app.py                              # Streamlit entry point (Overview: index, map, ranking)
-pages/
-  1_Country_Comparison.py           # Radar + bar comparison across all 6 factors
-  2_Country_Deep_Dive.py            # Per-country auto-generated brief + timelines + PDF export
-  3_Policy_Event_Tracker.py         # Chronological, sourced feed of chip-policy events
-  4_Scenario_Explorer.py            # Live reweighting of the methodology (never touches curated data)
-  5_Methodology.py                  # In-app weights/rubrics/limitations reference (mirrors this README)
+app.py                              # Thin router: grouped st.navigation() only, no page content
+app_pages/
+  regional_dashboard.py             # Flagship page: bottom line, KPIs, US-China scatterplot, map, ranking
+  country_comparison.py             # Radar + bar comparison across all 6 factors
+  country_deep_dive.py              # Per-country auto-generated brief + timelines + PDF export
+  policy_events.py                  # Chronological, sourced feed of chip-policy events + model-impact links
+  scenario_lab.py                   # Live reweighting + scenario robustness / rank-stability analysis
+  methodology.py                    # In-app weights/rubrics/limitations reference (mirrors this README)
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
-  ui.py                             # Shared theme CSS, KPI cards, confidence pills, footer (see note below)
+  ui.py                             # Design tokens, page header, bottom-line/KPI/evidence cards, footer
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
@@ -391,17 +392,19 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   Diffusion Rule's issuance and rescission, the Chip Security Act's introduction and committee markup, the
   Nov 2025 Saudi/UAE chip authorizations, the March 2026 smuggling indictments, the UAE's July 2026 Country
   Group upgrade). ✅
-- **Phase 4:** Scenario Explorer -- live reweighting of the US Integration Depth sub-weights and the
+- **Phase 4:** Scenario Lab (originally "Scenario Explorer," renamed for consistency with the wider
+  redesign -- see PROGRESS.md) -- live reweighting of the US Integration Depth sub-weights and the
   US-vs-China axis balance, with 5 named presets each carrying a stated analytical rationale (mirrors the
-  MENASA Risk Monitor's own Scenario Explorer). Operates purely on `build_composite()`'s in-memory output;
-  never writes to `data/curated/*.csv`. ✅
+  MENASA Risk Monitor's own Scenario Explorer), plus a Model Robustness / Rank Stability analysis that
+  samples many weight configurations and reports how much each country's rank actually moves. Operates
+  purely on `build_composite()`'s in-memory output; never writes to `data/curated/*.csv`. ✅
 
-### How the Scenario Explorer stays honest
+### How the Scenario Lab stays honest
 
 `src/scoring.py`'s `build_composite()` takes optional weight-override parameters (`tier_weight`,
 `investment_weight`, `compute_weight`, `axis_balance`), all defaulting to the exact values used everywhere
 else in this tracker -- calling it with no arguments is guaranteed identical to the scored methodology
-(covered by a dedicated test). The Scenario Explorer page is the only caller that ever passes overrides.
+(covered by a dedicated test). The Scenario Lab page is the only caller that ever passes overrides.
 Presets are named, dated design choices with a stated rationale shown inline (e.g. "Export-control-centric"
 weights BIS status at 70% because an analyst might treat the regulatory label as stickier than capital
 commitments) -- not arbitrary slider positions, and never a claim that any one configuration is more

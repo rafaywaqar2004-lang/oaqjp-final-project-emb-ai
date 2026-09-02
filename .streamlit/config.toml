@@ -14,13 +14,13 @@ enableStaticServing = true
 
 [theme]
 base = "light"
-primaryColor = "#2454a6"
-backgroundColor = "#f7f7f2"
-secondaryBackgroundColor = "#e9e8e0"
-textColor = "#1b1e22"
-borderColor = "#d7d5cb"
+primaryColor = "#2463A5"
+backgroundColor = "#F5F4EF"
+secondaryBackgroundColor = "#ECEAE3"
+textColor = "#17202A"
+borderColor = "#D7D5CB"
 font = "Public Sans"
 headingFont = "Source Serif 4"
 codeFont = "IBM Plex Mono"
-baseRadius = "0.5rem"
+baseRadius = "0.3rem"
 showWidgetBorder = true

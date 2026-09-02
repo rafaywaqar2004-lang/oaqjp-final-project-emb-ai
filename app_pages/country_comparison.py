@@ -15,7 +15,6 @@ from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 from constants import GULF_COUNTRIES  # noqa: E402
 
-st.set_page_config(page_title="Country Comparison | Gulf AI Tracker", page_icon="assets/favicon.png", layout="wide")
 
 FACTOR_COLUMNS = {
     "us_tier_score_100": "US Export-Control Access",

@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from constants import CURATED_DIR
+from constants import COUNTRIES, CURATED_DIR
+from policy_events import _affected_countries
 
 VALID_CATEGORIES = {"Regulatory Framework", "Bilateral Authorization", "Enforcement Action", "Legislation"}
 
@@ -43,3 +44,22 @@ def test_every_event_has_a_nonempty_summary_and_countries(events):
 
 def test_no_duplicate_titles(events):
     assert events["title"].is_unique
+
+
+def test_affected_countries_resolves_named_countries():
+    assert _affected_countries("Saudi Arabia; United Arab Emirates") == ["Saudi Arabia", "United Arab Emirates"]
+
+
+def test_affected_countries_resolves_global_to_all_tracked():
+    assert _affected_countries("Global (incl. all 8 tracked countries)") == list(COUNTRIES.keys())
+
+
+def test_affected_countries_ignores_untracked_names():
+    assert _affected_countries("United States; China (destination)") == []
+
+
+def test_every_event_resolves_to_at_least_one_affected_country_or_is_global(events):
+    # every real event in this dataset should link to *something* scoreable --
+    # a genuinely untraceable event would be a real model-impact gap, not expected here.
+    for _, row in events.iterrows():
+        assert len(_affected_countries(row["countries"])) > 0 or "united states" in row["countries"].lower()
