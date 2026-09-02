@@ -186,7 +186,7 @@ data/
     policy_events.csv               # The Policy Event Tracker's sourced event record
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
-  geo/gulf_countries.geojson        # Bundled country boundaries (see note below)
+  geo/region_countries.geojson      # Bundled country boundaries: 8 tracked + 9 regional-context (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
   sovereign-debt-and-political-instability.md  # Case-study brief (Pakistan/Sri Lanka/Bangladesh), MENASA-linked
@@ -215,10 +215,19 @@ Plotly's built-in geo trace fetches its world-atlas topojson from `cdn.plot.ly` 
 a custom GeoJSON is supplied and the base map is set invisible, in the Plotly.js version this project runs
 against. That's an external runtime dependency this project deliberately avoids, for the same reason the
 brief ruled out ArcGIS: it should run on Render with no external auth or network dependency it doesn't
-control. `src/mapping.py` renders the choropleth as filled `go.Scatter` polygons directly from the bundled,
-pre-filtered `data/geo/gulf_countries.geojson` (sourced from the `datasets/geo-countries` public-domain
-Natural Earth derivative) -- zero runtime network calls, verified in a fully network-restricted sandbox
-during development.
+control. `src/mapping.py` renders the choropleth as filled `go.Scatter` polygons directly from the bundled
+`data/geo/region_countries.geojson` (sourced from the `datasets/geo-countries` public-domain Natural Earth
+derivative) -- zero runtime network calls, verified in a fully network-restricted sandbox during
+development.
+
+The bundled GeoJSON carries 17 countries, not just the 8 this index scores: Iran, Iraq, Syria, Jordan,
+Lebanon, Israel, Yemen, Egypt, and Afghanistan are included purely as unscored geographic context (rendered
+in a muted, unbordered gray, with a hover label that says explicitly they aren't tracked), so the Overview
+map reads as a contiguous regional map instead of three disconnected landmasses (Turkey / the Gulf
+peninsula / Pakistan) floating in empty space. `build_choropleth_figure()`'s `context_ids` parameter is
+what distinguishes "not tracked at all" (light, unbordered gray) from "tracked but the data was too thin to
+score" (the darker, bordered gray used for a real data gap among the 8 scored countries) -- the map
+shouldn't make those two very different situations look the same.
 
 ### Visual design: matching the standalone briefs, not default Streamlit
 

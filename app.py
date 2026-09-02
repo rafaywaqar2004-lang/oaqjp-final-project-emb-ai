@@ -20,7 +20,7 @@ from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
 from ui import inject_base_css, kpi_card, kpi_row, footer  # noqa: E402
 
-GEOJSON_PATH = Path(__file__).resolve().parent / "data" / "geo" / "gulf_countries.geojson"
+GEOJSON_PATH = Path(__file__).resolve().parent / "data" / "geo" / "region_countries.geojson"
 
 st.set_page_config(
     page_title="Gulf AI & Tech-Bloc Alignment Tracker",
@@ -117,6 +117,8 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
 
     st.subheader("Net Alignment Score by country")
     geojson = load_geojson()
+    context_ids = frozenset(f["id"] for f in geojson["features"] if not f["properties"].get("scored"))
+    context_names = {f["id"]: f["properties"]["name"] for f in geojson["features"] if f["id"] in context_ids}
     scores = {row["iso3"]: (None if pd.isna(row["net_alignment_score"]) else row["net_alignment_score"]) for _, row in df.iterrows()}
 
     def _hover(row: pd.Series) -> str:
@@ -130,23 +132,27 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         )
 
     hover = {row["iso3"]: _hover(row) for _, row in df.iterrows()}
+    hover.update({iso3: f"<b>{name}</b><br>Not tracked by this index -- shown for regional context only" for iso3, name in context_names.items()})
     fig = build_choropleth_figure(
         geojson=geojson,
         scores=scores,
         hover_text=hover,
         colorscale=["#e01b24", "#f8e45c", "#62a0ea", "#1a5fb4"],
+        context_ids=context_ids,
     )
     fig.update_layout(height=560)
     st.plotly_chart(fig, use_container_width=True)
     st.caption(
         "**65-100** deep US integration &middot; **50-64** US-leaning, hedging &middot; "
-        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. Gray = insufficient "
-        "public data for a composite score. Hover a country for the US/China sub-score breakdown.",
+        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. Light gray "
+        "(Iran, Iraq, Syria, Jordan, Lebanon, Israel, Yemen, Egypt, Afghanistan) is shown for "
+        "regional geographic context only -- not tracked by this index. Hover a tracked country "
+        "for the US/China sub-score breakdown.",
         unsafe_allow_html=True,
     )
     missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, "net_alignment_score"]).all()])
     if missing:
-        st.caption(f"Gray on the map: {', '.join(missing)}")
+        st.caption(f"Tracked but insufficient data for a composite score (darker gray, bordered): {', '.join(missing)}")
 
     st.divider()
     st.subheader("Country ranking")

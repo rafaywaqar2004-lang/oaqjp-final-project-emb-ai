@@ -5,7 +5,28 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Latest session: a visual-design pass on the Streamlit app itself, prompted by direct user feedback
+**Immediately after the visual-design pass below, a direct follow-up: "include all the countries in
+between so the map looks full."** The Overview map's original GeoJSON held only the 8 tracked countries,
+so Turkey, the Gulf peninsula, and Pakistan rendered as three disconnected landmasses with large empty gaps
+where Iran, Iraq, Syria, and Afghanistan should be -- geographically correct, but it reads as broken or
+low-effort rather than intentional. Fixed by rebuilding the bundled GeoJSON:
+
+- Fetched the same public-domain `datasets/geo-countries` source used originally, this time keeping 17
+  countries instead of 8: the 8 tracked ones plus Iran, Iraq, Syria, Jordan, Lebanon, Israel, Yemen, Egypt,
+  and Afghanistan as unscored regional context. New file: `data/geo/region_countries.geojson` (~480KB),
+  replacing `data/geo/gulf_countries.geojson` (deleted -- nothing else referenced it).
+- `src/mapping.py`'s `build_choropleth_figure()` gained a `context_ids` parameter so the 9 context countries
+  render in a light, unbordered gray with a hover label that says outright "not tracked by this index,"
+  visually distinct from the darker, bordered gray already used for a *tracked* country with a genuine data
+  gap (e.g. if Bahrain had insufficient data) -- those are two different situations and the map shouldn't
+  make them look the same.
+- `app.py` derives `context_ids` from each feature's `properties.scored` flag rather than hardcoding a
+  country list a second time, and the map caption now names the 9 context countries explicitly so a reader
+  isn't left guessing why they're on the map but gray.
+- Verified in-browser again with the local Streamlit server + Playwright before calling it done (same
+  standard as the visual pass below). All 39 tests still pass -- geometry-only change, no scoring touched.
+
+**Before that, a visual-design pass on the Streamlit app itself, prompted by direct user feedback
 after reviewing the deployed dashboard.** The verdict was specific: content 8/10, presentation 3/10 --
 "it's 100% unstyled default Streamlit... zero visual identity... looks like a homework submission." The
 underlying analysis (methodology transparency, the Scenario Explorer, sourced confidence levels) wasn't
@@ -296,10 +317,11 @@ rather than build order:
    time regardless of custom-geojson/visible=False settings, in the Plotly.js version this project runs
    against (`plotly==7.0.0` as tested). That's exactly the kind of external runtime dependency the brief
    ruled out ArcGIS for. Wrote `src/mapping.py` to draw filled polygons directly from a bundled, pre-filtered
-   GeoJSON (`data/geo/gulf_countries.geojson`, sourced from the public-domain `datasets/geo-countries`
-   Natural Earth derivative) with zero runtime network calls -- verified working in a fully
-   network-restricted sandbox. This is a more robust choice for a Render deployment regardless of the
-   sandbox restriction that surfaced it.
+   GeoJSON (originally `data/geo/gulf_countries.geojson`, later rebuilt as `data/geo/region_countries.geojson`
+   to add regional-context countries -- see "Where things stand" above -- sourced from the public-domain
+   `datasets/geo-countries` Natural Earth derivative) with zero runtime network calls -- verified working in
+   a fully network-restricted sandbox. This is a more robust choice for a Render deployment regardless of
+   the sandbox restriction that surfaced it.
 
 6. **Data-thinness handling**: missing curated figures are `N/A`/excluded, never estimated or defaulted to
    zero. The US Integration Depth weighted average renormalizes over whichever of its 3 inputs are

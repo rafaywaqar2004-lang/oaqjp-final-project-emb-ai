@@ -38,19 +38,30 @@ def build_choropleth_figure(
     colorscale: list[str],
     value_range: tuple[float, float] = (0, 100),
     missing_color: str = "#d0d0d0",
+    context_ids: frozenset[str] = frozenset(),
+    context_color: str = "#eeede6",
+    context_line_color: str = "#c3c0b3",
 ) -> go.Figure:
     """
     geojson: FeatureCollection with each feature's `id` matching the keys of `scores`/`hover_text`.
     scores: {feature_id: numeric value or None}
     hover_text: {feature_id: hover label}
+    context_ids: feature ids rendered as muted geographic context (e.g. neighboring countries not
+        tracked by this index at all) rather than "tracked but missing data" -- a lighter fill and a
+        softer border than `missing_color`, so a reader doesn't read them as data gaps.
     """
     lo, hi = value_range
     fig = go.Figure()
 
     for feature in geojson["features"]:
         fid = feature["id"]
+        is_context = fid in context_ids
         value = scores.get(fid)
-        color = missing_color if value is None else sample_colorscale(colorscale, [(value - lo) / (hi - lo)])[0]
+        if is_context:
+            color, line_color, line_width = context_color, context_line_color, 0.5
+        else:
+            color = missing_color if value is None else sample_colorscale(colorscale, [(value - lo) / (hi - lo)])[0]
+            line_color, line_width = "#333333", 0.7
         rings = _polygon_rings(feature["geometry"])
         for i, ring in enumerate(rings):
             lons = [pt[0] for pt in ring]
@@ -62,7 +73,7 @@ def build_choropleth_figure(
                     mode="lines",
                     fill="toself",
                     fillcolor=color,
-                    line=dict(color="#333333", width=0.7),
+                    line=dict(color=line_color, width=line_width),
                     hoverinfo="text",
                     text=hover_text.get(fid, fid),
                     name=hover_text.get(fid, fid),
