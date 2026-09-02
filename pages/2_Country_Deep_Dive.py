@@ -16,15 +16,9 @@ from constants import COUNTRIES  # noqa: E402
 from country_brief import generate_brief, load_curated  # noqa: E402
 from pdf_export import build_country_pdf  # noqa: E402
 from scoring import build_composite  # noqa: E402
+from ui import inject_base_css, confidence_pill, footer  # noqa: E402
 
 st.set_page_config(page_title="Country Deep Dive | Gulf AI Tracker", page_icon="\U0001F4CB", layout="wide")
-
-_CONFIDENCE_DOT = {
-    "High confidence": "🟡",
-    "Moderate confidence": "⚪",
-    "Low confidence": "⚪",
-    "Data gap": "🔴",
-}
 
 
 def esc(text) -> str:
@@ -49,6 +43,7 @@ def _brief(country: str):
 
 
 def main() -> None:
+    inject_base_css()
     st.title("Country Deep Dive")
     st.caption(
         "An auto-generated analyst brief per country -- every sentence is templated from a cited row in "
@@ -79,9 +74,8 @@ def main() -> None:
 
     st.subheader("Key Judgments")
     for i, j in enumerate(brief.key_judgments, start=1):
-        dot = _CONFIDENCE_DOT.get(j.confidence, "⚪")
         with st.container(border=True):
-            st.markdown(f"**{i:02d}** &nbsp; {dot} **{j.confidence.upper()}**")
+            st.markdown(f"**{i:02d}** &nbsp; {confidence_pill(j.confidence)}", unsafe_allow_html=True)
             st.write(esc(j.text))
 
     st.divider()
@@ -124,6 +118,8 @@ def main() -> None:
         "This is a research/portfolio product, not a commissioned or institutional assessment. "
         "See the tracker's README for full methodology and the standalone brief for the region-wide analysis."
     )
+
+    footer()
 
 
 if __name__ == "__main__":

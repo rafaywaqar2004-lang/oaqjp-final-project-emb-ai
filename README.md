@@ -179,6 +179,7 @@ src/
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
+  ui.py                             # Shared theme CSS, KPI cards, confidence pills, footer (see note below)
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
@@ -188,6 +189,9 @@ data/
   geo/gulf_countries.geojson        # Bundled country boundaries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
+  sovereign-debt-and-political-instability.md  # Case-study brief (Pakistan/Sri Lanka/Bangladesh), MENASA-linked
+  mena-geopolitical-risk-brief-issue-01.md     # Monthly digest series, Issue No. 1, MENASA-linked
+.streamlit/config.toml              # Custom theme -- paper/ink palette shared with the briefs
 tests/                              # pytest suite -- see "Running tests" below
 .github/workflows/refresh_worldbank_data.yml
 .github/workflows/test.yml
@@ -215,6 +219,18 @@ control. `src/mapping.py` renders the choropleth as filled `go.Scatter` polygons
 pre-filtered `data/geo/gulf_countries.geojson` (sourced from the `datasets/geo-countries` public-domain
 Natural Earth derivative) -- zero runtime network calls, verified in a fully network-restricted sandbox
 during development.
+
+### Visual design: matching the standalone briefs, not default Streamlit
+
+`.streamlit/config.toml` sets a custom theme (warm paper background, `#2454a6` blue accent, `Source Serif 4`
+headings, `Public Sans` body, `IBM Plex Mono` code) -- the same palette and type system used in the three
+standalone briefs in `briefs/`, so the dashboard and the briefs read as one portfolio rather than two
+disconnected projects with different default styling. `src/ui.py` centralizes the rest: it hides Streamlit's
+default hamburger menu/footer/"Made with Streamlit" badge, and provides `kpi_card()`/`kpi_row()` for the
+Overview page's metric cards, `confidence_pill()` for color-coded (not plain-emoji) confidence badges, and a
+consistent `footer()` every page calls at the bottom. This exists because the underlying analysis and default
+Streamlit chrome were, before this pass, visually indistinguishable from an unstyled homework submission --
+see PROGRESS.md for the before/after reasoning.
 
 ## Running locally
 

@@ -13,11 +13,13 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import CURATED_DIR  # noqa: E402
 from scoring import COMPUTE_CEILING_MW, INVESTMENT_CEILING_USD_BN  # noqa: E402
+from ui import inject_base_css, footer  # noqa: E402
 
 st.set_page_config(page_title="Methodology | Gulf AI Tracker", page_icon="\U0001F4D0", layout="wide")
 
 
 def main() -> None:
+    inject_base_css()
     st.title("Methodology")
     st.caption(
         "How the Net Alignment Score is built, why it's built that way, and where it's known to be thin. "
@@ -153,6 +155,8 @@ Iran sanctions/missing-data problem.
         "methodology, sourcing cadence, and known limitations: README.md. The standalone brief, 'Gulf AI "
         "Ambitions and Geopolitical Risk,' is the region-wide analytical companion to this index."
     )
+
+    footer()
 
 
 if __name__ == "__main__":

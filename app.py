@@ -18,6 +18,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
+from ui import inject_base_css, kpi_card, kpi_row, footer  # noqa: E402
 
 GEOJSON_PATH = Path(__file__).resolve().parent / "data" / "geo" / "gulf_countries.geojson"
 
@@ -54,6 +55,7 @@ def alignment_label(score: float) -> str:
 
 
 def main() -> None:
+    inject_base_css()
     st.title("Gulf AI & Tech-Bloc Alignment Tracker")
     st.caption(
         "How Gulf states -- plus Pakistan and Turkey as smaller-scale comparators -- are navigating "
@@ -61,6 +63,36 @@ def main() -> None:
     )
 
     df = load_data()
+
+    scored = df.dropna(subset=["net_alignment_score"])
+    most_us = scored.loc[scored["net_alignment_score"].idxmax()] if not scored.empty else None
+    most_china = scored.loc[scored["net_alignment_score"].idxmin()] if not scored.empty else None
+    coverage = f"{len(scored)} / {len(df)}"
+
+    kpi_row(
+        [
+            kpi_card(
+                "Regional avg. alignment",
+                f"{scored['net_alignment_score'].mean():.0f}" if not scored.empty else "N/A",
+                "Net Alignment Score, 0-100 scale",
+            ),
+            kpi_card(
+                "Most US-integrated",
+                most_us["country"] if most_us is not None else "N/A",
+                f"Score {most_us['net_alignment_score']:.0f}" if most_us is not None else "",
+            ),
+            kpi_card(
+                "Most China-leaning",
+                most_china["country"] if most_china is not None else "N/A",
+                f"Score {most_china['net_alignment_score']:.0f}" if most_china is not None else "",
+            ),
+            kpi_card(
+                "Composite score coverage",
+                coverage,
+                "countries with enough disclosed data to score",
+            ),
+        ]
+    )
 
     with st.expander("Read this before the numbers -- what this index does and doesn't show", expanded=False):
         st.markdown(
@@ -83,66 +115,65 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
             """
         )
 
-    col_map, col_legend = st.columns([3, 1])
+    st.subheader("Net Alignment Score by country")
+    geojson = load_geojson()
+    scores = {row["iso3"]: (None if pd.isna(row["net_alignment_score"]) else row["net_alignment_score"]) for _, row in df.iterrows()}
 
-    with col_map:
-        st.subheader("Net Alignment Score by country")
-        geojson = load_geojson()
-        scores = {row["iso3"]: (None if pd.isna(row["net_alignment_score"]) else row["net_alignment_score"]) for _, row in df.iterrows()}
-        hover = {
-            row["iso3"]: (
-                f"{row['country']}<br>Net Alignment: {row['net_alignment_score']:.0f}"
-                if pd.notna(row["net_alignment_score"])
-                else f"{row['country']}<br>Insufficient data for a composite score"
-            )
-            for _, row in df.iterrows()
-        }
-        fig = build_choropleth_figure(
-            geojson=geojson,
-            scores=scores,
-            hover_text=hover,
-            colorscale=["#e01b24", "#f8e45c", "#62a0ea", "#1a5fb4"],
+    def _hover(row: pd.Series) -> str:
+        if pd.isna(row["net_alignment_score"]):
+            return f"<b>{row['country']}</b><br>Insufficient data for a composite score"
+        us = f"{row['us_integration_depth']:.0f}" if pd.notna(row["us_integration_depth"]) else "N/A"
+        cn = f"{row['china_exposure_depth']:.0f}" if pd.notna(row["china_exposure_depth"]) else "N/A"
+        return (
+            f"<b>{row['country']}</b><br>Net Alignment: {row['net_alignment_score']:.0f}"
+            f"<br>US Integration Depth: {us}<br>China Exposure Depth: {cn}"
         )
-        st.plotly_chart(fig, use_container_width=True)
-        missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, "net_alignment_score"]).all()])
-        if missing:
-            st.caption(f"Gray on the map (insufficient data for a composite score): {', '.join(missing)}")
 
-    with col_legend:
-        st.subheader("Legend")
-        st.markdown(
-            "- **65-100**: Deep US integration\n"
-            "- **50-64**: US-leaning, hedging\n"
-            "- **35-49**: China-leaning, hedging\n"
-            "- **0-34**: Deep China exposure\n\n"
-            "*Gray on the map = insufficient public data for a composite score.*"
-        )
+    hover = {row["iso3"]: _hover(row) for _, row in df.iterrows()}
+    fig = build_choropleth_figure(
+        geojson=geojson,
+        scores=scores,
+        hover_text=hover,
+        colorscale=["#e01b24", "#f8e45c", "#62a0ea", "#1a5fb4"],
+    )
+    fig.update_layout(height=560)
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(
+        "**65-100** deep US integration &middot; **50-64** US-leaning, hedging &middot; "
+        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. Gray = insufficient "
+        "public data for a composite score. Hover a country for the US/China sub-score breakdown.",
+        unsafe_allow_html=True,
+    )
+    missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, "net_alignment_score"]).all()])
+    if missing:
+        st.caption(f"Gray on the map: {', '.join(missing)}")
 
     st.divider()
     st.subheader("Country ranking")
 
     ranked = df.sort_values("net_alignment_score", ascending=False, na_position="last")
-    for _, row in ranked.iterrows():
-        c1, c2, c3, c4 = st.columns([2, 1, 3, 2])
-        with c1:
-            tag = "🌊 Gulf" if row["country"] in GULF else "🔶 Comparator"
-            st.markdown(f"**{row['country']}**  \n<small>{tag}</small>", unsafe_allow_html=True)
-        with c2:
-            score = row["net_alignment_score"]
-            st.metric("Net Alignment", f"{score:.0f}" if pd.notna(score) else "N/A")
-        with c3:
-            if pd.notna(score):
-                st.progress(int(score))
-            st.caption(alignment_label(score))
-        with c4:
-            us = row["us_integration_depth"]
-            cn = row["china_exposure_depth"]
-            st.caption(
-                f"US Integration: {us:.0f}" if pd.notna(us) else "US Integration: N/A"
-            )
-            st.caption(
-                f"China Exposure: {cn:.0f}" if pd.notna(cn) else "China Exposure: N/A"
-            )
+    ranked_rows = list(ranked.iterrows())
+    for start in range(0, len(ranked_rows), 4):
+        cols = st.columns(4)
+        for col, (_, row) in zip(cols, ranked_rows[start:start + 4]):
+            with col:
+                score = row["net_alignment_score"]
+                tag = "🌊 Gulf" if row["country"] in GULF else "🔶 Comparator"
+                with st.container(border=True):
+                    st.caption(f"{tag}")
+                    st.markdown(f"**{row['country']}**")
+                    st.metric("Net Alignment", f"{score:.0f}" if pd.notna(score) else "N/A", label_visibility="collapsed")
+                    if pd.notna(score):
+                        st.progress(int(score))
+                    st.caption(alignment_label(score))
+                    us = row["us_integration_depth"]
+                    cn = row["china_exposure_depth"]
+                    st.caption(
+                        (f"US {us:.0f}" if pd.notna(us) else "US N/A")
+                        + " &middot; "
+                        + (f"China {cn:.0f}" if pd.notna(cn) else "China N/A"),
+                        unsafe_allow_html=True,
+                    )
 
     st.divider()
     st.subheader("Context factors (not scored into alignment)")
@@ -183,6 +214,8 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         "See the **Country Comparison** page for a full factor-by-factor radar/bar breakdown, and README.md "
         "for the complete methodology, weights, sourcing, and known limitations."
     )
+
+    footer()
 
 
 if __name__ == "__main__":

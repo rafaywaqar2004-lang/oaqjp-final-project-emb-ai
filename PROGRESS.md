@@ -5,6 +5,50 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
+**Latest session: a visual-design pass on the Streamlit app itself, prompted by direct user feedback
+after reviewing the deployed dashboard.** The verdict was specific: content 8/10, presentation 3/10 --
+"it's 100% unstyled default Streamlit... zero visual identity... looks like a homework submission." The
+underlying analysis (methodology transparency, the Scenario Explorer, sourced confidence levels) wasn't
+the problem; the problem was that every page was default gray-on-white Streamlit chrome. Fixed in order of
+the impact the user identified:
+
+1. **`.streamlit/config.toml`** -- replaced the single `primaryColor` override with a full custom theme:
+   warm paper background (`#f7f7f2`), ink text, `#2454a6` blue accent (not Streamlit's default red/blue),
+   and `Source Serif 4` / `Public Sans` / `IBM Plex Mono` as heading/body/code fonts -- the exact palette
+   and type system already used in the three standalone briefs, so the dashboard and the briefs now read
+   as one portfolio rather than two disconnected projects.
+2. **`src/ui.py`** (new) -- one shared module every page imports: `inject_base_css()` hides the Streamlit
+   hamburger menu, footer, and "Made with Streamlit" badge and loads the Google Fonts as a CSS fallback;
+   `kpi_card()`/`kpi_row()` render metric cards; `confidence_pill()` renders a colored badge (blue/amber/red)
+   for a confidence string, replacing plain emoji dots; `footer()` renders a consistent attribution +
+   last-updated line at the bottom of every page.
+3. **Overview page (`app.py`) restructured**: 4 KPI cards (regional average, most US-integrated, most
+   China-leaning, composite-score coverage) now lead the page, above the "read this before the numbers"
+   caveats -- previously the caveats were the first thing on the page. The map moved from a cramped 3/4-width
+   column squeezed next to a text legend to full width at `height=560` (was 460), with hover tooltips now
+   showing the US Integration / China Exposure sub-score breakdown, not just the net score. The legend
+   became a single caption line under the map instead of its own column. The country-ranking list (plain
+   text rows) became a 4-across grid of bordered metric cards.
+4. **Country Deep Dive**: the emoji confidence dots (🟡/⚪/🔴, which didn't actually distinguish High from
+   Moderate from Low -- all three non-gap levels rendered the same white circle) became color-coded pill
+   badges via `confidence_pill()`, matching the briefs' own confidence-tag styling.
+5. **Verified in-browser**, not just by reading the diff: ran `streamlit run app.py` locally and screenshotted
+   every page with Playwright (Overview top/bottom, Country Deep Dive, Policy Event Tracker, Scenario
+   Explorer) before treating this as done, per this project's own standard for UI changes. One console
+   warning appeared (`fonts.googleapis.com` blocked by this sandbox's network policy, same class of known
+   sandbox limitation as `api.worldbank.org` and `cdn.plot.ly` elsewhere in this log) -- Streamlit's native
+   `[theme]` font keys still applied correctly without it, and the Google Fonts `@import` is a pure
+   enhancement that will resolve on Render's unrestricted network.
+6. All 39 existing tests still pass unchanged -- this was styling/layout only, no scoring or data logic touched.
+
+**Not done in this pass, and worth naming so it isn't mistaken for finished:** a real custom favicon (the
+browser-tab icon is still the 🌐 emoji passed to `page_icon`, which is the idiomatic Streamlit approach and
+was left as-is rather than fighting Streamlit's static-file serving for an uploaded PNG), and the sidebar's
+first nav entry still reads as the literal label "app" (from `app.py`'s filename) rather than "Overview" --
+fixing that requires moving to Streamlit's newer `st.navigation()` entrypoint API rather than the
+folder-based `pages/` convention this project already uses, which is a bigger structural change than this
+pass's scope and was deliberately not attempted alongside a purely visual pass.
+
 **Also added beyond the original 4-phase brief: an in-app Methodology page** (`pages/5_Methodology.py`),
 after being asked generally to make the project "much better and more detailed and more professional."
 The gap: methodology, weights, and rubrics only lived in the GitHub README -- someone browsing the live

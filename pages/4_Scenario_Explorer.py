@@ -17,6 +17,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import COUNTRIES  # noqa: E402
 from scoring import build_composite  # noqa: E402
+from ui import inject_base_css, footer  # noqa: E402
 
 st.set_page_config(page_title="Scenario Explorer | Gulf AI Tracker", page_icon="\U0001F39B️", layout="wide")
 
@@ -57,6 +58,7 @@ def _composite(tier: float, investment: float, compute: float, axis_balance: flo
 
 
 def main() -> None:
+    inject_base_css()
     st.title("Scenario Explorer")
     st.caption(
         "Live reweighting of the alignment methodology -- these controls change how the tracker's cited "
@@ -136,6 +138,8 @@ def main() -> None:
         "any one configuration is more 'correct' than the scored default. See README.md for the rationale "
         "behind the default weights, and the standalone brief for the substantive analysis behind the numbers."
     )
+
+    footer()
 
 
 if __name__ == "__main__":
