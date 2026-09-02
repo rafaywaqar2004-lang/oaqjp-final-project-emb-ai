@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from regional_dashboard import _bottom_line_text
+from regional_dashboard import _bottom_line_text, _city_markers, _hub_markers, load_ai_hubs, load_major_cities
 from scoring import build_composite
 
 
@@ -28,3 +28,38 @@ def test_bottom_line_handles_empty_dataframe():
     text, confidence = _bottom_line_text(empty)
     assert confidence == "Insufficient"
     assert "Insufficient" in text
+
+
+class TestMapMarkers:
+    """_city_markers/_hub_markers turn the curated major_cities.csv and
+    ai_hubs.csv rows into the {lat, lon, name, hover} dicts
+    build_choropleth_figure() expects -- checked here so a schema change
+    in either CSV surfaces as a test failure, not a silently blank map."""
+
+    def test_city_markers_shape_matches_csv_row_count(self):
+        cities = load_major_cities.__wrapped__()
+        markers = _city_markers(cities)
+        assert len(markers) == len(cities)
+        for m in markers:
+            assert {"lat", "lon", "name", "hover"}.issubset(m.keys())
+            assert m["name"] in cities["city_name"].values
+
+    def test_hub_markers_shape_matches_csv_row_count(self):
+        hubs = load_ai_hubs.__wrapped__()
+        markers = _hub_markers(hubs)
+        assert len(markers) == len(hubs)
+        for m in markers:
+            assert {"lat", "lon", "name", "hover"}.issubset(m.keys())
+
+    def test_hub_marker_hover_cites_its_source(self):
+        hubs = load_ai_hubs.__wrapped__()
+        markers = _hub_markers(hubs)
+        for marker, (_, row) in zip(markers, hubs.iterrows()):
+            assert row["source_name"] in marker["hover"]
+
+    def test_approximate_hub_hover_flags_its_own_precision(self):
+        hubs = load_ai_hubs.__wrapped__()
+        markers = _hub_markers(hubs)
+        for marker, (_, row) in zip(markers, hubs.iterrows()):
+            if row["location_precision"] == "approximate":
+                assert "Approximate" in marker["hover"]

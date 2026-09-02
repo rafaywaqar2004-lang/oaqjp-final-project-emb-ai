@@ -337,3 +337,70 @@ class TestChineseDigitalTiesData:
         for _, row in digital_ties.iterrows():
             assert isinstance(row["source_name"], str) and len(row["source_name"]) > 0
             assert isinstance(row["rationale"], str) and len(row["rationale"]) > 40
+
+
+@pytest.fixture(scope="module")
+def major_cities():
+    from constants import CURATED_DIR
+
+    return pd.read_csv(Path(CURATED_DIR) / "major_cities.csv")
+
+
+@pytest.fixture(scope="module")
+def ai_hubs():
+    from constants import CURATED_DIR
+
+    return pd.read_csv(Path(CURATED_DIR) / "ai_hubs.csv")
+
+
+class TestMajorCitiesData:
+    """Structural checks on data/curated/major_cities.csv -- one reference
+    city per tracked country, shown on the Regional Dashboard map for
+    geographic orientation only (never a claim about political capital
+    status -- see each row's own notes for Israel/Yemen's framing)."""
+
+    def test_all_tracked_countries_present(self, major_cities):
+        assert set(major_cities["country"]) == set(COUNTRIES.keys())
+
+    def test_exactly_one_city_per_country(self, major_cities):
+        assert major_cities["country"].value_counts().eq(1).all()
+
+    def test_coordinates_are_within_plausible_bounds(self, major_cities):
+        assert major_cities["lat"].between(-90, 90).all()
+        assert major_cities["lon"].between(-180, 180).all()
+
+    def test_every_row_has_a_city_name_and_note(self, major_cities):
+        for _, row in major_cities.iterrows():
+            assert isinstance(row["city_name"], str) and len(row["city_name"]) > 0
+            assert isinstance(row["notes"], str) and len(row["notes"]) > 0
+
+
+class TestAiHubsData:
+    """Structural checks on data/curated/ai_hubs.csv -- specific, named
+    AI/compute/telecom infrastructure sites, each tied to a deal already
+    cited in ai_investment_deals.csv, compute_capacity_deals.csv, or
+    chinese_digital_ties.csv. Only sites whose location is explicitly
+    named in that existing sourced data are included -- never inferred
+    from a company's headquarters or an announcement venue."""
+
+    def test_every_hub_is_a_tracked_country(self, ai_hubs):
+        assert set(ai_hubs["country"]).issubset(set(COUNTRIES.keys()))
+
+    def test_coordinates_are_within_plausible_bounds(self, ai_hubs):
+        assert ai_hubs["lat"].between(-90, 90).all()
+        assert ai_hubs["lon"].between(-180, 180).all()
+
+    def test_location_precision_is_a_recognized_value(self, ai_hubs):
+        assert set(ai_hubs["location_precision"]).issubset({"city-level", "approximate"})
+
+    def test_every_row_has_a_named_source_and_label(self, ai_hubs):
+        for _, row in ai_hubs.iterrows():
+            assert isinstance(row["source_name"], str) and len(row["source_name"]) > 0
+            assert isinstance(row["source_url"], str) and row["source_url"].startswith("http")
+            assert isinstance(row["label"], str) and len(row["label"]) > 0
+
+    def test_at_least_one_hub_per_major_investment_country(self, ai_hubs):
+        """Saudi Arabia, Israel, and Egypt carry this dataset's largest disclosed
+        AI investment/compute figures -- a sanity check that the hub layer
+        isn't accidentally empty for the countries it matters most for."""
+        assert {"Saudi Arabia", "Israel", "Egypt"}.issubset(set(ai_hubs["country"]))

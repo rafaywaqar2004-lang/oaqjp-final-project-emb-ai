@@ -1,0 +1,18 @@
+country,iso3,city_name,lat,lon,notes
+Saudi Arabia,SAU,Riyadh,24.7136,46.6753,Largest city and seat of government.
+United Arab Emirates,ARE,Abu Dhabi,24.4539,54.3773,Largest city and seat of government.
+Qatar,QAT,Doha,25.2854,51.5310,Largest city and seat of government.
+Bahrain,BHR,Manama,26.2285,50.5860,Largest city and seat of government.
+Kuwait,KWT,Kuwait City,29.3759,47.9774,Largest city and seat of government.
+Oman,OMN,Muscat,23.5880,58.3829,Largest city and seat of government.
+Pakistan,PAK,Islamabad,33.6844,73.0479,Seat of government; Karachi is Pakistan's largest city by population.
+Turkey,TUR,Istanbul,41.0082,28.9784,Turkey's largest city and primary economic/tech hub (Ankara is the seat of government).
+Israel,ISR,Tel Aviv,32.0853,34.7818,"Shown as Israel's primary tech/financial hub ('Silicon Wadi'), the most relevant reference point for an AI/tech-alignment map -- not a claim about political capital status, which is disputed internationally."
+Egypt,EGY,Cairo,30.0444,31.2357,Largest city and seat of government.
+Jordan,JOR,Amman,31.9454,35.9284,Largest city and seat of government.
+Iraq,IRQ,Baghdad,33.3152,44.3661,Largest city and seat of government.
+Lebanon,LBN,Beirut,33.8938,35.5018,Largest city and seat of government.
+Syria,SYR,Damascus,33.5138,36.2765,Seat of government; Aleppo is Syria's largest city by pre-war population.
+Iran,IRN,Tehran,35.6892,51.3890,Largest city and seat of government.
+Yemen,YEM,Sana'a,15.3694,44.1910,"Yemen's constitutional capital; shown as a geographic reference point only -- not a statement on which government currently controls it amid the ongoing civil war (Aden hosts the internationally recognized government's seat)."
+Afghanistan,AFG,Kabul,34.5553,69.2075,Largest city and seat of government.

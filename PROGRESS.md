@@ -5,7 +5,48 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: closed China Exposure Depth's single-factor limitation** with a second, independent,
+**Most recent session: added two optional map reference layers -- major cities and named AI/compute
+hubs.** The project owner asked for the Regional Dashboard's map to "highlight main cities, ai hubs and
+other important info ... whatever is needed to make it more detailed." Built as two independently
+toggleable marker layers (both on by default) on the existing custom `go.Scatter`-polygon choropleth in
+`src/mapping.py`:
+
+- **Major cities** (`data/curated/major_cities.csv`, 17 rows) -- one reference dot + label per tracked
+  country, for geographic orientation. Framed deliberately as "major city," never "capital," to avoid
+  taking a position on disputed political-status questions: Israel is labeled Tel Aviv (its actual
+  tech/financial hub -- "Silicon Wadi" -- and arguably more relevant to an AI-alignment tracker than a
+  political capital anyway) rather than the internationally disputed Jerusalem designation; Yemen is
+  labeled Sana'a as the constitutional capital, worded to make no claim about which government currently
+  controls it amid the civil war.
+- **AI / compute hubs** (`data/curated/ai_hubs.csv`, 9 rows) -- specific, named infrastructure sites,
+  rendered as gold stars with hover text citing the deal, its scale, and its source. Built under a strict
+  rule to keep the no-fabrication discipline intact for a *new* kind of claim (precise geographic
+  location, which this project had never asserted before): **a site only gets a hub marker if its curated
+  deal-data notes already explicitly name that location** -- never inferred from a company's known
+  headquarters or an announcement venue. This ruled out two real candidates: the UAE's Stargate campus
+  (widely reported as Abu Dhabi-adjacent given G42's HQ, but the curated deal notes don't name a specific
+  site) and Saudi Arabia's "KKR + Gulf Data Hub (LEAP25)" deal (announced at a Riyadh conference, but the
+  conference venue isn't the same fact as the data center's physical site) were both left off the map
+  rather than guessed at. The 9 sites that made the cut: NEOM (Saudi Arabia); Ashdod, Mevo Carmel, and
+  Kiryat Tivon (Israel, 3 separate Nvidia/data-center deals); Cairo/Maadi Technology Park (Egypt, 2 deals);
+  Baghdad (Iraq); the Al-Risha gas field in eastern Jordan (explicitly flagged as an *approximate* regional
+  location, not a precise coordinate, since only the gas field's general area is disclosed); Tartus, Syria
+  (the SilkLink subsea cable landing station); and Istanbul (Turkey's Huawei Cloud region, already cited in
+  `chinese_digital_ties.csv`).
+
+`src/mapping.py`'s `build_choropleth_figure()` gained optional `city_markers`/`hub_markers` params (lists
+of `{lat, lon, name, hover}` dicts), rendered as additional `go.Scatter` traces on top of the existing
+country polygons -- zero new runtime dependencies, consistent with why this project draws its own
+choropleth instead of using Plotly's geo subplot machinery in the first place. `app_pages/
+regional_dashboard.py` gained two checkboxes next to the existing metric selector and a caption explaining
+what's shown and why (including the Tel Aviv/Sana'a framing and Jordan's approximate-location flag). Also
+fixed two stale mentions of "single-factor China axis" / "6 factors" in this page's own "read this before
+the numbers" expander that the prior session's China Exposure Depth work had missed. 18 new tests added
+(`tests/test_mapping.py`, plus new classes in `tests/test_scoring.py` and `tests/test_regional_dashboard.py`)
+covering the two CSVs' schemas and the marker-building/rendering logic; full suite at 104/104 passing.
+Verified in-browser via Playwright, including toggling both layers off.
+
+**Previous session: closed China Exposure Depth's single-factor limitation** with a second, independent,
 fully-sourced factor -- Chinese AI/cloud/digital-infrastructure ties -- researched across all 17 tracked
 countries and blended 50/50 with the existing Chinese-telecom-penetration factor. This was the top item on
 the project owner's approved "deepen the project" list, carrying an explicit standing instruction: no
