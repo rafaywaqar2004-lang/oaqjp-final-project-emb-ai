@@ -4,8 +4,10 @@ A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plu
 smaller-scale, non-Gulf comparators -- are navigating the US-China AI/chip competition, and what that
 means for regional stability and Western strategic interests.
 
-**Status: Phase 1 (MVP)** -- composite index, choropleth map, radar/bar comparison view. See
-[`PROGRESS.md`](PROGRESS.md) for what's built, what's next, and open questions for the project owner.
+**Status: Phase 1 (MVP) + Phase 3 (country deep-dives)** -- composite index, choropleth map, radar/bar
+comparison view, and per-country deep-dive pages with an auto-generated analyst brief and downloadable PDF.
+Also has a standalone written companion piece: [`briefs/gulf-ai-ambitions-and-geopolitical-risk.md`](briefs/gulf-ai-ambitions-and-geopolitical-risk.md).
+See [`PROGRESS.md`](PROGRESS.md) for what's built, what's next, and open questions for the project owner.
 
 ---
 
@@ -159,20 +161,37 @@ visible for context, excluded from the number, so ambition is never silently cou
 
 ```
 app.py                              # Streamlit entry point (Overview: index, map, ranking)
-pages/1_Country_Comparison.py       # Radar + bar comparison across all 6 factors
+pages/
+  1_Country_Comparison.py           # Radar + bar comparison across all 6 factors
+  2_Country_Deep_Dive.py            # Per-country auto-generated brief + timelines + PDF export
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
   mapping.py                        # Custom choropleth renderer (see note below)
+  country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
+  pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/gulf_countries.geojson        # Bundled country boundaries (see note below)
+briefs/
+  gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
 .github/workflows/refresh_worldbank_data.yml
 render.yaml                         # Render deployment config
 ```
+
+### The per-country brief is templated, not free-generated
+
+`src/country_brief.py` builds each country's Bottom-Line-Up-Front and Key Judgments by filling sentence
+templates with values pulled directly from `data/curated/*.csv` and the computed scores -- there is no LLM
+call at runtime, and no free-form text generation. This means the brief is deterministic (same data always
+produces the same brief), stays in sync automatically when a curated figure is corrected or updated, and
+every sentence is traceable to a specific cited row. Confidence tags on each judgment are pulled straight
+from that row's `confidence` column rather than invented separately. `src/pdf_export.py` renders the same
+`CountryBrief` object to a downloadable PDF via `reportlab` (pure Python, no system dependencies, so it
+works on Render's free tier without extra build steps).
 
 ### Why a custom choropleth renderer instead of `plotly.express.choropleth`
 
@@ -229,9 +248,11 @@ PYTHONPATH=src python src/scoring.py
 
 See [`PROGRESS.md`](PROGRESS.md) for full detail. In brief:
 
-- **Phase 1 (this phase):** Composite index, choropleth, radar/bar comparison. ✅
+- **Phase 1:** Composite index, choropleth, radar/bar comparison. ✅
+- **Phase 3:** Country deep-dive pages -- auto-generated brief, investment/compute timelines, downloadable
+  PDF brief. ✅ (built ahead of Phase 2 -- see `PROGRESS.md` for why)
 - **Phase 2:** Policy Event Tracker tab -- chronological, sourced feed (Nov 2025 chip approvals, smuggling
-  enforcement cases, the March 2026 Chip Security Act, etc.).
-- **Phase 3:** Country deep-dive pages -- investment timeline, governance summary, downloadable PDF brief.
+  enforcement cases, the March 2026 Chip Security Act, etc.). Not yet built; the working rule is to build
+  it when a written piece specifically needs a sourced policy timeline to cite, not on a fixed schedule.
 - **Phase 4 (stretch):** Scenario toggle -- reweight the index live against a hypothetical tightening/
-  loosening of export controls.
+  loosening of export controls. Lowest priority -- see `PROGRESS.md`.

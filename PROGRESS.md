@@ -24,10 +24,33 @@ designed, standalone page: https://claude.ai/code/artifact/42522a4b-83ae-48ef-88
 private; the project owner needs to share it from the page's share menu before linking it publicly from the
 portfolio site). See "Sequencing decision" below for why this came before Phase 2.
 
-**Not yet started:** Phase 2 (Policy Event Tracker), Phase 3 (country deep-dives + PDF export), Phase 4
-(scenario reweighting toggle). See "Sequencing decision" for the current view on when to pick Phase 2 back up.
+**Phase 3 (country deep-dives) is also built**, ahead of Phase 2, per the same sequencing logic:
+- `src/country_brief.py` -- templates a per-country BLUF + Key Judgments brief straight from the curated
+  CSVs and computed scores. No LLM call at runtime, no free-generated text: every sentence is built from
+  conditional templates filled with real cited values, so the brief is deterministic and stays correct
+  automatically when a curated figure changes. Confidence tags come directly from each source row's
+  `confidence` column.
+- `src/pdf_export.py` -- renders the same brief to a downloadable PDF via `reportlab` (pure Python, no
+  system deps, so it'll build fine on Render's free tier).
+- `pages/2_Country_Deep_Dive.py` -- the Streamlit page: country selector, sub-score metrics, the
+  BLUF/Key-Judgments brief, investment and compute-capacity timelines (every deal from the curated CSVs,
+  including the excluded/aspirational ones, each labeled), sources list, and the PDF download button.
+- **Real bug caught and fixed during testing**: Streamlit's markdown renderer treats a matched pair of `$`
+  characters as a LaTeX math span (`$34.2bn ... $23.0bn` was rendering as a garbled math/code block instead
+  of plain text). Fixed with an `esc()` helper in the page that escapes literal `$` before any generated
+  text reaches `st.write`/`st.markdown`/`st.caption`/`st.info`. This only affects the Streamlit UI layer --
+  the PDF export (reportlab) was never affected, since it uses its own markup, not Streamlit's markdown.
+  Worth remembering if any future page renders generated text containing dollar amounts.
 
-## Sequencing decision: why the written brief came before Phase 2
+This reframes what "Phase 3" means from the original brief: rather than a UI feature bolted onto the
+dashboard, the per-country brief is a second written-analysis output (8 short country briefs, same
+BLUF/Key-Judgments format as the standalone Gulf-wide brief) that happens to live inside the dashboard --
+which was the whole point of prioritizing it over Phase 2 and Phase 4 (see below).
+
+**Not yet started:** Phase 2 (Policy Event Tracker), Phase 4 (scenario reweighting toggle). See "Sequencing
+decision" below, and its update after Phase 3 shipped, for the current view on both.
+
+## Sequencing decision: why the written brief (and then Phase 3) came before Phase 2
 
 Checked the project owner's live portfolio (`rafaywaqar2004-lang/rafaywaqar-portfolio`) mid-project. Two
 things came out of that worth recording:
@@ -52,6 +75,19 @@ such need arises, the next unit of work should be another written piece (the mon
 or the sovereign-debt/political-instability brief, both already listed as "Planned" on the portfolio) rather
 than more dashboard features, on the logic that 2-3 written analytic pieces will do more for this specific
 career goal than a third dashboard.
+
+**Update after Phase 3 shipped:** when asked what should happen to Phases 2-4, the view given (and agreed
+by the project owner, who said to proceed) was to rank them by how much each demonstrates analyst judgment
+rather than build order:
+- **Phase 4 (scenario reweighting toggle) is deprioritized, possibly permanently.** It's an interaction
+  feature, not an analytic one -- wiring a slider to a recompute function doesn't demonstrate judgment the
+  way the rest of this project does. Lowest priority; fine to skip if time is short.
+- **Phase 2 (Policy Event Tracker) stays on the "build when a brief needs it" rule above** -- not
+  reprioritized, just reaffirmed.
+- **Phase 3 (this session's work) turned out to be worth doing *before* Phase 2 after all**, once reframed:
+  a per-country downloadable PDF brief in the same BLUF/Key-Judgments format as the standalone brief isn't
+  really a dashboard feature, it's 8 more written-analysis outputs with a UI wrapper. That reframing is why
+  it jumped the queue -- see "Where things stand" above for what got built.
 
 ## Key decisions made, and why
 
@@ -147,8 +183,15 @@ reader (or a future research pass) should hit first.
 3. Confirm the fixed normalization ceilings ($50bn / 6000MW) still feel right, or would you rather they be
    configurable/documented differently (e.g. tied to a specific benchmark like "2x the current leader"
    instead of a static number)?
-4. Ready to move to **Phase 2 (Policy Event Tracker)** next, per the original build order, unless you'd
-   rather prioritize closing the confidence gaps above first.
+4. **Three things only you can do, blocking visibility of what's already built:** share the brief artifact
+   publicly (currently private -- https://claude.ai/code/artifact/42522a4b-83ae-48ef-887f-caebdc87cf20),
+   deploy the tracker to Render, and update the portfolio site's two Gulf project cards (this session only
+   has read access to `rafaywaqar-portfolio`, so these pushes can't be done for you unless you grant push
+   access or paste in the copy/links yourself).
+5. **Next content decision**, per the sequencing update above: another written piece (monthly MENA brief
+   series, or the sovereign-debt/political-instability brief pairing with the MENASA Risk Monitor the same
+   way this project's brief pairs with this tracker) rather than Phase 2, unless a specific need for the
+   policy timeline comes up first.
 
 ## Environment note for whoever picks this up next
 
