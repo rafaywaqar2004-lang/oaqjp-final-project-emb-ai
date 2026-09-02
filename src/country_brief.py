@@ -76,6 +76,7 @@ def load_curated() -> dict[str, pd.DataFrame]:
     return {
         "tier": pd.read_csv(base / "export_control_tier.csv"),
         "china": pd.read_csv(base / "chinese_tech_penetration.csv"),
+        "china_digital": pd.read_csv(base / "chinese_digital_ties.csv"),
         "governance": pd.read_csv(base / "governance_maturity.csv"),
         "investment": pd.read_csv(base / "ai_investment_deals.csv"),
         "compute": pd.read_csv(base / "compute_capacity_deals.csv"),
@@ -89,6 +90,7 @@ def generate_brief(country: str, curated: dict[str, pd.DataFrame] | None = None,
     row = composite[composite["country"] == country].iloc[0]
     tier_row = curated["tier"][curated["tier"]["country"] == country]
     china_row = curated["china"][curated["china"]["country"] == country]
+    china_digital_row = curated["china_digital"][curated["china_digital"]["country"] == country]
     gov_row = curated["governance"][curated["governance"]["country"] == country]
 
     inv_deals = curated["investment"][(curated["investment"]["country"] == country) & (curated["investment"]["counted_in_score"] == True)]  # noqa: E712
@@ -147,8 +149,15 @@ def generate_brief(country: str, curated: dict[str, pd.DataFrame] | None = None,
     if not china_row.empty:
         c = china_row.iloc[0]
         judgments.append(Judgment(
-            text=f"On Chinese technology penetration, {country} is characterized as '{c['penetration_label']}'. {c['rationale']}",
+            text=f"On Chinese telecom penetration, {country} is characterized as '{c['penetration_label']}'. {c['rationale']}",
             confidence=_confidence_label(c["confidence"]),
+        ))
+
+    if not china_digital_row.empty:
+        cd = china_digital_row.iloc[0]
+        judgments.append(Judgment(
+            text=f"On Chinese AI/cloud/digital-infrastructure ties, {country} is characterized as '{cd['digital_ties_label']}'. {cd['rationale']}",
+            confidence=_confidence_label(cd["confidence"]),
         ))
 
     if not gov_row.empty:
@@ -159,7 +168,10 @@ def generate_brief(country: str, curated: dict[str, pd.DataFrame] | None = None,
         ))
 
     sources = []
-    for topic, df in (("Export control", tier_row), ("Chinese tech penetration", china_row), ("Governance", gov_row)):
+    for topic, df in (
+        ("Export control", tier_row), ("Chinese telecom penetration", china_row),
+        ("Chinese AI/cloud/digital ties", china_digital_row), ("Governance", gov_row),
+    ):
         if not df.empty:
             r = df.iloc[0]
             sources.append({"topic": topic, "name": r["source_name"], "url": r.get("source_url", ""), "date": r["as_of_date"]})

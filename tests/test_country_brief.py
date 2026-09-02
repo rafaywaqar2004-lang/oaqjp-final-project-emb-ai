@@ -59,8 +59,9 @@ def test_well_sourced_country_has_no_data_gap_judgment(curated, composite):
 
 
 def test_sources_are_deduplicated_by_row_not_missing(curated, composite):
-    """Every country with curated tier/china/governance rows should carry
-    at least those 3 sources (plus any investment/compute deal sources)."""
+    """Every country with curated tier/china/china_digital/governance rows
+    should carry at least those 4 sources (plus any investment/compute deal
+    sources)."""
     brief = generate_brief("Saudi Arabia", curated=curated, composite=composite)
     topics = {s["topic"] for s in brief.sources}
-    assert {"Export control", "Chinese tech penetration", "Governance"}.issubset(topics)
+    assert {"Export control", "Chinese telecom penetration", "Chinese AI/cloud/digital ties", "Governance"}.issubset(topics)

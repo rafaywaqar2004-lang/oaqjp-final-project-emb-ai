@@ -5,7 +5,68 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: a scoped subset of a 56-section "master upgrade brief"** the project owner pasted
+**Most recent session: closed China Exposure Depth's single-factor limitation** with a second, independent,
+fully-sourced factor -- Chinese AI/cloud/digital-infrastructure ties -- researched across all 17 tracked
+countries and blended 50/50 with the existing Chinese-telecom-penetration factor. This was the top item on
+the project owner's approved "deepen the project" list, carrying an explicit standing instruction: no
+fabrication, everything grounded in current, reliable, cited 2025/2026 sources.
+
+**How the research was done:** three parallel background research agents (isolated worktrees, `WebSearch`
+only -- `WebFetch` is broadly blocked in this sandbox, confirmed even for benign domains like Wikipedia),
+each covering a subset of the 17 countries, each returning structured JSON scored against a shared 0-5
+rubric (0 = no disclosed presence, 5 = extensive/state-level backbone plus multiple financing ties -- see
+the Methodology page or README for the full table). Every row carries a `source_name`, `source_url`,
+`confidence` (High/Medium/Low), `as_of_date`, and a `rationale` explaining the score -- the same sourcing
+bar as every other curated factor in this project, never an inferred or aggregated number.
+
+**A real integrity check passed during this research:** one candidate source for Egypt's digital-ties score
+-- a specific-dollar-figure claim ("$9.8bn, Deutsche Bank-facilitated" data-center financing via an obscure
+outlet, `cqbluejay.com`) -- was flagged by the research agent itself as carrying "hallmarks of a fabricated
+financial press release" (a chain of obscure SPV entities with no independent corroboration) and correctly
+declined. Egypt's score instead rests on mainstream Bloomberg/Entrepreneur/Al-Monitor reporting of the real,
+still-unresolved Huawei/iFlytek AI-data-center bid. This is the no-fabrication instruction working as
+intended, not a close call that got waved through.
+
+**What changed in the data and the score:**
+
+- New file `data/curated/chinese_digital_ties.csv` (17 rows, full schema matching the project's other
+  curated factors). Final scores span the full 0-5 range: Israel and Bahrain lowest (0-1, `High`/`Low`
+  confidence respectively), Saudi Arabia and Pakistan highest (4, "Deep"). Three rows (Bahrain, Jordan,
+  Iraq) are `Low` confidence -- flagged, not hidden -- because their evidence rests on a single MOU or
+  marketing announcement rather than a confirmed, audited deployment.
+- A specific, documented finding worth a reader's attention: **Saudi Arabia's digital-ties score (4/5,
+  "Deep") exceeds its telecom-penetration score (3/5, "Significant")** -- an active Huawei/Alibaba Cloud
+  footprint plus a disclosed Chinese-financed data-center joint venture outweighs its telecom exposure.
+  **Iraq shows the opposite pattern** (telecom 4/5 "Deep" vs. digital ties 1/5 "Minimal" -- Huawei is
+  entrenched in Iraqi telecom, but its flagship digital-infrastructure financing bid has stalled). Neither
+  factor reliably predicts the other, which is exactly why the brief called for two factors instead of one.
+- `src/scoring.py`: new `CHINA_TELECOM_WEIGHT = 0.50` / `CHINA_DIGITAL_WEIGHT = 0.50` constants; a new
+  shared `_weighted_average()` helper (replacing the old US-Integration-only inline closure, now used
+  symmetrically by both axes); `build_composite()` gained `china_telecom_weight` / `china_digital_weight`
+  override params, defaulting to the scored 50/50 split, with the same renormalize-over-available-factors
+  behavior US Integration Depth already had (a country missing one China factor is scored on the other
+  alone, never silently treated as 0).
+- Real score movement, not a cosmetic relabeling: Saudi Arabia's `net_alignment_score` moved from 59.78 to
+  54.78 once its China Exposure Depth stopped being a pure telecom-only passthrough (60.0) and became the
+  blended figure (70.0, pulled up by its high digital-ties score). This is the expected, correct effect of
+  adding a real second factor -- not a bug.
+- `src/country_brief.py`, `app_pages/country_comparison.py` (radar + raw-data table), and
+  `app_pages/regional_dashboard.py` (map metric selector) all updated to surface the new factor alongside
+  the existing telecom one, never replacing it.
+- `app_pages/scenario_lab.py` gained a China Exposure Depth sub-weight slider row (telecom vs. digital
+  ties), mirroring the existing US Integration slider row exactly -- two new presets
+  ("China-telecom-centric", "China-digital-ties-centric") demonstrate the two ends of that range, and the
+  Model Robustness analysis now samples the China sub-weights too, not just the US ones.
+- `app_pages/methodology.py` and README.md updated: the factor-weights table, the ordinal-rubric tabs (a
+  third rubric added), the confidence-counts table, the "why 7 factors" section, the Known Limitations
+  entry (rewritten from "single-factor axis" to "the new factor is thinner-sourced than the one it
+  complements," which is now the true state), and the Scenario Lab / roadmap sections.
+- `data/computed/composite_scores.csv` regenerated; `data/computed/composite_scores_history.csv` gained a
+  new dated snapshot reflecting the post-change scores.
+- Full test suite (86 tests, including new coverage for the weighted-average symmetry, the renormalization
+  behavior, and the curated CSV's own shape) passes.
+
+**Previous session: a scoped subset of a 56-section "master upgrade brief"** the project owner pasted
 (sourced from an outside consultant's advice), aimed at turning the tracker into a CSIS/CFR/PIIE-style
 professional geopolitical-intelligence product rather than a "Streamlit demo." The brief itself says to
 implement in phases, not all at once, and names its own top 3 highest-value items -- this session did
@@ -577,10 +638,12 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
 
 ## Open questions for the project owner
 
-1. **Should China Exposure Depth stay a single-factor axis, or is it worth the research time to add a
-   second China-tie factor** (e.g. disclosed Chinese AI model deployments, CPEC/BRI-style digital
-   financing) before Phase 2? Flagged as a known limitation in the README; not blocking, but worth a
-   decision before this is shown to anyone who'd press on it.
+1. **Resolved this session.** China Exposure Depth now blends Chinese telecom penetration with a new,
+   independently-researched Chinese AI/cloud/digital-ties factor (50/50, renormalized when one is missing).
+   See "Where things stand" above for the research method, the specific country findings, and the resulting
+   score movements. The new factor's sourcing is thinner than the telecom factor it complements (3 of 17
+   rows are `Low` confidence) -- worth a follow-up pass if this project is ever shown to a critical reader,
+   but not a blocking gap.
 2. **Partially resolved this session** -- see "Where things stand" above. Turkey's governance score and
    Saudi Arabia's China-penetration score are now `Medium` confidence with fresh sources; Bahrain's
    China-penetration score was corrected outright. **Still open:** Qatar/Bahrain/Kuwait/Oman's and Turkey's
@@ -612,13 +675,12 @@ all of them as "Planned" until the project owner updates it -- see "Open questio
    still-unverified export-control tier for Qatar, Bahrain, Kuwait, Oman, and Turkey, which needs a session
    that can actually reach `bis.gov`. A fifth written piece is a reasonable option too, but depth on what
    already exists is the stronger use of time at this point, not more breadth.
-8. **Start capturing dated score snapshots** (a small addition to `src/scoring.py`'s `__main__` block: on
-   each refresh, append the current `data/computed/composite_scores.csv` output to a
-   `data/computed/composite_scores_history.csv`, dated, alongside the existing overwrite-in-place file) so
-   that Score Momentum, historical trend charts, and a real 12-Month Outlook -- all explicitly scoped out of
-   this session's redesign work for lack of any historical data to compute them from -- become buildable
-   honestly in a few months rather than staying permanently blocked. Low effort, no risk, purely additive;
-   just wasn't in scope for a session that was implementing a specific, already-large prioritized brief.
+8. **Resolved in a later session.** `src/scoring.py`'s `__main__` block now calls
+   `append_history_snapshot()` on every refresh, appending a dated row per country to
+   `data/computed/composite_scores_history.csv` (idempotent per day). Score Momentum, historical trend
+   charts, and a real 12-Month Outlook are still not built (there isn't yet enough history accumulated to
+   make them meaningful), but the data collection that unblocks them going forward is now in place and has
+   been running for several sessions.
 
 ## Environment note for whoever picks this up next
 

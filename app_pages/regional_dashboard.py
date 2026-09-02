@@ -212,6 +212,8 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         "Net Alignment Score": dict(col="net_alignment_score", range=(0, 100), colorscale=[RED, "#f0e6c8", "#a9c4de", BLUE], unit="", cb="0=China-leaning<br>100=US-integrated"),
         "US Integration Depth": dict(col="us_integration_depth", range=(0, 100), colorscale=["#f0e6c8", BLUE], unit="", cb="US Integration Depth"),
         "China Exposure Depth": dict(col="china_exposure_depth", range=(0, 100), colorscale=["#f0e6c8", RED], unit="", cb="China Exposure Depth"),
+        "Chinese Telecom Penetration (0-5)": dict(col="china_penetration_raw", range=(0, 5), colorscale=["#f0e6c8", RED], unit="/5", cb="Telecom penetration (0-5)"),
+        "Chinese AI/Cloud/Digital Ties (0-5)": dict(col="china_digital_raw", range=(0, 5), colorscale=["#f0e6c8", RED], unit="/5", cb="AI/cloud/digital ties (0-5)"),
         "AI Investment ($bn, scored deals)": dict(col="investment_usd_bn", range=(0, max(1.0, df["investment_usd_bn"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="bn", cb="Disclosed AI investment ($bn)"),
         "Compute Capacity (MW, scored deals)": dict(col="compute_mw", range=(0, max(1.0, df["compute_mw"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="MW", cb="Compute capacity (MW)"),
         "AI Governance Maturity (0-5)": dict(col="governance_raw", range=(0, 5), colorscale=["#f0e6c8", GOLD], unit="/5", cb="Governance maturity (0-5)"),

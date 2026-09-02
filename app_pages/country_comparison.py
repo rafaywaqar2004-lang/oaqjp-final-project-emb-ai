@@ -20,7 +20,8 @@ FACTOR_COLUMNS = {
     "us_tier_score_100": "US Export-Control Access",
     "investment_score_100": "AI Investment Volume",
     "compute_score_100": "Compute/Data-Center Capacity",
-    "china_penetration_score_100": "Chinese Tech Penetration",
+    "china_penetration_score_100": "Chinese Telecom Penetration",
+    "china_digital_score_100": "Chinese AI/Cloud/Digital Ties",
     "governance_score_100": "AI Governance Maturity",
 }
 
@@ -96,14 +97,15 @@ def main() -> None:
     st.divider()
     st.subheader("Raw data table")
     display_cols = [
-        "country", "us_tier_raw", "china_penetration_raw", "governance_raw",
+        "country", "us_tier_raw", "china_penetration_raw", "china_digital_raw", "governance_raw",
         "investment_usd_bn", "compute_mw", "non_oil_diversification_proxy",
         "us_integration_depth", "china_exposure_depth", "net_alignment_score",
     ]
     st.dataframe(
         view_df[display_cols].rename(columns={
             "us_tier_raw": "US Tier (0-5)",
-            "china_penetration_raw": "China Penetration (0-5)",
+            "china_penetration_raw": "China Telecom Penetration (0-5)",
+            "china_digital_raw": "Chinese AI/Cloud/Digital Ties (0-5)",
             "governance_raw": "Governance (0-5)",
             "investment_usd_bn": "Investment ($bn, scored deals)",
             "compute_mw": "Compute (MW, scored deals)",

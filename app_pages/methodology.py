@@ -34,8 +34,9 @@ built in two layers:
 
 1. **US Integration Depth** (0-100): a weighted average of US export-control access tier, disclosed
    in-country AI investment, and disclosed compute capacity.
-2. **China Exposure Depth** (0-100): currently Chinese tech penetration alone — a documented single-factor
-   limitation, not an oversight (see below).
+2. **China Exposure Depth** (0-100): a weighted average of Chinese telecom-vendor penetration (Huawei
+   5G/fiber) and Chinese AI/cloud/digital-infrastructure ties — two distinct hedging signals, since a state
+   can carry deep legacy telecom exposure with little AI-stack exposure, or vice versa.
 3. **Net Alignment Score** (0-100, 50 = neutral), *derived*: `50 + (US Integration Depth − China Exposure Depth) / 2`.
    **50 does not mean "inactive"** — a country maxing out both axes and a country doing little on either
    can both land near 50. Try the **Scenario Lab** page to see how sensitive this reading is to how
@@ -50,7 +51,8 @@ built in two layers:
         {"Factor": "US export-control access tier", "Axis": "US Integration Depth", "Weight": "40%", "Type": "Ordinal (0-5), curated"},
         {"Factor": "Disclosed AI infrastructure investment", "Axis": "US Integration Depth", "Weight": "30%", "Type": f"Log-scale, ceiling ${INVESTMENT_CEILING_USD_BN}bn"},
         {"Factor": "Disclosed/under-development compute capacity", "Axis": "US Integration Depth", "Weight": "30%", "Type": f"Log-scale, ceiling {COMPUTE_CEILING_MW:,}MW"},
-        {"Factor": "Chinese tech penetration", "Axis": "China Exposure Depth", "Weight": "100%", "Type": "Ordinal (0-5), curated"},
+        {"Factor": "Chinese telecom-vendor penetration", "Axis": "China Exposure Depth", "Weight": "50%", "Type": "Ordinal (0-5), curated"},
+        {"Factor": "Chinese AI/cloud/digital-infrastructure ties", "Axis": "China Exposure Depth", "Weight": "50%", "Type": "Ordinal (0-5), curated"},
         {"Factor": "AI governance maturity", "Axis": "Context only, not scored", "Weight": "—", "Type": "Ordinal (0-5), curated"},
         {"Factor": "Non-oil economic diversification", "Axis": "Context only, not scored", "Weight": "—", "Type": "World Bank, live-refreshed"},
     ])
@@ -63,6 +65,17 @@ gatekeeper — a state's formal BIS status determines what capital and hardware 
 possible, before either of the other two factors can move. **Investment and compute are weighted equally
 (30% each)** because capital committed and physical infrastructure built are distinct facts that don't
 always move together — a state can announce big dollar figures well ahead of actual buildout, or vice versa.
+
+**Telecom penetration and digital ties are weighted equally (50% each)** within China Exposure Depth for
+the same reason: a Huawei-built national 5G/fiber backbone (physical, capital-intensive, slow to rip out)
+and a Chinese AI-model/cloud partnership (contractual, can be renegotiated or dual-sourced faster) are both
+real hedging signals but sit at different points on the reversibility spectrum, and neither reliably implies
+the other. In the curated data, Saudi Arabia's telecom-penetration score (3/5, "Significant") sits below its
+digital-ties score (4/5, "Deep" -- an active Huawei/Alibaba Cloud footprint plus a disclosed Chinese-financed
+data-center joint venture), while Iraq shows the opposite pattern (telecom 4/5 "Deep" vs. digital ties 1/5
+"Minimal" -- Huawei is core to Iraqi telecom, but its flagship digital-infrastructure financing bid has
+stalled). Try the **Scenario Lab**'s China Exposure Depth sliders to see how much this weighting choice
+moves individual countries' rank.
 
 **Fixed-ceiling log-scale normalization, not dataset-relative min-max**, for the two dollar/MW factors. With
 only 2-3 countries carrying any disclosed investment/compute figure, min-max normalization would stretch a
@@ -79,7 +92,7 @@ they're state-capacity signals, not alignment signals.
 
     st.divider()
     st.subheader("Ordinal rubrics")
-    tab1, tab2 = st.tabs(["US export-control access tier", "Chinese tech penetration"])
+    tab1, tab2, tab3 = st.tabs(["US export-control access tier", "Chinese telecom penetration", "Chinese AI/cloud/digital ties"])
     with tab1:
         st.markdown(
             """
@@ -104,6 +117,19 @@ they're state-capacity signals, not alignment signals.
 | 3 | Significant -- Huawei is a major/core RAN vendor for at least one major carrier |
 | 4 | Deep -- Huawei core RAN across multiple major carriers, plus cloud/enterprise expansion |
 | 5 | Extensive -- Huawei is the leading/sole 5G vendor across all major carriers, plus deep economic ties |
+            """
+        )
+    with tab3:
+        st.markdown(
+            """
+| Score | Meaning |
+|---|---|
+| 0 | No disclosed Chinese AI/cloud infrastructure presence or financing found |
+| 1 | Minimal -- an isolated MOU, marketing presence, or announcement, with no confirmed active deployment or financing |
+| 2 | Moderate -- an actively marketed/launched Chinese cloud service, but no AI-model deployment and no digital-infrastructure financing |
+| 3 | Significant -- confirmed active Chinese AI-model deployment OR confirmed Chinese financing of digital infrastructure (not both) |
+| 4 | Deep -- confirmed active Chinese AI-model/cloud deployment AND confirmed Chinese financing of digital infrastructure |
+| 5 | Extensive -- primary/state-level Chinese digital backbone plus multiple, distinct financing ties |
             """
         )
     st.caption(
@@ -132,7 +158,8 @@ Iran sanctions/missing-data problem.
         frames = []
         for name, col in [
             ("Export control tier", "export_control_tier.csv"),
-            ("Chinese tech penetration", "chinese_tech_penetration.csv"),
+            ("Chinese telecom penetration", "chinese_tech_penetration.csv"),
+            ("Chinese AI/cloud/digital ties", "chinese_digital_ties.csv"),
             ("Governance maturity", "governance_maturity.csv"),
         ]:
             df = pd.read_csv(Path(CURATED_DIR) / col)

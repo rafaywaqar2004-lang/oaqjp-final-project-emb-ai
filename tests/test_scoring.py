@@ -6,6 +6,8 @@ import pytest
 
 from constants import COUNTRIES
 from scoring import (
+    CHINA_DIGITAL_WEIGHT,
+    CHINA_TELECOM_WEIGHT,
     COMPUTE_CEILING_MW,
     INVESTMENT_CEILING_USD_BN,
     US_COMPUTE_WEIGHT,
@@ -80,16 +82,35 @@ class TestBuildComposite:
         for value in df["us_integration_depth"]:
             assert pd.isna(value) or 0 <= value <= 100
 
-    def test_china_exposure_depth_matches_penetration_score(self, df):
-        # China Exposure Depth is currently a single-factor axis (see README
-        # limitations) -- it should equal the normalized penetration score exactly.
+    def test_china_exposure_depth_is_50_50_average_of_telecom_and_digital(self, df):
+        # China Exposure Depth blends two equally-weighted factors (see module
+        # docstring): Chinese telecom penetration and Chinese AI/cloud/
+        # digital-infrastructure ties. Both are always disclosed for all 17
+        # tracked countries in the current dataset, so this should hold exactly.
         for _, row in df.iterrows():
-            if pd.notna(row["china_penetration_score_100"]):
-                assert row["china_exposure_depth"] == pytest.approx(row["china_penetration_score_100"])
+            if pd.notna(row["china_penetration_score_100"]) and pd.notna(row["china_digital_score_100"]):
+                expected = (row["china_penetration_score_100"] + row["china_digital_score_100"]) / 2
+                assert row["china_exposure_depth"] == pytest.approx(expected)
+
+    def test_china_exposure_depth_equals_single_factor_when_other_missing(self, df):
+        """The renormalization rule that already applies to US Integration
+        Depth applies symmetrically to China Exposure Depth: a country
+        missing one of the two China factors should read the other factor's
+        value directly, not a value pulled toward a phantom 0."""
+        only_telecom = df[df["china_penetration_score_100"].notna() & df["china_digital_score_100"].isna()]
+        for _, row in only_telecom.iterrows():
+            assert row["china_exposure_depth"] == pytest.approx(row["china_penetration_score_100"])
+        only_digital = df[df["china_digital_score_100"].notna() & df["china_penetration_score_100"].isna()]
+        for _, row in only_digital.iterrows():
+            assert row["china_exposure_depth"] == pytest.approx(row["china_digital_score_100"])
 
     def test_factors_available_never_exceeds_three(self, df):
         assert df["us_integration_factors_available"].max() <= 3
         assert df["us_integration_factors_available"].min() >= 0
+
+    def test_china_exposure_factors_available_never_exceeds_two(self, df):
+        assert df["china_exposure_factors_available"].max() <= 2
+        assert df["china_exposure_factors_available"].min() >= 0
 
     def test_net_alignment_formula(self, df):
         """50 + (US Integration Depth - China Exposure Depth) / 2, clipped to [0, 100]."""
@@ -160,8 +181,28 @@ class TestScenarioOverrides:
         overridden = build_composite(
             tier_weight=US_TIER_WEIGHT, investment_weight=US_INVESTMENT_WEIGHT,
             compute_weight=US_COMPUTE_WEIGHT, axis_balance=0.5,
+            china_telecom_weight=CHINA_TELECOM_WEIGHT, china_digital_weight=CHINA_DIGITAL_WEIGHT,
         )
         pd.testing.assert_frame_equal(baseline, overridden)
+
+    def test_china_weights_are_renormalized_not_required_to_sum_to_one(self):
+        df_raw = build_composite(china_telecom_weight=70, china_digital_weight=30)
+        df_fraction = build_composite(china_telecom_weight=0.70, china_digital_weight=0.30)
+        pd.testing.assert_series_equal(df_raw["china_exposure_depth"], df_fraction["china_exposure_depth"])
+
+    def test_telecom_heavy_weighting_moves_scores_toward_telecom_factor(self):
+        """A country whose telecom-penetration score differs from its
+        digital-ties score should visibly shift when telecom is weighted
+        much more heavily. Saudi Arabia's two China factors genuinely
+        differ (60 vs. 80 in the scored dataset), so this is a real check,
+        not a tautology."""
+        baseline = build_composite().set_index("country")
+        telecom_heavy = build_composite(china_telecom_weight=100, china_digital_weight=1).set_index("country")
+        assert not math.isclose(
+            baseline.loc["Saudi Arabia", "china_exposure_depth"],
+            telecom_heavy.loc["Saudi Arabia", "china_exposure_depth"],
+            abs_tol=0.01,
+        )
 
     def test_weights_are_renormalized_not_required_to_sum_to_one(self):
         """Scenario presets pass human-friendly numbers like 70/15/15, not
@@ -267,3 +308,32 @@ class TestAppendHistorySnapshot:
         df = pd.read_csv(history_path)
         assert len(df) == len(COUNTRIES) * 2
         assert set(df["snapshot_date"]) == {"2026-01-01", "2026-02-01"}
+
+
+@pytest.fixture(scope="module")
+def digital_ties():
+    from constants import CURATED_DIR
+
+    return pd.read_csv(Path(CURATED_DIR) / "chinese_digital_ties.csv")
+
+
+class TestChineseDigitalTiesData:
+    """Structural checks on data/curated/chinese_digital_ties.csv -- the
+    second China Exposure Depth factor (Chinese AI/cloud/digital-
+    infrastructure ties), added to close the single-factor-axis limitation.
+    Mirrors this project's existing rigor: every row must be a real,
+    dated, cited, confidence-tagged research finding, never a placeholder."""
+
+    def test_all_tracked_countries_present(self, digital_ties):
+        assert set(digital_ties["country"]) == set(COUNTRIES.keys())
+
+    def test_scores_are_valid_ordinal_0_to_5(self, digital_ties):
+        assert digital_ties["digital_ties_score"].between(0, 5).all()
+
+    def test_confidence_values_are_recognized(self, digital_ties):
+        assert set(digital_ties["confidence"]).issubset({"High", "Medium", "Low"})
+
+    def test_every_row_has_a_named_source_and_rationale(self, digital_ties):
+        for _, row in digital_ties.iterrows():
+            assert isinstance(row["source_name"], str) and len(row["source_name"]) > 0
+            assert isinstance(row["rationale"], str) and len(row["rationale"]) > 40

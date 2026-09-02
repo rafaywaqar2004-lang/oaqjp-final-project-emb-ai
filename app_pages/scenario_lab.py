@@ -17,7 +17,13 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import COUNTRIES  # noqa: E402
-from scoring import build_composite, INVESTMENT_CEILING_USD_BN, COMPUTE_CEILING_MW  # noqa: E402
+from scoring import (  # noqa: E402
+    build_composite,
+    CHINA_DIGITAL_WEIGHT,
+    CHINA_TELECOM_WEIGHT,
+    COMPUTE_CEILING_MW,
+    INVESTMENT_CEILING_USD_BN,
+)
 from ui import inject_base_css, footer, GREEN, GOLD, GRAY  # noqa: E402
 
 N_ROBUSTNESS_SAMPLES = 150
@@ -27,23 +33,38 @@ ROBUSTNESS_SEED = 42
 PRESETS = {
     "Default (as scored)": {
         "tier": 40, "investment": 30, "compute": 30, "axis_balance": 50,
+        "china_telecom": 50, "china_digital": 50,
         "rationale": "The methodology as scored throughout the rest of this tracker -- see README.md for the full weighting rationale.",
     },
     "Export-control-centric": {
         "tier": 70, "investment": 15, "compute": 15, "axis_balance": 50,
+        "china_telecom": 50, "china_digital": 50,
         "rationale": "For an analyst who treats formal BIS export-control status as the single most decisive signal of US integration, discounting capital and hardware commitments that could still be reversed by a change in the regulatory relationship.",
     },
     "Capital-and-hardware-centric": {
         "tier": 15, "investment": 45, "compute": 40, "axis_balance": 50,
+        "china_telecom": 50, "china_digital": 50,
         "rationale": "For an analyst who thinks money and physical infrastructure already committed on the ground is stickier and more predictive than a regulatory label that could change with the next administration or the next bilateral deal.",
     },
     "China-exposure-weighted": {
         "tier": 40, "investment": 30, "compute": 30, "axis_balance": 25,
+        "china_telecom": 50, "china_digital": 50,
         "rationale": "For an analyst prioritizing hedging-risk exposure -- how deep a state's Chinese technology ties run -- over how deep its US integration runs, when assessing overall alignment.",
     },
     "US-integration-weighted": {
         "tier": 40, "investment": 30, "compute": 30, "axis_balance": 75,
+        "china_telecom": 50, "china_digital": 50,
         "rationale": "For an analyst who thinks US chip-access depth is the more strategically consequential axis right now, and Chinese telecom exposure is a secondary, slower-moving signal by comparison.",
+    },
+    "China-telecom-centric": {
+        "tier": 40, "investment": 30, "compute": 30, "axis_balance": 50,
+        "china_telecom": 80, "china_digital": 20,
+        "rationale": "For an analyst who treats physical telecom-backbone vendor choice (Huawei 5G/fiber) as the harder-to-reverse hedging signal, discounting AI/cloud partnerships that can be renegotiated or dual-sourced more easily.",
+    },
+    "China-digital-ties-centric": {
+        "tier": 40, "investment": 30, "compute": 30, "axis_balance": 50,
+        "china_telecom": 20, "china_digital": 80,
+        "rationale": "For an analyst who thinks AI-model, cloud, and digital-infrastructure partnerships with Chinese firms are the more strategically consequential exposure right now -- these touch the AI stack directly, where legacy telecom contracts may not.",
     },
 }
 
@@ -55,14 +76,15 @@ def esc(text) -> str:
 @st.cache_data(ttl=3600)
 def _robustness_table(n_samples: int = N_ROBUSTNESS_SAMPLES, seed: int = ROBUSTNESS_SEED) -> pd.DataFrame:
     """Samples n_samples random-but-valid weight configurations (all three
-    US Integration sub-weights and axis_balance drawn uniformly, exactly the
-    same valid range the sliders above allow) and recomputes the full
-    ranking each time via the same build_composite() used everywhere else
-    in this tracker -- no separate model, no shortcuts. Reports, per
-    country: how often it lands in the top 3, its median rank, and its full
-    rank range across all samples. This is scenario/rank *stability*, not a
-    statistical confidence interval -- it describes how sensitive the
-    ranking is to plausible reweighting, nothing more."""
+    US Integration sub-weights, both China Exposure sub-weights, and
+    axis_balance drawn uniformly, exactly the same valid range the sliders
+    above allow) and recomputes the full ranking each time via the same
+    build_composite() used everywhere else in this tracker -- no separate
+    model, no shortcuts. Reports, per country: how often it lands in the
+    top 3, its median rank, and its full rank range across all samples.
+    This is scenario/rank *stability*, not a statistical confidence
+    interval -- it describes how sensitive the ranking is to plausible
+    reweighting, nothing more."""
     rng = np.random.default_rng(seed)
     countries = list(COUNTRIES.keys())
     ranks: dict[str, list[int]] = {c: [] for c in countries}
@@ -70,10 +92,12 @@ def _robustness_table(n_samples: int = N_ROBUSTNESS_SAMPLES, seed: int = ROBUSTN
 
     for _ in range(n_samples):
         tier_w, invest_w, compute_w = rng.uniform(1, 100, size=3)
+        china_telecom_w, china_digital_w = rng.uniform(1, 100, size=2)
         axis_balance = rng.uniform(0, 100)
         df = build_composite(
             tier_weight=float(tier_w), investment_weight=float(invest_w), compute_weight=float(compute_w),
             axis_balance=float(axis_balance) / 100,
+            china_telecom_weight=float(china_telecom_w) / 100, china_digital_weight=float(china_digital_w) / 100,
         )
         ranked = df.dropna(subset=["net_alignment_score"]).sort_values("net_alignment_score", ascending=False)
         for rank, country in enumerate(ranked["country"], start=1):
@@ -150,11 +174,13 @@ def _scenario_interpretation(merged: pd.DataFrame, preset_name: str) -> str:
 def _composite(
     tier: float, investment: float, compute: float, axis_balance: float,
     investment_ceiling: float = INVESTMENT_CEILING_USD_BN, compute_ceiling: float = COMPUTE_CEILING_MW,
+    china_telecom: float = CHINA_TELECOM_WEIGHT * 100, china_digital: float = CHINA_DIGITAL_WEIGHT * 100,
 ) -> pd.DataFrame:
     return build_composite(
         tier_weight=tier, investment_weight=investment, compute_weight=compute,
         axis_balance=axis_balance / 100,
         investment_ceiling=investment_ceiling, compute_ceiling=compute_ceiling,
+        china_telecom_weight=china_telecom / 100, china_digital_weight=china_digital / 100,
     )
 
 
@@ -187,6 +213,21 @@ def main() -> None:
         return
     st.caption(f"Normalized: tier {tier_w/total:.0%} &middot; investment {invest_w/total:.0%} &middot; compute {compute_w/total:.0%}", unsafe_allow_html=True)
 
+    st.subheader("China Exposure Depth -- relative weights")
+    st.caption(
+        "How much should Chinese telecom-vendor penetration (Huawei 5G/fiber) count vs. Chinese AI/cloud/"
+        "digital-infrastructure ties, when scoring hedging exposure? Renormalized to sum to 100% automatically."
+    )
+    cc1, cc2 = st.columns(2)
+    china_telecom_w = cc1.slider("Chinese telecom penetration", 0, 100, preset["china_telecom"], key=f"china_telecom_{preset_name}")
+    china_digital_w = cc2.slider("Chinese AI/cloud/digital ties", 0, 100, preset["china_digital"], key=f"china_digital_{preset_name}")
+
+    china_total = china_telecom_w + china_digital_w
+    if china_total == 0:
+        st.warning("Both China Exposure weights are 0 -- set at least one above 0 to compute China Exposure Depth.")
+        return
+    st.caption(f"Normalized: telecom {china_telecom_w/china_total:.0%} &middot; digital ties {china_digital_w/china_total:.0%}", unsafe_allow_html=True)
+
     st.subheader("Net Alignment Score -- axis balance")
     axis_balance = st.slider(
         "How much should US Integration Depth count vs. China Exposure Depth?",
@@ -197,7 +238,7 @@ def main() -> None:
     )
     st.caption(f"{axis_balance}% US Integration Depth &middot; {100 - axis_balance}% China Exposure Depth (inverted)", unsafe_allow_html=True)
 
-    scenario_df = _composite(tier_w, invest_w, compute_w, axis_balance)
+    scenario_df = _composite(tier_w, invest_w, compute_w, axis_balance, china_telecom=china_telecom_w, china_digital=china_digital_w)
     baseline_df = _composite(40, 30, 30, 50)
 
     st.divider()
@@ -250,7 +291,10 @@ def main() -> None:
     inv_ceiling = nc1.radio("Investment ceiling ($bn)", [25, 50, 100], index=1, horizontal=True, key="inv_ceiling")
     comp_ceiling = nc2.radio("Compute ceiling (MW)", [3000, 6000, 9000], index=1, horizontal=True, key="comp_ceiling")
 
-    sensitivity_df = _composite(tier_w, invest_w, compute_w, axis_balance, investment_ceiling=inv_ceiling, compute_ceiling=comp_ceiling)
+    sensitivity_df = _composite(
+        tier_w, invest_w, compute_w, axis_balance, investment_ceiling=inv_ceiling, compute_ceiling=comp_ceiling,
+        china_telecom=china_telecom_w, china_digital=china_digital_w,
+    )
     sens_merged = scenario_df[["country", "net_alignment_score"]].rename(columns={"net_alignment_score": "default_ceilings"})
     sens_merged["alternative_ceilings"] = sensitivity_df["net_alignment_score"]
     sens_merged = sens_merged.dropna(subset=["default_ceilings", "alternative_ceilings"])

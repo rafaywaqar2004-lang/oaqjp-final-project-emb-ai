@@ -3,16 +3,24 @@ Composite scoring for the Gulf AI & Tech-Bloc Alignment Tracker.
 
 Methodology summary (see README.md for full rationale):
 
-Six factors are grouped onto two axes plus a context group:
+Seven factors are grouped onto two axes plus a context group:
 
   US Integration Depth (0-100), weighted average of:
     - US export-control access tier (0-5 ordinal, curated)   weight 0.40
     - Disclosed in-country AI infrastructure investment ($bn) weight 0.30
     - Disclosed/under-development compute capacity (MW)       weight 0.30
 
-  China Exposure Depth (0-100):
-    - Chinese tech penetration (0-5 ordinal, curated)          weight 1.00
-    (single-factor axis -- documented as a limitation; see README)
+  China Exposure Depth (0-100), weighted average of:
+    - Chinese telecom penetration (0-5 ordinal, curated)       weight 0.50
+      (Huawei/ZTE RAN/5G vendor relationships)
+    - Chinese AI/cloud/digital-infrastructure ties (0-5,        weight 0.50
+      ordinal, curated) -- Chinese cloud regions (Huawei
+      Cloud/Alibaba Cloud/Tencent Cloud), Chinese-origin AI
+      model deployments (Qwen/Ernie/DeepSeek/Pangu), and
+      BRI/CPEC-style Chinese financing of digital infrastructure.
+      Added specifically to close this axis's prior single-factor
+      limitation -- see README's "Country set" / PROGRESS.md for
+      when and why.
 
   Net Alignment Score (0-100, 50 = neutral):
     50 + (US Integration Depth - China Exposure Depth) / 2
@@ -39,6 +47,9 @@ from constants import COUNTRIES, CURATED_DIR, WORLDBANK_DIR
 US_TIER_WEIGHT = 0.40
 US_INVESTMENT_WEIGHT = 0.30
 US_COMPUTE_WEIGHT = 0.30
+
+CHINA_TELECOM_WEIGHT = 0.50
+CHINA_DIGITAL_WEIGHT = 0.50
 
 # Fixed-ceiling log-scale normalization anchors. Deliberately NOT dataset-
 # relative min-max: with only 2-3 countries carrying disclosed investment/
@@ -69,6 +80,7 @@ def load_curated() -> dict[str, pd.DataFrame]:
     return {
         "export_control_tier": pd.read_csv(base / "export_control_tier.csv"),
         "chinese_tech_penetration": pd.read_csv(base / "chinese_tech_penetration.csv"),
+        "chinese_digital_ties": pd.read_csv(base / "chinese_digital_ties.csv"),
         "governance_maturity": pd.read_csv(base / "governance_maturity.csv"),
         "ai_investment_deals": pd.read_csv(base / "ai_investment_deals.csv"),
         "compute_capacity_deals": pd.read_csv(base / "compute_capacity_deals.csv"),
@@ -94,6 +106,25 @@ def _aggregate_compute(deals: pd.DataFrame) -> pd.Series:
     return totals
 
 
+def _weighted_average(df: pd.DataFrame, weights: dict[str, float]) -> tuple[pd.Series, pd.Series]:
+    """Weighted average across the given 0-100 columns, per row, renormalized
+    over whatever columns are actually available for that row (a missing
+    factor is excluded, never treated as 0) -- shared by both US Integration
+    Depth and China Exposure Depth so the two axes' missing-data handling
+    can't drift apart. Returns (value, n_factors_available)."""
+
+    def _row(row: pd.Series) -> tuple[float | None, int]:
+        available = {k: w for k, w in weights.items() if pd.notna(row[k])}
+        if not available:
+            return None, 0
+        total_weight = sum(available.values())
+        value = sum(row[k] * (w / total_weight) for k, w in available.items())
+        return value, len(available)
+
+    results = df.apply(_row, axis=1)
+    return results.apply(lambda r: r[0]), results.apply(lambda r: r[1])
+
+
 def build_composite(
     tier_weight: float = US_TIER_WEIGHT,
     investment_weight: float = US_INVESTMENT_WEIGHT,
@@ -101,12 +132,21 @@ def build_composite(
     axis_balance: float = 0.5,
     investment_ceiling: float = INVESTMENT_CEILING_USD_BN,
     compute_ceiling: float = COMPUTE_CEILING_MW,
+    china_telecom_weight: float = CHINA_TELECOM_WEIGHT,
+    china_digital_weight: float = CHINA_DIGITAL_WEIGHT,
 ) -> pd.DataFrame:
     """
     tier_weight / investment_weight / compute_weight: relative weights within
     US Integration Depth (renormalized to sum to 1 -- pass any positive
     numbers, e.g. 40/30/30 or 70/15/15, not necessarily already summing to 1).
     Defaults reproduce the scored methodology exactly.
+
+    china_telecom_weight / china_digital_weight: relative weights within
+    China Exposure Depth (same renormalization rule as the US Integration
+    weights above). Defaults (50/50) reproduce the scored methodology
+    exactly. Lets a Scenario Lab viewer ask "what if telecom vendor choice
+    matters more than AI/cloud/financing ties, or vice versa" -- the same
+    kind of question the US-side weights already let them ask.
 
     axis_balance: how much Net Alignment Score weighs US Integration Depth
     vs. China Exposure Depth, in [0, 1]. Default 0.5 reproduces the scored
@@ -132,12 +172,14 @@ def build_composite(
 
     tier = curated["export_control_tier"].set_index("country")["tier_score"]
     china = curated["chinese_tech_penetration"].set_index("country")["penetration_score"]
+    china_digital = curated["chinese_digital_ties"].set_index("country")["digital_ties_score"]
     gov = curated["governance_maturity"].set_index("country")["governance_score"]
     invest_bn = _aggregate_investment(curated["ai_investment_deals"])
     compute_mw = _aggregate_compute(curated["compute_capacity_deals"])
 
     df["us_tier_raw"] = df["country"].map(tier)
     df["china_penetration_raw"] = df["country"].map(china)
+    df["china_digital_raw"] = df["country"].map(china_digital)
     df["governance_raw"] = df["country"].map(gov)
     df["investment_usd_bn"] = df["country"].map(invest_bn)
     df["compute_mw"] = df["country"].map(compute_mw)
@@ -151,33 +193,24 @@ def build_composite(
     # Normalize each raw input to 0-100.
     df["us_tier_score_100"] = df["us_tier_raw"] / 5 * 100
     df["china_penetration_score_100"] = df["china_penetration_raw"] / 5 * 100
+    df["china_digital_score_100"] = df["china_digital_raw"] / 5 * 100
     df["governance_score_100"] = df["governance_raw"] / 5 * 100
     df["investment_score_100"] = _log_scale_normalize(df["investment_usd_bn"], investment_ceiling)
     df["compute_score_100"] = _log_scale_normalize(df["compute_mw"], compute_ceiling)
 
-    # US Integration Depth: weighted average over available factors only,
-    # with weights renormalized so a missing factor doesn't silently
-    # penalize a country -- it's just excluded, and we track how many
-    # of the 3 factors were available for transparency.
-    weights = {
+    # US Integration Depth and China Exposure Depth: weighted averages over
+    # available factors only, with weights renormalized so a missing factor
+    # doesn't silently penalize a country -- it's just excluded, and we
+    # track how many factors were available for transparency.
+    df["us_integration_depth"], df["us_integration_factors_available"] = _weighted_average(df, {
         "us_tier_score_100": tier_weight,
         "investment_score_100": investment_weight,
         "compute_score_100": compute_weight,
-    }
-
-    def weighted_us_integration(row: pd.Series) -> tuple[float | None, int]:
-        available = {k: w for k, w in weights.items() if pd.notna(row[k])}
-        if not available:
-            return None, 0
-        total_weight = sum(available.values())
-        value = sum(row[k] * (w / total_weight) for k, w in available.items())
-        return value, len(available)
-
-    results = df.apply(weighted_us_integration, axis=1)
-    df["us_integration_depth"] = results.apply(lambda r: r[0])
-    df["us_integration_factors_available"] = results.apply(lambda r: r[1])
-
-    df["china_exposure_depth"] = df["china_penetration_score_100"]
+    })
+    df["china_exposure_depth"], df["china_exposure_factors_available"] = _weighted_average(df, {
+        "china_penetration_score_100": china_telecom_weight,
+        "china_digital_score_100": china_digital_weight,
+    })
 
     df["net_alignment_score"] = df.apply(
         lambda r: (
