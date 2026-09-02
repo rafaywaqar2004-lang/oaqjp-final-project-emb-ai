@@ -7,6 +7,7 @@ from constants import COUNTRIES, CURATED_DIR
 from policy_events import _affected_countries
 
 VALID_CATEGORIES = {"Regulatory Framework", "Bilateral Authorization", "Enforcement Action", "Legislation"}
+VALID_DIRECTIONS = {"Loosening", "Tightening"}
 
 
 @pytest.fixture(scope="module")
@@ -44,6 +45,20 @@ def test_every_event_has_a_nonempty_summary_and_countries(events):
 
 def test_no_duplicate_titles(events):
     assert events["title"].is_unique
+
+
+def test_every_event_has_a_recognized_direction(events):
+    assert set(events["direction"]).issubset(VALID_DIRECTIONS)
+    assert events["direction"].notna().all()
+
+
+def test_bilateral_authorizations_are_loosening(events):
+    """The two events that directly grant a country expanded US chip access
+    (Saudi/UAE Nov 2025, UAE's July 2026 upgrade) must be classified as
+    Loosening -- a sanity check that the direction label tracks the event's
+    actual described effect, not an arbitrary tag."""
+    bilateral = events[events["category"] == "Bilateral Authorization"]
+    assert (bilateral["direction"] == "Loosening").all()
 
 
 def test_affected_countries_resolves_named_countries():

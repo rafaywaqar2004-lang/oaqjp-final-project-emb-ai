@@ -5,7 +5,91 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: added two optional map reference layers -- major cities and named AI/compute
+**Most recent session: Tier 1 of a 42-section "9+/10 quality & credibility upgrade" master prompt.** The
+project owner pasted a very large, explicitly self-prioritized brief (Tiers 1-5, `IMPLEMENTATION PRIORITY`
+section) aimed at making the tracker read as a CSIS/CFR/PIIE-grade research product rather than a "student
+Streamlit dashboard." Given the brief's own scale and its own explicit decision rule ("If a feature cannot
+be implemented without fabricating information, do not implement a fake version"), this session built Tier
+1 in full and documented Tiers 2-5 as deliberately deferred, rather than attempting a shallow pass across
+all 42 sections.
+
+**Tier 1 built, in the brief's own order:**
+
+1. **Methodology consistency audit.** Swept README.md, every `app_pages/*.py`, `src/scoring.py`'s
+   docstring, and PROGRESS.md for stale "single-factor China axis" / "6 factors" language left over from
+   the China Exposure Depth work two sessions ago. Found and fixed one real remaining case:
+   `regional_dashboard.py`'s "read this before the numbers" expander still said "China Exposure Depth
+   currently rests on a single factor" -- updated to describe the current 2-factor, 50/50-weighted
+   methodology. Everywhere else was already consistent (verified by grep, not assumed).
+2. **Executive Key Findings on the Overview.** `ui.key_findings_card()` (new component) renders a 4-part
+   KEY FINDINGS / KEY JUDGMENT / CONFIDENCE / WHY IT MATTERS card. `regional_dashboard.py`'s `_key_findings()`
+   computes all four fields from the live composite dataframe (the modal-quadrant bottom line already
+   existed; Key Judgment is new -- the point spread between the most US-integrated and most China-leaning
+   country -- and Why It Matters is a fixed, defensible analytical framing sentence, not a fabricated
+   per-run claim).
+3. **Country Deep Dive rebuilt as an intelligence profile.** New hierarchy: Current Position -> Bottom Line
+   Up Front -> Key Judgments (existing) -> **Key Drivers** (new factor-level table: all 5 scored components
+   across both axes, with raw value, scored value, weight, and confidence pulled from the same curated rows
+   used elsewhere, never re-derived) -> **Trend** (new, via `src/momentum.py`) -> **What Changed** (new,
+   reuses `policy_events._affected_countries()` to filter the existing event feed to this country) ->
+   **Strategic Implications** (new, `_strategic_implications()` -- deterministic, branches on the country's
+   actual tier/axis values into distinct Policymakers/Investors/Corporates text, never a generic paragraph
+   repeated for every country, and explicitly never a buy/sell recommendation -- covered by a test that
+   asserts neither word appears) -> **What to Watch** (new, via `src/watch_next.py`) -> **Data Quality**
+   (new, factor coverage + confidence distribution + deal counts) -> Sources (existing).
+4. **What Changed intelligence feed.** The existing Policy Event Tracker was already close to this
+   spec (dated, sourced, categorized, with a "Model impact & source" expander using the same honest
+   "current tier, not a fabricated delta" pattern from an earlier session). Added: a country filter, a date-
+   range filter, and a new `direction` column (`Loosening`/`Tightening`) on `policy_events.csv` -- an
+   analyst classification of each event's already-described effect (e.g. the AI Diffusion Rule's issuance
+   is `Tightening`, its rescission is `Loosening`), covered by a test that asserts both bilateral-
+   authorization events are classified `Loosening` (a sanity check that the label tracks the event's actual
+   effect, not an arbitrary tag).
+5. **Watch Next, a new reusable component.** `src/watch_next.py` + `data/curated/watch_indicators.csv` (6
+   rows). Every indicator is derived from an already-cited fact elsewhere in the curated data flagged
+   `pending`/`target`/`not yet realized` -- e.g. Egypt's unresolved Huawei/iFlytek AI-data-center bid,
+   Jordan's not-yet-built Al-Risha 400MW target, the five countries whose export-control tier is still `Low`
+   confidence pending BIS access. Rendered on the Overview (regional-scope items) and every Country Deep
+   Dive (country-specific + regional items). Explicitly labeled leading indicators, never forecasts.
+6. **Score Momentum infrastructure.** New `src/momentum.py`: `compute_momentum()` and `regional_momentum()`
+   classify a metric's trajectory (Accelerating/Increasing/Stable/Declining/Rapidly declining) from
+   `composite_scores_history.csv`, with a hard rule -- fewer than 2 dated snapshots returns `Insufficient
+   data`, fewer than 3 can report direction but never acceleration. **As of this session the history file
+   holds exactly one dated snapshot (2026-09-02)**, so every live call currently returns `Insufficient data`
+   -- this is the correct, honest behavior per the brief's own rule, not a bug, and needs no code change the
+   day a second snapshot lands. Wired into the Overview (one regional-trend caption) and every Country Deep
+   Dive (a Trend section for all 3 axes). 13 tests exercise the classification logic directly with synthetic
+   multi-snapshot histories the live data doesn't yet have, so the logic is verified even though it can't
+   yet be observed live.
+
+**Also fixed while touching these files:** a `ModuleNotFoundError` at runtime (not caught by tests, which
+add `app_pages/` to `sys.path` themselves) -- `country_deep_dive.py`'s new `from policy_events import
+_affected_countries` needed an explicit `sys.path.insert(0, .../app_pages)`, since Streamlit's page router
+doesn't put a page's own directory on the path the way the test suite's `conftest.py` does. Caught via a
+live Playwright pass, not by the test suite -- worth remembering this class of bug isn't test-visible.
+
+**Deliberately not built this session (Tiers 2-5 of the brief) -- and why:**
+
+- **Sources & Data catalog page, Strategic Risk page, 12-Month Outlook page.** All three are net-new pages,
+  not enhancements to existing ones -- real scope, not fabrication risk, just larger than a single Tier-1-
+  focused session. The underlying data these pages would present already exists and is already surfaced
+  elsewhere (Methodology page, README, Key Drivers table, Watch Next), so nothing is currently hidden; it
+  would just be re-presented in a more purpose-built layout.
+- **One serious empirical economic-analysis module (Section 21, PIIE angle).** Not attempted this session --
+  a real, defensible descriptive/associational analysis (e.g. AI investment vs. non-oil diversification)
+  needs its own careful sample-size and causality-framing pass, not a rushed addition alongside 5 other
+  Tier-1 items. Flagged as the highest-value Tier 3 item for a follow-up session.
+- **Chart-styling centralization, PDF export upgrade to the fuller "policy brief" structure, full
+  accessibility pass.** Tier 5 polish items, explicitly lowest priority in the brief's own ordering. The
+  existing PDF export and chart styling are functional and already follow the paper/ink palette; this is
+  refinement, not a missing feature.
+- **Country cards on the Overview** (Section 8) already show Net Alignment, US/China sub-scores, and tag --
+  Momentum wasn't added to them specifically (17 cards x a Trend badge reading "Insufficient data" for
+  every one would be pure repetition with zero information value at N=1 snapshot); the single regional-
+  trend caption plus the full per-country Trend section on Country Deep Dive covers this honestly without
+  the repetition.
+
+**Most recent session before this one: added two optional map reference layers -- major cities and named AI/compute
 hubs.** The project owner asked for the Regional Dashboard's map to "highlight main cities, ai hubs and
 other important info ... whatever is needed to make it more detailed." Built as two independently
 toggleable marker layers (both on by default) on the existing custom `go.Scatter`-polygon choropleth in

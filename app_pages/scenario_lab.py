@@ -188,9 +188,9 @@ def main() -> None:
     inject_base_css()
     st.title("Scenario Lab")
     st.caption(
-        "Live reweighting of the alignment methodology -- these controls change how the tracker's cited "
-        "figures are *combined*, never the figures themselves. Nothing here edits data/curated/*.csv; every "
-        "underlying number stays exactly as sourced elsewhere in this tracker."
+        "**ASSUMPTION TEST** -- not a forecast. Live reweighting of the alignment methodology: these controls "
+        "change how the tracker's cited figures are *combined*, never the figures themselves. Nothing here "
+        "edits data/curated/*.csv; every underlying number stays exactly as sourced elsewhere in this tracker."
     )
 
     if "preset_choice" not in st.session_state:

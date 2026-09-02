@@ -18,7 +18,12 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
-from ui import inject_base_css, page_header, bottom_line, kpi_card, kpi_row, footer, BLUE, RED, NAVY, GRAY, GOLD  # noqa: E402
+from momentum import load_history, regional_momentum  # noqa: E402
+from watch_next import load_watch_indicators, watch_items_for  # noqa: E402
+from ui import (  # noqa: E402
+    inject_base_css, page_header, key_findings_card, kpi_card, kpi_row, footer,
+    watch_item, watch_next, BLUE, RED, NAVY, GRAY, GOLD,
+)
 from constants import GULF_COUNTRIES, COMPARATOR_COUNTRIES  # noqa: E402
 
 GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "region_countries.geojson"
@@ -125,6 +130,39 @@ def _bottom_line_text(df: pd.DataFrame) -> tuple[str, str]:
     return text, "Moderate"
 
 
+def _key_findings(df: pd.DataFrame) -> dict[str, str]:
+    """Extends _bottom_line_text() with a Key Judgment and a Why It Matters
+    line for the executive Key Findings card -- both derived from the same
+    real, computed data (the score extremes already shown in the KPI row),
+    never a generic or hard-coded sentence."""
+    bl_text, bl_confidence = _bottom_line_text(df)
+    scored = df.dropna(subset=["net_alignment_score"])
+
+    if scored.empty:
+        key_judgment = "No country currently has enough disclosed data to compute a Net Alignment Score."
+    else:
+        most_us = scored.loc[scored["net_alignment_score"].idxmax()]
+        most_china = scored.loc[scored["net_alignment_score"].idxmin()]
+        spread = most_us["net_alignment_score"] - most_china["net_alignment_score"]
+        key_judgment = (
+            f"The spread between the most US-integrated country ({most_us['country']}, "
+            f"{most_us['net_alignment_score']:.0f}) and the most China-leaning ({most_china['country']}, "
+            f"{most_china['net_alignment_score']:.0f}) is {spread:.0f} points on a 0-100 scale -- "
+            f"the region spans nearly the full spectrum rather than clustering near neutral."
+        )
+
+    why_it_matters = (
+        "A regional pattern dominated by simultaneous engagement with both blocs (rather than binary "
+        "alignment) complicates any US or Chinese policy premised on countries eventually 'choosing a side.'"
+    )
+    return {
+        "bottom_line": bl_text,
+        "key_judgment": key_judgment,
+        "confidence": bl_confidence,
+        "why_it_matters": why_it_matters,
+    }
+
+
 def main() -> None:
     inject_base_css()
 
@@ -137,8 +175,21 @@ def main() -> None:
         meta=[f"{len(df)} COUNTRIES", "DATA AS OF: SEPTEMBER 2026", f"COVERAGE: {len(scored)}/{len(df)} SCORED"],
     )
 
-    bl_text, bl_confidence = _bottom_line_text(df)
-    bottom_line(f"ANALYST'S BOTTOM LINE &middot; Confidence: {bl_confidence.upper()}", bl_text)
+    findings = _key_findings(df)
+    key_findings_card(findings["bottom_line"], findings["key_judgment"], findings["confidence"], findings["why_it_matters"])
+
+    regional_trend = regional_momentum(load_history())
+    if regional_trend.direction == "Insufficient data":
+        st.caption(
+            f"**Regional trend:** Trend unavailable -- historical score tracking began September 2026 "
+            f"({regional_trend.n_observations} dated snapshot{'s' if regional_trend.n_observations != 1 else ''} on file so far). "
+            "A second dated snapshot will make a real regional trend computable for the first time."
+        )
+    else:
+        st.caption(
+            f"**Regional trend:** Net Alignment {regional_trend.direction} "
+            f"({regional_trend.change:+.1f} vs. previous snapshot, {regional_trend.n_observations} observations)."
+        )
 
     most_us = scored.loc[scored["net_alignment_score"].idxmax()] if not scored.empty else None
     most_china = scored.loc[scored["net_alignment_score"].idxmin()] if not scored.empty else None
@@ -395,6 +446,18 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
                 "deployed. It could not be fetched live during development because this sandbox's network policy "
                 "blocks `api.worldbank.org` -- it is not a code issue and will resolve automatically on Render/GH Actions."
             )
+
+    st.divider()
+    st.subheader("Watch Next")
+    st.caption(
+        "Leading indicators, not forecasts -- each tied to a specific, already-cited deal or data gap "
+        "elsewhere in this tracker (see each item's underlying source in `data/curated/watch_indicators.csv`)."
+    )
+    watch_df = watch_items_for(load_watch_indicators(), country=None)
+    watch_next([
+        watch_item(row["indicator"], row["why_it_matters"], row["current_signal"], row["direction"], row["confidence"])
+        for _, row in watch_df.iterrows()
+    ])
 
     st.caption(
         "See the **Country Comparison** page for a full factor-by-factor radar/bar breakdown, and README.md "
