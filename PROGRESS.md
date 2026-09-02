@@ -5,7 +5,50 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: Tier 1 of a 42-section "9+/10 quality & credibility upgrade" master prompt.** The
+**Most recent session: Tiers 2-3 of the same "9+/10 credibility upgrade" brief -- the Economic Analysis page
+and the Sources & Data catalog.** Continuing directly from the Tier 1 session below. Two real gaps closed:
+
+1. **Economic Analysis page** (`app_pages/economic_analysis.py` + `src/economic_analysis.py`). The primary
+   finding: AI governance maturity is moderately-to-strongly associated with US export-control tier
+   (Pearson r=0.68, Spearman ρ=0.64, full 17-country sample -- every other candidate relationship involving
+   investment or compute figures only has 4-6 of 17 countries with both values, documented and rejected in
+   a `CANDIDATE_RELATIONSHIPS` table on the page). Reported as a correlation, not a fitted regression (n=17
+   with two 5-point ordinal scales doesn't support the false precision a regression line implies), with two
+   robustness checks (excluding Saudi Arabia/UAE: r=0.52; excluding Yemen/Afghanistan: r=0.63 -- the
+   association survives both, so it isn't purely 2-4 outliers) and an explicit three-way
+   association-vs-causation discussion (governance→tier, tier→governance, or a shared confound -- a single
+   cross-sectional snapshot can't distinguish between them, and the page says so).
+2. **A real workaround for the blocked World Bank pipeline.** The project owner explicitly said not to
+   limit sourcing to the World Bank API specifically -- "take it from any source as long as it is reliable
+   and valid." A background research agent gathered real, cited non-oil GDP share figures from IMF Article
+   IV releases, national statistics agencies (UAE's FCSC, Qatar's NPC, Bahrain's and Oman's finance
+   ministries), and World Bank *published* reports (as opposed to the live, currently-blocked API) for 8 of
+   17 countries -- and correctly marked the other 9 as **structurally not-applicable** (Pakistan, Turkey,
+   Israel, Jordan, Lebanon, Syria, Yemen, Afghanistan aren't hydrocarbon-rent economies at all, so the
+   "non-oil GDP share" concept doesn't mean anything for them; Egypt has a real-but-misleadingly-small oil-
+   rents figure that would imply ~97% "non-oil" on par with a rentier state if forced through the formula,
+   so it was correctly left out rather than reported). New file: `data/curated/non_oil_diversification.csv`.
+   Used as a **supplementary, smaller-sample finding** (diversification vs. China Exposure Depth, r=-0.50,
+   n=8, explicitly flagged as exploratory) alongside the primary n=17 governance/tier result -- never given
+   equal weight to the full-sample finding, and the investment/compute-vs-diversification angle the original
+   brief suggested was checked and still rejected (n=2, Saudi Arabia and UAE only).
+3. **Sources & Data page** (`app_pages/sources_data.py` + `src/data_catalog.py`). A research data catalog:
+   every dataset this tracker uses (13 entries -- 11 curated, 1 computed, 1 live/automated), with source
+   type, country coverage, observation count, missingness, methodology note, and limitations all **computed
+   live from the actual files** at page-load time (row counts, unique-country counts, null percentages --
+   never hard-coded numbers that could drift out of sync with the data). Each curated CSV has a direct
+   download button. Coverage counts correctly exclude non-tracked pseudo-country rows (e.g.
+   `compute_capacity_deals.csv`'s "GCC region-wide" context row) so a long-format file never reports more
+   than 17/17 countries.
+
+25 new tests (`test_economic_analysis.py`, `test_data_catalog.py`, plus the new diversification-data
+checks); 208/208 passing. Verified in-browser via Playwright.
+
+**Deliberately still not built:** Strategic Risk page and 12-Month Outlook page (Tiers 3-4 of the brief) --
+both remain real scope beyond this session; chart-style centralization, PDF export restructure, full
+accessibility pass (Tier 5 polish, explicitly lowest priority in the brief's own ordering).
+
+**Previous session: Tier 1 of a 42-section "9+/10 quality & credibility upgrade" master prompt.** The
 project owner pasted a very large, explicitly self-prioritized brief (Tiers 1-5, `IMPLEMENTATION PRIORITY`
 section) aimed at making the tracker read as a CSIS/CFR/PIIE-grade research product rather than a "student
 Streamlit dashboard." Given the brief's own scale and its own explicit decision rule ("If a feature cannot
