@@ -1,0 +1,237 @@
+# Gulf AI & Tech-Bloc Alignment Tracker
+
+A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plus Pakistan and Turkey as
+smaller-scale, non-Gulf comparators -- are navigating the US-China AI/chip competition, and what that
+means for regional stability and Western strategic interests.
+
+**Status: Phase 1 (MVP)** -- composite index, choropleth map, radar/bar comparison view. See
+[`PROGRESS.md`](PROGRESS.md) for what's built, what's next, and open questions for the project owner.
+
+---
+
+## What this is (and isn't)
+
+This is a research/portfolio project aimed at analyst roles (CIA, CFR, CSIS, PIIE, Oxford Analytica-type
+work) and geopolitical/economic risk consulting. It is **not** a forecasting tool, an investment signal, or
+an authoritative government assessment. Where public data was too thin to responsibly support a number,
+that gap is shown explicitly (`"insufficient public data"`) rather than filled with an estimate presented
+as fact -- the same principle the MENASA Risk Monitor applies to Iran-sanctions data gaps.
+
+## Country set
+
+**Gulf (6):** Saudi Arabia, United Arab Emirates, Qatar, Bahrain, Kuwait, Oman
+**Non-Gulf comparators (2):** Pakistan, Turkey -- both navigating similar US/China balancing acts on a
+smaller scale (Pakistan via CPEC/Huawei telecom integration alongside a new, cabinet-approved National AI
+Policy; Turkey via a decades-long Huawei/Turkcell partnership alongside NATO membership and the 2020 CAATSA
+sanctions precedent over its S-400 purchase from Russia).
+
+## Methodology
+
+### Two axes, not one score pretending to be simple
+
+A Gulf state maximizing ties with **both** Washington and Beijing simultaneously (the empirically observed
+pattern -- e.g. the UAE running the most US-favorable chip-export status in the region while also running
+Huawei radio equipment on live 5G networks) is not "confused" or "neutral" -- it's hedging, and that is
+exactly the story this tracker exists to show. A single linear score collapses that signal. So the index is
+built in two layers:
+
+1. **US Integration Depth** (0-100) -- a weighted average of:
+   - **US export-control access tier** (0-5 ordinal, curated) -- weight 0.40
+   - **Disclosed in-country AI infrastructure investment** ($bn, log-scaled) -- weight 0.30
+   - **Disclosed/under-development compute capacity** (MW, log-scaled) -- weight 0.30
+
+2. **China Exposure Depth** (0-100) -- currently a single factor:
+   - **Chinese tech penetration** (0-5 ordinal, curated; chiefly Huawei's telecom/cloud footprint)
+
+3. **Net Alignment Score** (0-100, 50 = neutral), *derived*, not independently weighted:
+   ```
+   Net Alignment Score = 50 + (US Integration Depth - China Exposure Depth) / 2
+   ```
+   Higher = more US-integrated relative to Chinese exposure. Lower = more Chinese-exposed relative to US
+   integration. **50 does not mean "inactive"** -- a country maxing out both axes and a country doing
+   little on either can both land near 50. Always read the two sub-scores (visible in the country ranking
+   list and the comparison table) alongside the headline number.
+
+Two more factors are tracked but deliberately **not folded into the alignment score** -- they measure state
+capacity, not bloc alignment, and a mature AI regulator or a diversified economy doesn't inherently signal
+pro-US or pro-China:
+
+- **AI governance maturity** (0-5 ordinal, curated) -- existence of a national AI strategy, a dedicated
+  authority/regulator, and binding sectoral rules.
+- **Non-oil economic diversification** (World Bank, live-refreshed) -- see [Data sources](#data-sources).
+
+### Why 6 factors, not 8-10
+
+The original brief allowed 6-8 factors. Research (documented per-country in `data/curated/*.csv`) confirmed
+all 6 of the brief's original factors are sourceable for at least the Gulf's two AI leaders, but data depth
+drops off sharply for Qatar, Bahrain, Kuwait, Oman, Pakistan, and Turkey -- a methodologically sound 6-factor
+index beat padding to 8 with factors that would be mostly `N/A` outside Saudi Arabia and the UAE.
+
+### Why log-scale, fixed-ceiling normalization (not dataset min-max)
+
+Investment and compute figures are normalized with `log10(x+1) / log10(ceiling+1) * 100`, clipped to
+[0, 100] -- **not** dataset-relative min-max. With only 2-3 countries carrying any disclosed investment/
+compute figure at all, min-max normalization would stretch a modest real gap (Saudi Arabia's $34.2bn vs.
+the UAE's $15.2bn in scored deals) into an artificial 100-vs-0 spread, misrepresenting two countries that
+are both genuinely substantial. Fixed ceilings (`INVESTMENT_CEILING_USD_BN = 50`, `COMPUTE_CEILING_MW =
+6000` in `src/scoring.py`) keep scores stable as new deals are disclosed and make "what it would take to
+score 100" an explicit, documented choice instead of an artifact of who else happens to be in the data set
+this month. Both ceilings are grounded in the data itself (the ceiling sits just above Saudi Arabia's
+current scored total; the compute ceiling matches Saudi Arabia's own disclosed 2034 national target).
+
+### Missing-data handling
+
+A country missing one of the three US Integration Depth inputs still gets a score -- the weighted average
+renormalizes over whichever factors are available (tracked in `us_integration_factors_available`). A
+country with **zero** available inputs for an axis shows `N/A` for that axis and for the derived Net
+Alignment Score, and is rendered gray on the map rather than silently defaulted to a floor score. This
+mirrors how the MENASA Risk Monitor handles the Iran sanctions/missing-data problem.
+
+### Ordinal (0-5) factors: not a clean pulled number, and that's disclosed
+
+The **US export-control access tier** and **Chinese tech penetration** factors are scored on a documented
+0-5 rubric rather than a single clean public number, because none exists at this granularity. This is a
+deliberate, disclosed methodology choice (an analyst-desk judgment call, same as a country-risk analyst
+would make), not an attempt to disguise a soft estimate as a hard figure. The full rubric, the specific
+source(s) behind every country's score, and a `confidence` rating (High/Medium/Low) are all in
+`data/curated/export_control_tier.csv` and `data/curated/chinese_tech_penetration.csv`. **Several `Low`
+confidence entries are explicitly flagged for follow-up research** -- see [Known limitations](#known-limitations).
+
+#### US export-control access tier rubric
+
+| Score | Meaning |
+|---|---|
+| 0 | Comprehensively restricted / arms-embargoed (Country Group D:5 equivalent) |
+| 1 | No bilateral framework; standard case-by-case EAR licensing |
+| 2 | Some licensing accommodation, no formal bilateral deal or approved-entity status |
+| 3 | Bespoke, entity-specific authorization for a capped chip volume |
+| 4 | Formal bilateral AI cooperation framework; license-free access for BIS-approved entities |
+| 5 | Full closest-ally treatment; broad license-free access, no entity-specific cap |
+
+As of this research pass, only the UAE (4) and Saudi Arabia (3) have any disclosed bilateral arrangement at
+all -- both dated within the last year (UAE: BIS Country Group A:5 upgrade, 10 Jul 2026; Saudi Arabia:
+HUMAIN/G42 35,000-GB300-equivalent authorization, 19 Nov 2025). This space is moving fast: the Biden-era "AI
+Diffusion Rule" (would have imposed a worldwide license requirement) was rescinded by the Trump
+administration on 13 May 2025 in favor of exactly this kind of bilateral, government-to-government
+dealmaking, so this factor should be re-verified before any presentation of this project, not treated as
+static.
+
+#### Chinese tech penetration rubric
+
+| Score | Meaning |
+|---|---|
+| 0 | No significant Chinese ICT vendor presence |
+| 1 | Minimal, isolated non-core relationships |
+| 2 | Moderate -- a few Huawei contracts, non-core |
+| 3 | Significant -- Huawei is a major/core RAN vendor for at least one major carrier |
+| 4 | Deep -- Huawei core RAN across multiple major carriers, plus cloud/enterprise expansion |
+| 5 | Extensive -- Huawei is the leading/sole 5G vendor across all major carriers, plus deep economic ties |
+
+## Data sources
+
+| Layer | Type | Refresh cadence | Where |
+|---|---|---|---|
+| Non-oil diversification proxy, FDI net inflows | **Live, automated** | Weekly (GitHub Actions, Mondays) | World Bank API v2, `src/data_pipeline/fetch_worldbank.py` → `data/worldbank/` |
+| US export-control tier, Chinese tech penetration, AI governance maturity | **Manually curated** | Ad hoc, as bilateral deals/policy events are disclosed | `data/curated/*.csv`, one row per country with `source_name`, `source_url`, `confidence`, `as_of_date`, `rationale` |
+| AI investment deals, compute-capacity deals | **Manually curated**, long-format (one row per deal) | Ad hoc | `data/curated/ai_investment_deals.csv`, `data/curated/compute_capacity_deals.csv` |
+
+**The manually curated layer is never touched by the scheduled GitHub Actions refresh.** Only
+`data/worldbank/` and the recomputed `data/computed/composite_scores.csv` are auto-committed. Updating a
+curated figure is a deliberate, sourced edit to a CSV row -- exactly the distinction the project brief asked
+for between "automatable" and "requires manual research/curation."
+
+### Non-oil diversification: a documented proxy, not a literal figure
+
+The World Bank does not cleanly expose "non-oil share of GDP" as a single indicator across all 8 countries.
+This tracker uses **`100 - Oil rents (% of GDP)`** (`NY.GDP.PETR.RT.ZS`) as a standard analyst proxy (the
+same approximation used in IMF Article IV coverage of GCC economies) -- it is *not* a literal non-oil GDP
+share, and is labeled as a proxy everywhere it appears in the app and the data files.
+
+### Investment figures: disclosed commitments only, never aspirational headlines
+
+Every investment figure that feeds the score is a specific, dated, sourced deal. Headline ambition figures
+(Saudi Arabia's "$100bn AI company," the UAE's globally-anchored $100bn MGX/Microsoft/BlackRock/GIP fund,
+outbound portfolio stakes like MGX's OpenAI equity or QIA's Anthropic/Databricks/Cresta stakes) are recorded
+in `data/curated/ai_investment_deals.csv` with `counted_in_score = FALSE` and a note explaining why --
+visible for context, excluded from the number, so ambition is never silently counted as commitment.
+
+## Repository structure
+
+```
+app.py                              # Streamlit entry point (Overview: index, map, ranking)
+pages/1_Country_Comparison.py       # Radar + bar comparison across all 6 factors
+src/
+  constants.py                      # Country list, ISO3 codes, World Bank indicator codes
+  scoring.py                        # Composite scoring -- the methodology above, in code
+  mapping.py                        # Custom choropleth renderer (see note below)
+  data_pipeline/fetch_worldbank.py  # The one automated data pipeline
+data/
+  curated/                          # Manually researched, cited, dated
+  worldbank/                        # Auto-refreshed by GitHub Actions
+  computed/                         # Recomputed composite_scores.csv
+  geo/gulf_countries.geojson        # Bundled country boundaries (see note below)
+.github/workflows/refresh_worldbank_data.yml
+render.yaml                         # Render deployment config
+```
+
+### Why a custom choropleth renderer instead of `plotly.express.choropleth`
+
+Plotly's built-in geo trace fetches its world-atlas topojson from `cdn.plot.ly` at render time -- even when
+a custom GeoJSON is supplied and the base map is set invisible, in the Plotly.js version this project runs
+against. That's an external runtime dependency this project deliberately avoids, for the same reason the
+brief ruled out ArcGIS: it should run on Render with no external auth or network dependency it doesn't
+control. `src/mapping.py` renders the choropleth as filled `go.Scatter` polygons directly from the bundled,
+pre-filtered `data/geo/gulf_countries.geojson` (sourced from the `datasets/geo-countries` public-domain
+Natural Earth derivative) -- zero runtime network calls, verified in a fully network-restricted sandbox
+during development.
+
+## Running locally
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+To refresh the World Bank layer and recompute scores:
+
+```bash
+python src/data_pipeline/fetch_worldbank.py
+PYTHONPATH=src python src/scoring.py
+```
+
+## Known limitations
+
+- **China Exposure Depth is a single-factor axis.** It currently rests entirely on Chinese tech
+  penetration (Huawei). A stronger version would add a second, independent China-tie factor (e.g.
+  disclosed Chinese AI model deployments, BRI/CPEC-style financing tied to digital infrastructure) if and
+  when that data becomes available with the same sourcing bar as the rest of this project.
+- **Several curated scores are `Low` confidence and flagged for follow-up**, specifically: Qatar, Bahrain,
+  Kuwait, and Oman's export-control tier (no BIS rule or entity authorization was found for any of them in
+  this research pass -- scored via analyst judgment, not a documented designation); Turkey's export-control
+  tier and governance-maturity score (a fresh 2025/2026 source was not located this session); Saudi Arabia's
+  and Bahrain's Chinese-tech-penetration score (regional-level sourcing, not country-specific this pass).
+  See the `confidence` and `rationale` columns in `data/curated/*.csv` for exactly which rows need a fresh
+  source before this project is presented to a critical reader.
+- **Investment and compute figures are undercounts, by design.** Only deals this research could attribute
+  to a specific country with a specific dollar/MW figure and a citable source are scored. Qatar, Bahrain,
+  Kuwait, Oman, Pakistan, and Turkey show `N/A` on these two factors not because nothing is happening, but
+  because nothing at this level of specificity was found in this research pass -- see the `not_found` rows
+  in `data/curated/ai_investment_deals.csv` and `compute_capacity_deals.csv` for exactly what was checked.
+- **This is a fast-moving policy space.** The two BIS decisions this index's export-control tier is built
+  around (UAE, Saudi Arabia) are both less than a year old at time of writing (Sept 2026), and the framework
+  itself only stabilized after the AI Diffusion Rule's rescission in May 2025. Treat the export-control
+  tier and the Policy Event Tracker (Phase 2) as the two most time-sensitive parts of this project.
+- **The choropleth's bundled GeoJSON uses simplified public-domain boundaries.** Fine for this project's
+  purpose (color-by-country at a regional zoom level); not suitable for any use requiring precise or
+  politically sensitive boundary accuracy.
+
+## Roadmap
+
+See [`PROGRESS.md`](PROGRESS.md) for full detail. In brief:
+
+- **Phase 1 (this phase):** Composite index, choropleth, radar/bar comparison. ✅
+- **Phase 2:** Policy Event Tracker tab -- chronological, sourced feed (Nov 2025 chip approvals, smuggling
+  enforcement cases, the March 2026 Chip Security Act, etc.).
+- **Phase 3:** Country deep-dive pages -- investment timeline, governance summary, downloadable PDF brief.
+- **Phase 4 (stretch):** Scenario toggle -- reweight the index live against a hypothetical tightening/
+  loosening of export controls.
