@@ -1,0 +1,48 @@
+name: Refresh World Bank data layer
+
+# Only the automatable World Bank layer (non-oil diversification proxy,
+# FDI inflows) is refreshed on a schedule. Everything in data/curated/ is
+# manually researched and cited -- see README.md -- and is NOT touched by
+# this workflow; it changes only when a human updates it with a new source.
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"  # weekly, Monday 03:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pandas
+
+      - name: Fetch World Bank data
+        run: python src/data_pipeline/fetch_worldbank.py
+
+      - name: Recompute composite scores
+        run: |
+          pip install -r requirements.txt
+          PYTHONPATH=src python src/scoring.py
+
+      - name: Run test suite before committing
+        run: |
+          pip install -r requirements-dev.txt
+          python -m pytest tests/ -v
+
+      - name: Commit updated data if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/worldbank/ data/computed/
+          git diff --cached --quiet || git commit -m "chore: scheduled World Bank data refresh"
+          git push
