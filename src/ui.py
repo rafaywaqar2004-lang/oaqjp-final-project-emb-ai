@@ -32,6 +32,26 @@ GRAY = "#6B7280"         # neutral / unavailable
 GRAY_SOFT = "#E9E8E0"
 LINE = "#D7D5CB"
 
+# -- Centralized chart tokens -----------------------------------------------
+# Every Plotly chart across app_pages/*.py should pull its colors from here
+# rather than hard-coding a hex literal, so the app reads as one consistent
+# visual system. Semantic assignment (never arbitrary): US = blue, China =
+# red/rust, baseline = neutral gray, scenario/hypothetical = navy,
+# uncertainty = gold, confirmed/operational = green.
+MAP_NEUTRAL = "#f0e6c8"          # the "0 / no signal" anchor color for every choropleth gradient
+MAP_BLUE_MID = "#a9c4de"         # intermediate stop for the diverging Net Alignment colorscale
+CHART_BASELINE = GRAY            # "as scored" / unmodified baseline series in a comparison chart
+CHART_SCENARIO = NAVY            # a hypothetical/reweighted scenario series -- never the same blue as US Integration
+NET_ALIGNMENT_DIVERGING_SCALE = [RED, MAP_NEUTRAL, MAP_BLUE_MID, BLUE]
+
+
+def sequential_map_scale(end_color: str) -> list[str]:
+    """A single-hue choropleth gradient from the shared neutral anchor to
+    `end_color` -- the pattern every non-diverging map metric on the
+    Overview uses (US Integration -> blue, China Exposure -> red,
+    Governance -> gold, etc.)."""
+    return [MAP_NEUTRAL, end_color]
+
 _CONFIDENCE_COLORS = {
     "high": (GREEN_SOFT, GREEN),
     "moderate": (GOLD_SOFT, GOLD),

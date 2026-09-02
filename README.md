@@ -234,11 +234,13 @@ visible for context, excluded from the number, so ambition is never silently cou
 ```
 app.py                              # Thin router: grouped st.navigation() only, no page content
 app_pages/
-  regional_dashboard.py             # Flagship page: bottom line, KPIs, US-China scatterplot, map, ranking
+  regional_dashboard.py             # Flagship page: key findings, KPIs, US-China scatterplot, map, ranking, watch next, executive PDF
   country_comparison.py             # Radar + bar comparison across all 6 scored factors
-  country_deep_dive.py              # Country intelligence profile: drivers, trend, what changed, implications, watch, PDF export
+  country_deep_dive.py              # Country intelligence profile: drivers, trend, what changed, implications, watch, full PDF export
   policy_events.py                  # Chronological, sourced feed of chip-policy events + direction + model-impact links
   scenario_lab.py                   # Live reweighting (incl. China Exposure sub-weights) + robustness / rank-stability analysis
+  strategic_risk.py                 # Regional risk matrix (4 dimensions) + per-country transmission-channel implications
+  outlook.py                        # 12-Month Outlook: Base Case / Alternative Case, analyst-judgment probability bands
   methodology.py                    # In-app weights/rubrics/limitations reference (mirrors this README)
   economic_analysis.py              # The one serious empirical economic-analysis module (QUESTION/DATA/.../LIMITATION)
   sources_data.py                   # Research data catalog -- every dataset, computed live, with CSV downloads
@@ -247,12 +249,15 @@ src/
   scoring.py                        # Composite scoring -- the methodology above, in code
   momentum.py                       # Score Momentum -- honest "Insufficient data" until >=2 dated snapshots exist
   watch_next.py                     # Loads/filters data/curated/watch_indicators.csv for the Watch Next component
-  economic_analysis.py              # Correlation logic backing the Economic Analysis page (no regression fit)
+  economic_analysis_engine.py       # Correlation logic backing the Economic Analysis page (no regression fit)
+  strategic_risk_engine.py          # The 4-dimension risk-rating logic backing the Strategic Risk page
+  outlook_engine.py                 # Base Case / Alternative Case construction backing the 12-Month Outlook page
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
+  data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
-  pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
-  ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, footer
+  pdf_export.py                     # Renders a country brief AND the regional executive assessment to PDF via reportlab
+  ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, chart-color tokens, footer
   data_pipeline/fetch_worldbank.py  # The one automated data pipeline
 data/
   curated/                          # Manually researched, cited, dated
@@ -485,7 +490,7 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   every event card. See PROGRESS.md for the full scope decision (a prioritized subset of a much larger
   brief) and what was deliberately not built this round.
 - **Economic Analysis page and Sources & Data catalog** (Tiers 2-3 of the same credibility-upgrade brief):
-  a new `src/economic_analysis.py` module reports this tracker's one serious empirical finding -- AI
+  a new `src/economic_analysis_engine.py` module reports this tracker's one serious empirical finding -- AI
   governance maturity is moderately-to-strongly associated with US export-control tier (Pearson r=0.68,
   full 17-country sample, robust to excluding either the highest-scoring or floor-sharing countries),
   reported as descriptive correlation rather than a fitted regression, with an explicit
@@ -500,6 +505,27 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   Sources & Data page (`src/data_catalog.py`) catalogs every dataset this tracker uses -- source type,
   country coverage, observation count, missingness, methodology, and limitations, all computed live from
   the actual files rather than typed in by hand -- with a direct CSV download button per dataset.
+- **Strategic Risk, 12-Month Outlook, data validation, chart-color centralization, and a fuller PDF export**
+  (the remaining Tiers 3-5 of the same brief): a new Strategic Risk page rates every country on 4 dimensions
+  derived transparently from already-scored data (US Policy Exposure from export-control tier, China
+  Exposure directly, Infrastructure Execution Risk from the share of counted compute capacity still under
+  development, Measurement Confidence Risk from this project's own curated `confidence` columns) -- two
+  dimensions the brief named ("semiconductor dependency," "geopolitical volatility") are explicitly *not*
+  rated per-country, since the first would just restate the other two axes and the second would require a
+  political judgment this project's data doesn't support. A new 12-Month Outlook page reports a Base Case
+  and Alternative Case per country, built entirely from Watch Next's own indicators, with every probability
+  an explicit qualitative band (Likely/Possible/Unlikely/N/A) rather than a fabricated percentage, and every
+  section labeled ANALYST JUDGMENT vs. the one real MODEL OUTPUT (the current score). A new
+  `src/data_validation.py` runs structural checks (duplicate countries, out-of-range scores, malformed
+  dates, mismatched ISO3 codes, negative dollar/MW figures, invalid weight sums) against the actual
+  repository data on every test run. Chart colors were centralized into `ui.py` (`sequential_map_scale()`,
+  `NET_ALIGNMENT_DIVERGING_SCALE`, `CHART_BASELINE`/`CHART_SCENARIO`) -- catching and fixing a real
+  inconsistency where the Scenario Lab's "scenario" bar used a blue almost identical to the US Integration
+  semantic color instead of the brief's own "scenario = navy" convention. `src/pdf_export.py`'s
+  `build_country_pdf()` gained optional Current Position / Key Drivers / Recent Developments / Strategic
+  Implications / What to Watch / Data Quality sections (still works with just a brief, for backward
+  compatibility), and a new `build_executive_pdf()` renders the regional Key Findings, Country Rankings,
+  What Changed, and Strategic Risk matrix into a downloadable executive assessment from the Overview page.
 
 ### How the Scenario Lab stays honest
 

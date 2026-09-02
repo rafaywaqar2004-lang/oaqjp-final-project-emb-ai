@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 
 from constants import COUNTRIES, CURATED_DIR
-from economic_analysis import (
+from economic_analysis_engine import (
     CANDIDATE_RELATIONSHIPS,
     diversification_vs_china_exposure,
     governance_vs_tier_correlation,

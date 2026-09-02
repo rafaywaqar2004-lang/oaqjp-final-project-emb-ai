@@ -5,7 +5,92 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: Tiers 2-3 of the same "9+/10 credibility upgrade" brief -- the Economic Analysis page
+**Most recent session: closed out the "9+/10 credibility upgrade" brief -- Strategic Risk, 12-Month
+Outlook, data validation, chart-color centralization, and a fuller PDF export (Tiers 3-5).** This
+completes every tier of the brief except a handful of items explicitly judged not defensible without
+fabrication (see "Deliberately not built" below) or genuinely out of proportion for a portfolio project
+(a full WCAG audit, a from-scratch mobile-first redesign).
+
+1. **Strategic Risk page** (`app_pages/strategic_risk.py` + `src/strategic_risk_engine.py`). Rates all 17
+   countries on 4 dimensions, each traced to a specific already-computed number:
+   - US Policy Exposure (from `us_tier_raw` -- a country with a broad bilateral arrangement has more to
+     lose from a future US policy reversal than one with none)
+   - China Exposure (directly, `china_exposure_depth`)
+   - Infrastructure Execution Risk (the share of a country's counted compute capacity still
+     `under_development`/`target` rather than `disclosed_current` -- UAE's two counted compute deals are
+     both 100% not-yet-built, so it correctly rates High; a country with no compute deal on file rates
+     Insufficient data, never a guessed Low)
+   - Measurement Confidence Risk (the worst confidence rating across a country's tier/china/china_digital
+     curated rows -- a risk in the *assessment itself*, not the country's real-world position)
+
+   Two dimensions named in the original brief -- "semiconductor dependency" and "geopolitical volatility" --
+   are deliberately **not** rated per-country. The first would just restate US Policy Exposure + China
+   Exposure in different words (this tracker's own two axes already measure exactly that). The second would
+   require a political judgment this project's curated data doesn't support without guessing -- exposed as
+   a limitation on the page itself rather than invented.
+
+2. **12-Month Outlook page** (`app_pages/outlook.py` + `src/outlook_engine.py`). The hardest page to build
+   honestly this session, because it's inherently forward-looking and this tracker has zero historical trend
+   data to fit anything to. Solution: Base Case ("current position persists, absent a specific disclosed
+   pending event") and Alternative Case built *directly from a country's own Watch Next items* -- if none
+   exist, the Alternative Case says so explicitly (`probability: "N/A"`) rather than inventing one. Every
+   probability is one of 4 fixed qualitative labels (Likely/Possible/Unlikely/N/A) -- covered by a test that
+   asserts no digit ever appears in a probability value, since a numeric percentage here would imply a
+   precision this project's data cannot support. Every section is explicitly labeled `ANALYST JUDGMENT`; the
+   only `MODEL OUTPUT` on the page is the current composite score, labeled as such.
+
+3. **Data validation module** (`src/data_validation.py`, 25 tests). Structural checks -- duplicate
+   countries, out-of-range ordinal/composite scores, mismatched ISO3 codes, malformed dates, negative
+   dollar/MW figures, unrecognized confidence values, weights that don't sum to 1 -- run against the actual
+   repository data on every test run (`test_repository_data_currently_has_no_validation_issues` fails loudly
+   if a future edit introduces a real data bug, rather than letting it slip into `main` silently).
+
+4. **Chart-color centralization** (`src/ui.py` gained `sequential_map_scale()`, `NET_ALIGNMENT_DIVERGING_SCALE`,
+   `CHART_BASELINE`, `CHART_SCENARIO`, `MAP_NEUTRAL`). This surfaced and fixed a real, pre-existing
+   inconsistency: Scenario Lab's "scenario" bar was colored `#2454a6`, nearly identical to `BLUE` (the US
+   Integration semantic color, `#2463A5`) -- one digit apart, clearly an unintentional near-duplicate rather
+   than a deliberate choice. Per the brief's own explicit convention ("Scenario = navy"), it's now `NAVY`,
+   and the baseline bar is now the shared `GRAY` token instead of a one-off `#c3c0b3`. `regional_dashboard.py`'s
+   6-entry `MAP_METRICS` dict, which previously repeated the literal `"#f0e6c8"` six times, now calls
+   `sequential_map_scale(BLUE)` / `sequential_map_scale(RED)` / etc. `src/mapping.py`'s AI-hub star marker
+   color, which duplicated `ui.GREEN`'s hex value as an independent literal, now imports `GREEN` directly --
+   removing a second source of truth for the same color.
+
+5. **Fuller PDF export** (`src/pdf_export.py`). `build_country_pdf()` gained optional `current_position`,
+   `key_drivers`, `what_changed`, `strategic_implications`, `watch_items`, and `data_quality` parameters --
+   each renders a new section if supplied, skipped silently if not, so the original minimal call shape
+   (`build_country_pdf(brief)`) still works (a real backward-compatibility concern, not just a style
+   choice, since a signature change here could have broken the download button without any test catching
+   it -- covered by a dedicated "minimal call" test for all 17 countries). Country Deep Dive's download
+   button now passes through everything the page itself already computes. A new `build_executive_pdf()`
+   renders a regional report (Executive Summary from Key Findings, Regional Positioning, Country Rankings,
+   What Changed, Strategic Risk matrix, Methodology, Sources) from the Overview page -- wrapped in
+   `st.cache_data` (a real performance fix caught during this session: the first draft rebuilt the entire
+   ReportLab PDF, including a fresh Strategic Risk pass over all 17 countries, on every single script
+   rerun -- e.g. toggling the map's city/hub checkboxes -- not just when the underlying data changed).
+
+**A real bug caught and fixed during this session, not shipped:** naming every new engine module the same
+as its page file (`src/strategic_risk.py` next to `app_pages/strategic_risk.py`, same for `outlook.py`)
+caused a circular self-import the moment the page tried `from strategic_risk import assess_all` -- Python
+resolved "strategic_risk" to the page file itself (shadowing the src module, since `app_pages/` sits earlier
+on `sys.path` per `tests/conftest.py`), not the intended module. Worse: **this exact bug already existed,
+silently, in the previous session's `economic_analysis.py`** -- it happened not to surface then because
+pytest's import-caching order masked it in a full-suite run, but broke immediately when that one test file
+was run in isolation. All three engine modules were renamed with an `_engine` suffix
+(`strategic_risk_engine.py`, `outlook_engine.py`, `economic_analysis_engine.py`) to eliminate the collision
+class entirely, and a systematic `comm -12` check across every `src/`/`app_pages/` basename confirmed no
+other collisions exist. Worth remembering for any future page+engine-module pair this project adds.
+
+62 new tests this session (`test_strategic_risk.py`, `test_outlook.py`, `test_data_validation.py`,
+`test_pdf_export.py`); 333/333 passing. Verified in-browser via Playwright across every one of the app's 10
+pages.
+
+**Deliberately still not built:** a full WCAG contrast/screen-reader audit and a mobile-first layout
+redesign (Streamlit's own column-based layout has known limits on narrow viewports that aren't fixable
+without a different UI framework -- out of proportion for this session). Everything else the original
+42-section brief asked for is now built.
+
+**Previous session: Tiers 2-3 of the same "9+/10 credibility upgrade" brief -- the Economic Analysis page
 and the Sources & Data catalog.** Continuing directly from the Tier 1 session below. Two real gaps closed:
 
 1. **Economic Analysis page** (`app_pages/economic_analysis.py` + `src/economic_analysis.py`). The primary

@@ -17,6 +17,8 @@ from __future__ import annotations
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 
+from ui import GREEN as _HUB_MARKER_COLOR
+
 
 def _polygon_rings(geometry: dict) -> list[list[list[float]]]:
     """Return a flat list of exterior rings (lon/lat coordinate lists) for a
@@ -111,7 +113,7 @@ def build_choropleth_figure(
                 x=[m["lon"] for m in hub_markers],
                 y=[m["lat"] for m in hub_markers],
                 mode="markers",
-                marker=dict(size=11, color="#397A5B", symbol="star", line=dict(width=1, color="white")),
+                marker=dict(size=11, color=_HUB_MARKER_COLOR, symbol="star", line=dict(width=1, color="white")),
                 hoverinfo="text",
                 hovertext=[m.get("hover", m["name"]) for m in hub_markers],
                 name="AI / compute hubs",
