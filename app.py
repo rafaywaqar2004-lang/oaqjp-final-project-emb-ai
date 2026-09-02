@@ -31,6 +31,8 @@ pg = st.navigation(
         ],
         "Research": [
             st.Page("app_pages/methodology.py", title="Methodology"),
+            st.Page("app_pages/economic_analysis.py", title="Economic Analysis"),
+            st.Page("app_pages/sources_data.py", title="Sources & Data"),
         ],
     }
 )

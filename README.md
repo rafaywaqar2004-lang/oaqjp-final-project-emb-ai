@@ -240,11 +240,15 @@ app_pages/
   policy_events.py                  # Chronological, sourced feed of chip-policy events + direction + model-impact links
   scenario_lab.py                   # Live reweighting (incl. China Exposure sub-weights) + robustness / rank-stability analysis
   methodology.py                    # In-app weights/rubrics/limitations reference (mirrors this README)
+  economic_analysis.py              # The one serious empirical economic-analysis module (QUESTION/DATA/.../LIMITATION)
+  sources_data.py                   # Research data catalog -- every dataset, computed live, with CSV downloads
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
   momentum.py                       # Score Momentum -- honest "Insufficient data" until >=2 dated snapshots exist
   watch_next.py                     # Loads/filters data/curated/watch_indicators.csv for the Watch Next component
+  economic_analysis.py              # Correlation logic backing the Economic Analysis page (no regression fit)
+  data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a CountryBrief to PDF via reportlab (pure Python)
@@ -256,6 +260,7 @@ data/
     major_cities.csv                # Map reference layer: one city per country, geographic orientation only
     ai_hubs.csv                     # Map reference layer: named, cited AI/compute/telecom infrastructure sites
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
+    non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -479,6 +484,22 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   applied to each event's already-cited, already-summarized effect -- never a numeric score fabrication) on
   every event card. See PROGRESS.md for the full scope decision (a prioritized subset of a much larger
   brief) and what was deliberately not built this round.
+- **Economic Analysis page and Sources & Data catalog** (Tiers 2-3 of the same credibility-upgrade brief):
+  a new `src/economic_analysis.py` module reports this tracker's one serious empirical finding -- AI
+  governance maturity is moderately-to-strongly associated with US export-control tier (Pearson r=0.68,
+  full 17-country sample, robust to excluding either the highest-scoring or floor-sharing countries),
+  reported as descriptive correlation rather than a fitted regression, with an explicit
+  association-not-causation discussion of three distinct plausible causal stories. A candidate-relationships
+  table documents what was considered and rejected for sample size (investment/compute correlations only
+  have 4-6 of 17 countries with both figures). A supplementary finding uses a new manually-researched
+  dataset, `data/curated/non_oil_diversification.csv` (real IMF/national-statistics-sourced non-oil GDP
+  share figures for 8 countries, gathered specifically because this project's live World Bank pipeline is
+  unpopulated in its development sandbox -- the other 9 countries are correctly marked structurally
+  not-applicable rather than estimated), finding a moderate negative association between diversification and
+  China Exposure Depth (r=-0.50, n=8, explicitly flagged as exploratory given the small sample). A new
+  Sources & Data page (`src/data_catalog.py`) catalogs every dataset this tracker uses -- source type,
+  country coverage, observation count, missingness, methodology, and limitations, all computed live from
+  the actual files rather than typed in by hand -- with a direct CSV download button per dataset.
 
 ### How the Scenario Lab stays honest
 
