@@ -395,9 +395,15 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
 - **Phase 4:** Scenario Lab (originally "Scenario Explorer," renamed for consistency with the wider
   redesign -- see PROGRESS.md) -- live reweighting of the US Integration Depth sub-weights and the
   US-vs-China axis balance, with 5 named presets each carrying a stated analytical rationale (mirrors the
-  MENASA Risk Monitor's own Scenario Explorer), plus a Model Robustness / Rank Stability analysis that
-  samples many weight configurations and reports how much each country's rank actually moves. Operates
-  purely on `build_composite()`'s in-memory output; never writes to `data/curated/*.csv`. ✅
+  MENASA Risk Monitor's own Scenario Explorer); a templated (not free-generated) plain-language
+  interpretation of each scenario's effect on the ranking; a Normalization Sensitivity section that
+  recomputes the ranking against alternative, equally-defensible investment/compute ceilings so a reader
+  can check whether the ranking depends on that judgment call; and a Model Robustness / Rank Stability
+  analysis that samples many weight configurations and reports how much each country's rank actually moves.
+  Operates purely on `build_composite()`'s in-memory output; never writes to `data/curated/*.csv`. ✅
+- **Overview map gained a metric selector** -- it originally only rendered Net Alignment Score; it now
+  switches between Net Alignment, US Integration Depth, China Exposure Depth, disclosed AI Investment,
+  disclosed Compute Capacity, and AI Governance Maturity, each with its own color scale and colorbar label.
 
 ### How the Scenario Lab stays honest
 

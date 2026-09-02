@@ -18,7 +18,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from scoring import build_composite  # noqa: E402
 from mapping import build_choropleth_figure  # noqa: E402
-from ui import inject_base_css, page_header, bottom_line, kpi_card, kpi_row, footer, BLUE, RED, NAVY, GRAY  # noqa: E402
+from ui import inject_base_css, page_header, bottom_line, kpi_card, kpi_row, footer, BLUE, RED, NAVY, GRAY, GOLD  # noqa: E402
 from constants import GULF_COUNTRIES, COMPARATOR_COUNTRIES  # noqa: E402
 
 GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "region_countries.geojson"
@@ -207,23 +207,34 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
             use_container_width=True,
         )
 
-    st.subheader("Net Alignment Score by country")
+    st.subheader("Map by factor")
+    MAP_METRICS = {
+        "Net Alignment Score": dict(col="net_alignment_score", range=(0, 100), colorscale=[RED, "#f0e6c8", "#a9c4de", BLUE], unit="", cb="0=China-leaning<br>100=US-integrated"),
+        "US Integration Depth": dict(col="us_integration_depth", range=(0, 100), colorscale=["#f0e6c8", BLUE], unit="", cb="US Integration Depth"),
+        "China Exposure Depth": dict(col="china_exposure_depth", range=(0, 100), colorscale=["#f0e6c8", RED], unit="", cb="China Exposure Depth"),
+        "AI Investment ($bn, scored deals)": dict(col="investment_usd_bn", range=(0, max(1.0, df["investment_usd_bn"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="bn", cb="Disclosed AI investment ($bn)"),
+        "Compute Capacity (MW, scored deals)": dict(col="compute_mw", range=(0, max(1.0, df["compute_mw"].max(skipna=True) or 1.0)), colorscale=["#f0e6c8", BLUE], unit="MW", cb="Compute capacity (MW)"),
+        "AI Governance Maturity (0-5)": dict(col="governance_raw", range=(0, 5), colorscale=["#f0e6c8", GOLD], unit="/5", cb="Governance maturity (0-5)"),
+    }
+    metric_name = st.selectbox("Metric", options=list(MAP_METRICS.keys()))
+    metric = MAP_METRICS[metric_name]
+    metric_col = metric["col"]
+
     geojson = load_geojson()
     # All 17 countries in the bundled GeoJSON are scored; context_ids stays wired up in
     # build_choropleth_figure() in case a future country is added to the map before it's
     # researched and scored (see the pattern this project already went through once).
     context_ids = frozenset(f["id"] for f in geojson["features"] if not f["properties"].get("scored"))
     context_names = {f["id"]: f["properties"]["name"] for f in geojson["features"] if f["id"] in context_ids}
-    scores = {row["iso3"]: (None if pd.isna(row["net_alignment_score"]) else row["net_alignment_score"]) for _, row in df.iterrows()}
+    scores = {row["iso3"]: (None if pd.isna(row[metric_col]) else row[metric_col]) for _, row in df.iterrows()}
 
     def _hover(row: pd.Series) -> str:
-        if pd.isna(row["net_alignment_score"]):
-            return f"<b>{row['country']}</b><br>Insufficient data for a composite score"
-        us = f"{row['us_integration_depth']:.0f}" if pd.notna(row["us_integration_depth"]) else "N/A"
-        cn = f"{row['china_exposure_depth']:.0f}" if pd.notna(row["china_exposure_depth"]) else "N/A"
+        if pd.isna(row[metric_col]):
+            return f"<b>{row['country']}</b><br>{metric_name}: insufficient data"
+        val = f"{row[metric_col]:.0f}{metric['unit']}" if metric_col not in ("investment_usd_bn",) else f"${row[metric_col]:.1f}{metric['unit']}"
         return (
-            f"<b>{row['country']}</b><br>Net Alignment: {row['net_alignment_score']:.0f}"
-            f"<br>US Integration Depth: {us}<br>China Exposure Depth: {cn}"
+            f"<b>{row['country']}</b><br>{metric_name}: {val}"
+            f"<br>Net Alignment: {row['net_alignment_score']:.0f}" if pd.notna(row["net_alignment_score"]) else f"<b>{row['country']}</b><br>{metric_name}: {val}"
         )
 
     hover = {row["iso3"]: _hover(row) for _, row in df.iterrows()}
@@ -232,20 +243,31 @@ This is a research/portfolio project, **not** a forecasting or investment tool.
         geojson=geojson,
         scores=scores,
         hover_text=hover,
-        colorscale=[RED, "#f0e6c8", "#a9c4de", BLUE],
+        colorscale=metric["colorscale"],
+        value_range=metric["range"],
         context_ids=context_ids,
+        colorbar_title=metric["cb"],
     )
     fig.update_layout(height=560)
     st.plotly_chart(fig, use_container_width=True)
-    st.caption(
-        "**65-100** deep US integration &middot; **50-64** US-leaning, hedging &middot; "
-        "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. All 17 countries on "
-        "this map are scored -- hover any of them for the US/China sub-score breakdown.",
-        unsafe_allow_html=True,
-    )
-    missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, "net_alignment_score"]).all()])
+    if metric_col in ("investment_usd_bn", "compute_mw"):
+        st.caption(
+            f"Only deals counted in the score are shown (see Methodology) -- gray/darker-gray countries may "
+            f"still have disclosed activity that didn't meet this project's sourcing bar; check the Country "
+            f"Deep Dive page before reading a gap here as genuine zero activity."
+        )
+    if metric_name == "Net Alignment Score":
+        st.caption(
+            "**65-100** deep US integration &middot; **50-64** US-leaning, hedging &middot; "
+            "**35-49** China-leaning, hedging &middot; **0-34** deep China exposure. All 17 countries on "
+            "this map are scored -- hover any of them for the US/China sub-score breakdown.",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.caption(f"Darker shading = higher {metric_name}. Light gray = insufficient data for this factor specifically.")
+    missing = sorted([c for c in df["country"] if pd.isna(df.loc[df["country"] == c, metric_col]).all()])
     if missing:
-        st.caption(f"Tracked but insufficient data for a composite score (darker gray, bordered): {', '.join(missing)}")
+        st.caption(f"Tracked but insufficient data for {metric_name} (darker gray, bordered): {', '.join(missing)}")
 
     st.divider()
     st.subheader("Country ranking")

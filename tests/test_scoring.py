@@ -125,9 +125,35 @@ class TestBuildComposite:
 
 
 class TestScenarioOverrides:
-    """Covers the Scenario Explorer's override parameters (pages/4_Scenario_Explorer.py).
+    """Covers the Scenario Lab's override parameters (app_pages/scenario_lab.py).
     These must never touch data/curated/*.csv -- only change how the same
     curated numbers are combined."""
+
+    def test_default_ceilings_reproduce_baseline_exactly(self):
+        baseline = build_composite()
+        overridden = build_composite(investment_ceiling=INVESTMENT_CEILING_USD_BN, compute_ceiling=COMPUTE_CEILING_MW)
+        pd.testing.assert_frame_equal(baseline, overridden)
+
+    def test_tighter_ceiling_raises_scores_for_countries_with_disclosed_deals(self):
+        """A country with a nonzero disclosed investment/compute figure should
+        score higher (or equal) against a lower ceiling -- tightening the
+        ceiling can only make an existing figure look larger relative to it,
+        never smaller."""
+        loose = build_composite(investment_ceiling=100, compute_ceiling=12000)
+        tight = build_composite(investment_ceiling=25, compute_ceiling=3000)
+        has_investment = loose["investment_usd_bn"].notna()
+        assert (tight.loc[has_investment, "investment_score_100"] >= loose.loc[has_investment, "investment_score_100"] - 1e-9).all()
+
+    def test_ceiling_override_can_change_the_ranking(self):
+        """Regression guard for the normalization-sensitivity feature: this
+        is only a meaningful check if some country's rank can actually move
+        under a tighter ceiling -- verified against the real curated data,
+        not asserted blindly."""
+        default_df = build_composite()
+        tight_df = build_composite(investment_ceiling=25, compute_ceiling=3000)
+        d = default_df.dropna(subset=["net_alignment_score"]).set_index("country")["net_alignment_score"].rank(ascending=False, method="min")
+        t = tight_df.dropna(subset=["net_alignment_score"]).set_index("country")["net_alignment_score"].rank(ascending=False, method="min")
+        assert not d.equals(t)  # at least one country's rank actually moves
 
     def test_default_params_reproduce_baseline_exactly(self):
         baseline = build_composite()
@@ -187,3 +213,57 @@ class TestScenarioOverrides:
         build_composite(tier_weight=99, investment_weight=1, compute_weight=1, axis_balance=0.1)
         after = {f: os.path.getmtime(curated_dir / f) for f in os.listdir(curated_dir)}
         assert before == after
+
+
+class TestAppendHistorySnapshot:
+    """Covers append_history_snapshot() -- the mechanism that lets Score
+    Momentum/trend features be built honestly later instead of fabricated
+    now (see PROGRESS.md)."""
+
+    def test_creates_file_with_expected_columns(self, tmp_path):
+        from scoring import append_history_snapshot
+
+        result = build_composite()
+        history_path = tmp_path / "history.csv"
+        append_history_snapshot(result, history_path)
+
+        assert history_path.exists()
+        df = pd.read_csv(history_path)
+        assert set(df.columns) == {"snapshot_date", "country", "iso3", "us_integration_depth", "china_exposure_depth", "net_alignment_score"}
+        assert len(df) == len(COUNTRIES)
+
+    def test_same_day_rerun_replaces_not_duplicates(self, tmp_path):
+        from scoring import append_history_snapshot
+
+        result = build_composite()
+        history_path = tmp_path / "history.csv"
+        append_history_snapshot(result, history_path)
+        append_history_snapshot(result, history_path)  # same day, re-run
+
+        df = pd.read_csv(history_path)
+        assert len(df) == len(COUNTRIES)  # not 2x
+
+    def test_different_day_appends(self, tmp_path, monkeypatch):
+        import datetime as real_datetime
+
+        import scoring as scoring_module
+
+        result = build_composite()
+        history_path = tmp_path / "history.csv"
+
+        class _FixedDate(real_datetime.date):
+            _today = real_datetime.date(2026, 1, 1)
+
+            @classmethod
+            def today(cls):
+                return cls._today
+
+        monkeypatch.setattr(scoring_module.datetime, "date", _FixedDate)
+        scoring_module.append_history_snapshot(result, history_path)
+
+        _FixedDate._today = real_datetime.date(2026, 2, 1)
+        scoring_module.append_history_snapshot(result, history_path)
+
+        df = pd.read_csv(history_path)
+        assert len(df) == len(COUNTRIES) * 2
+        assert set(df["snapshot_date"]) == {"2026-01-01", "2026-02-01"}

@@ -17,7 +17,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from constants import COUNTRIES  # noqa: E402
-from scoring import build_composite  # noqa: E402
+from scoring import build_composite, INVESTMENT_CEILING_USD_BN, COMPUTE_CEILING_MW  # noqa: E402
 from ui import inject_base_css, footer, GREEN, GOLD, GRAY  # noqa: E402
 
 N_ROBUSTNESS_SAMPLES = 150
@@ -106,11 +106,55 @@ def _robustness_label(rank_range: int) -> tuple[str, str]:
     return "LOW", GRAY
 
 
+def _scenario_interpretation(merged: pd.DataFrame, preset_name: str) -> str:
+    """Deterministic, templated interpretation of a scenario run against the
+    baseline -- filled from the actual computed ranks, never a free-form
+    generated sentence. Mirrors this project's country_brief.py discipline:
+    real numbers into a template, not an LLM call."""
+    m = merged.dropna(subset=["baseline", "scenario"]).copy()
+    if len(m) < 2:
+        return "Not enough countries have both a baseline and scenario score to assess ranking stability."
+
+    m["baseline_rank"] = m["baseline"].rank(ascending=False, method="min").astype(int)
+    m["scenario_rank"] = m["scenario"].rank(ascending=False, method="min").astype(int)
+    m["rank_shift"] = (m["scenario_rank"] - m["baseline_rank"]).abs()
+
+    baseline_top5 = set(m.sort_values("baseline_rank").head(5)["country"])
+    scenario_top5 = set(m.sort_values("scenario_rank").head(5)["country"])
+    top5_overlap = len(baseline_top5 & scenario_top5)
+    big_movers = m[m["rank_shift"] >= 3]
+
+    if preset_name == "Default (as scored)":
+        return "This is the scored default -- by definition, it reproduces the baseline ranking exactly."
+
+    if top5_overlap == 5 and big_movers.empty:
+        return (
+            f"Under **{preset_name}**, the top 5 countries are unchanged and no country's rank moved by 3 or "
+            "more places -- the regional ranking looks robust to this particular reweighting."
+        )
+    if top5_overlap >= 3:
+        movers_txt = ", ".join(f"{r['country']} ({int(r['baseline_rank'])}→{int(r['scenario_rank'])})" for _, r in big_movers.sort_values("rank_shift", ascending=False).head(3).iterrows())
+        return (
+            f"Under **{preset_name}**, {top5_overlap} of the top 5 countries are unchanged, but "
+            f"{len(big_movers)} countries move 3+ ranking places" + (f" -- notably {movers_txt}" if movers_txt else "") +
+            ". This weighting has a real but partial effect on the ranking."
+        )
+    return (
+        f"Under **{preset_name}**, only {top5_overlap} of the top 5 countries are unchanged from baseline -- "
+        "this reweighting materially reorders the regional ranking, not just individual scores. Treat this "
+        "scenario's ranking as a genuinely different picture, not a minor variation on the default."
+    )
+
+
 @st.cache_data(ttl=3600)
-def _composite(tier: float, investment: float, compute: float, axis_balance: float) -> pd.DataFrame:
+def _composite(
+    tier: float, investment: float, compute: float, axis_balance: float,
+    investment_ceiling: float = INVESTMENT_CEILING_USD_BN, compute_ceiling: float = COMPUTE_CEILING_MW,
+) -> pd.DataFrame:
     return build_composite(
         tier_weight=tier, investment_weight=investment, compute_weight=compute,
         axis_balance=axis_balance / 100,
+        investment_ceiling=investment_ceiling, compute_ceiling=compute_ceiling,
     )
 
 
@@ -188,6 +232,52 @@ def main() -> None:
         for _, row in movers.head(4).iterrows():
             direction = "more US-integrated" if row["delta"] > 0 else "more China-leaning"
             st.caption(f"**{esc(row['country'])}**: {row['baseline']:.0f} → {row['scenario']:.0f} ({row['delta']:+.1f}, reads {direction} under this scenario)")
+
+    st.info(_scenario_interpretation(merged, preset_name), icon="\U0001F9ED")
+    st.caption(
+        "This interpretation is templated from the actual computed ranks above (top-5 overlap, count of "
+        "3+-place rank shifts) -- never a free-form generated summary."
+    )
+
+    st.divider()
+    st.subheader("Normalization sensitivity")
+    st.caption(
+        "The $50bn investment ceiling and 6,000MW compute ceiling (see Methodology) are documented judgment "
+        "calls, not derived constants -- 'what it would take to score 100' is an explicit choice, not "
+        "self-evident. This checks whether the ranking holds up under an equally-defensible alternative."
+    )
+    nc1, nc2 = st.columns(2)
+    inv_ceiling = nc1.radio("Investment ceiling ($bn)", [25, 50, 100], index=1, horizontal=True, key="inv_ceiling")
+    comp_ceiling = nc2.radio("Compute ceiling (MW)", [3000, 6000, 9000], index=1, horizontal=True, key="comp_ceiling")
+
+    sensitivity_df = _composite(tier_w, invest_w, compute_w, axis_balance, investment_ceiling=inv_ceiling, compute_ceiling=comp_ceiling)
+    sens_merged = scenario_df[["country", "net_alignment_score"]].rename(columns={"net_alignment_score": "default_ceilings"})
+    sens_merged["alternative_ceilings"] = sensitivity_df["net_alignment_score"]
+    sens_merged = sens_merged.dropna(subset=["default_ceilings", "alternative_ceilings"])
+    sens_merged["default_rank"] = sens_merged["default_ceilings"].rank(ascending=False, method="min").astype(int)
+    sens_merged["alternative_rank"] = sens_merged["alternative_ceilings"].rank(ascending=False, method="min").astype(int)
+    sens_merged["rank_shift"] = (sens_merged["alternative_rank"] - sens_merged["default_rank"]).abs()
+
+    if inv_ceiling == 50 and comp_ceiling == 6000:
+        st.caption("These are the scored default ceilings -- select a different value above to compare.")
+    else:
+        shifted = sens_merged[sens_merged["rank_shift"] > 0].sort_values("rank_shift", ascending=False)
+        if shifted.empty:
+            st.success(f"No country's rank changes at ${inv_ceiling}bn / {comp_ceiling}MW ceilings -- the ranking is insensitive to this choice.", icon="✅")
+        else:
+            st.warning(
+                f"{len(shifted)} of {len(sens_merged)} countries' rank changes at ${inv_ceiling}bn / {comp_ceiling}MW "
+                "ceilings (vs. the scored $50bn / 6,000MW default):",
+                icon="⚠️",
+            )
+            st.dataframe(
+                shifted[["country", "default_rank", "alternative_rank", "default_ceilings", "alternative_ceilings"]].rename(columns={
+                    "country": "Country", "default_rank": "Rank (default)", "alternative_rank": "Rank (alternative)",
+                    "default_ceilings": "Score (default)", "alternative_ceilings": "Score (alternative)",
+                }).round(1),
+                hide_index=True,
+                use_container_width=True,
+            )
 
     st.divider()
     st.subheader("Model robustness / rank stability")

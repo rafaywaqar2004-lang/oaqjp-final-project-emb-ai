@@ -28,6 +28,7 @@ public data" rather than imputed or scored as zero.
 
 from __future__ import annotations
 
+import datetime
 import math
 from pathlib import Path
 
@@ -98,6 +99,8 @@ def build_composite(
     investment_weight: float = US_INVESTMENT_WEIGHT,
     compute_weight: float = US_COMPUTE_WEIGHT,
     axis_balance: float = 0.5,
+    investment_ceiling: float = INVESTMENT_CEILING_USD_BN,
+    compute_ceiling: float = COMPUTE_CEILING_MW,
 ) -> pd.DataFrame:
     """
     tier_weight / investment_weight / compute_weight: relative weights within
@@ -108,9 +111,18 @@ def build_composite(
     axis_balance: how much Net Alignment Score weighs US Integration Depth
     vs. China Exposure Depth, in [0, 1]. Default 0.5 reproduces the scored
     formula (50 + (US - China) / 2) exactly. Used by the Scenario Lab
-    (pages/4_Scenario_Explorer.py) to let a viewer ask "what if I weighted
+    (app_pages/scenario_lab.py) to let a viewer ask "what if I weighted
     China exposure more heavily than US integration" -- never changes the
     underlying curated data, only how it's combined.
+
+    investment_ceiling / compute_ceiling: the fixed-ceiling log-scale
+    normalization anchors (see module docstring for why fixed, not
+    dataset-relative). Defaults reproduce the scored methodology exactly.
+    Also used by the Scenario Lab's normalization-sensitivity section, to
+    let a viewer check whether the ranking holds up under an alternative,
+    equally-defensible ceiling choice -- these are documented judgment
+    calls, not derived constants, and this is how that's made checkable
+    rather than just asserted.
     """
     curated = load_curated()
     wb = load_worldbank()
@@ -140,8 +152,8 @@ def build_composite(
     df["us_tier_score_100"] = df["us_tier_raw"] / 5 * 100
     df["china_penetration_score_100"] = df["china_penetration_raw"] / 5 * 100
     df["governance_score_100"] = df["governance_raw"] / 5 * 100
-    df["investment_score_100"] = _log_scale_normalize(df["investment_usd_bn"], INVESTMENT_CEILING_USD_BN)
-    df["compute_score_100"] = _log_scale_normalize(df["compute_mw"], COMPUTE_CEILING_MW)
+    df["investment_score_100"] = _log_scale_normalize(df["investment_usd_bn"], investment_ceiling)
+    df["compute_score_100"] = _log_scale_normalize(df["compute_mw"], compute_ceiling)
 
     # US Integration Depth: weighted average over available factors only,
     # with weights renormalized so a missing factor doesn't silently
@@ -180,10 +192,38 @@ def build_composite(
     return df
 
 
+def append_history_snapshot(result: pd.DataFrame, history_path: str | Path = "data/computed/composite_scores_history.csv") -> None:
+    """Appends a dated snapshot of the scored columns to a running history
+    file -- the one thing that has to start happening *before* Score
+    Momentum, trend charts, or a real 12-Month Outlook can ever be built
+    honestly (this tracker stores only a single current value per country
+    otherwise; see PROGRESS.md). Idempotent per day: re-running this on the
+    same date replaces that date's rows rather than duplicating them, so a
+    same-day re-run (e.g. a second manual refresh) doesn't skew a future
+    average with a duplicate observation."""
+    history_path = Path(history_path)
+    today = datetime.date.today().isoformat()
+
+    snapshot = result[["country", "iso3", "us_integration_depth", "china_exposure_depth", "net_alignment_score"]].copy()
+    snapshot.insert(0, "snapshot_date", today)
+
+    if history_path.exists():
+        existing = pd.read_csv(history_path)
+        existing = existing[existing["snapshot_date"] != today]
+        combined = pd.concat([existing, snapshot], ignore_index=True)
+    else:
+        combined = snapshot
+
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    combined.sort_values(["snapshot_date", "country"]).to_csv(history_path, index=False)
+
+
 if __name__ == "__main__":
     result = build_composite()
     out_path = Path("data/computed/composite_scores.csv")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     result.to_csv(out_path, index=False)
+    append_history_snapshot(result)
     print(result[["country", "us_integration_depth", "china_exposure_depth", "net_alignment_score"]])
     print(f"\nWrote {out_path}")
+    print("Appended dated snapshot to data/computed/composite_scores_history.csv")

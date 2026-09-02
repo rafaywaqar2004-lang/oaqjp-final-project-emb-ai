@@ -41,6 +41,7 @@ def build_choropleth_figure(
     context_ids: frozenset[str] = frozenset(),
     context_color: str = "#eeede6",
     context_line_color: str = "#c3c0b3",
+    colorbar_title: str = "0=China-leaning<br>100=US-integrated",
 ) -> go.Figure:
     """
     geojson: FeatureCollection with each feature's `id` matching the keys of `scores`/`hover_text`.
@@ -93,7 +94,7 @@ def build_choropleth_figure(
                 cmax=hi,
                 color=[lo],
                 showscale=True,
-                colorbar=dict(title="0=China-leaning<br>100=US-integrated", len=0.8),
+                colorbar=dict(title=colorbar_title, len=0.8),
                 size=0.1,
             ),
             hoverinfo="skip",

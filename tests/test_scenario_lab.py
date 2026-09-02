@@ -1,8 +1,9 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from constants import COUNTRIES
-from scenario_lab import N_ROBUSTNESS_SAMPLES, ROBUSTNESS_SEED, _robustness_label, _robustness_table
+from scenario_lab import N_ROBUSTNESS_SAMPLES, ROBUSTNESS_SEED, _robustness_label, _robustness_table, _scenario_interpretation
 
 
 @pytest.fixture(scope="module")
@@ -52,3 +53,38 @@ def test_robustness_label_thresholds(rank_range, expected):
 def test_default_sample_count_is_reasonable():
     # documented in the UI copy -- keep the constant and the copy in sync by asserting a sane bound
     assert 50 <= N_ROBUSTNESS_SAMPLES <= 1000
+
+
+class TestScenarioInterpretation:
+    def _merged(self, baseline_scores: dict, scenario_scores: dict) -> pd.DataFrame:
+        countries = list(baseline_scores.keys())
+        return pd.DataFrame({
+            "country": countries,
+            "baseline": [baseline_scores[c] for c in countries],
+            "scenario": [scenario_scores[c] for c in countries],
+        })
+
+    def test_default_preset_always_says_reproduces_baseline(self):
+        merged = self._merged({"A": 10, "B": 20}, {"A": 99, "B": 1})  # scores irrelevant for this preset name
+        text = _scenario_interpretation(merged, "Default (as scored)")
+        assert "reproduces the baseline ranking exactly" in text
+
+    def test_identical_scores_report_no_movement(self):
+        scores = {"A": 80, "B": 60, "C": 40, "D": 20, "E": 10, "F": 5}
+        merged = self._merged(scores, scores)
+        text = _scenario_interpretation(merged, "Some Preset")
+        assert "robust to this particular reweighting" in text
+
+    def test_disjoint_top5_reports_material_reordering(self):
+        # 10 countries, baseline top 5 (A-E) and scenario top 5 (F-J) share zero members --
+        # the clearest possible case of a scenario materially reordering the ranking.
+        baseline = {"A": 100, "B": 90, "C": 80, "D": 70, "E": 60, "F": 50, "G": 40, "H": 30, "I": 20, "J": 10}
+        scenario = {"A": 10, "B": 20, "C": 30, "D": 40, "E": 50, "F": 60, "G": 70, "H": 80, "I": 90, "J": 100}
+        merged = self._merged(baseline, scenario)
+        text = _scenario_interpretation(merged, "Some Preset")
+        assert "materially reorders" in text
+
+    def test_too_few_comparable_countries_is_handled(self):
+        merged = pd.DataFrame({"country": ["A"], "baseline": [50.0], "scenario": [60.0]})
+        text = _scenario_interpretation(merged, "Some Preset")
+        assert "Not enough countries" in text
