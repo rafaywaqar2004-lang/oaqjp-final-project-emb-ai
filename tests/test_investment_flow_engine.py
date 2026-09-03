@@ -127,10 +127,14 @@ class TestPerCountrySummary:
             r = row["capital_alignment_ratio"]
             assert pd.isna(r) or (0 <= r <= 100)
 
-    def test_country_with_no_confirmed_deals_has_nan_ratio(self, flows):
+    def test_country_with_tracked_but_unconfirmed_deals_has_nan_ratio(self, flows):
+        """Bahrain has 2 tracked deals (a US-bound and a China-bound one),
+        but neither has a disclosed dollar value -- the ratio must stay
+        NaN (insufficient data), never guessed from deal count alone."""
         summary = per_country_summary(flows)
         bahrain = summary[summary["country"] == "Bahrain"].iloc[0]
-        assert bahrain["n_deals"] == 0
+        assert bahrain["n_deals"] == 2
+        assert bahrain["n_deals_unconfirmed_value"] == 2
         assert pd.isna(bahrain["capital_alignment_ratio"])
 
     def test_net_alignment_score_joined_in(self, flows):

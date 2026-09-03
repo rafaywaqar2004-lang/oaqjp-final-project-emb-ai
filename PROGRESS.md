@@ -119,6 +119,26 @@ re-checked all 12 disputed/new claims individually before anything was changed:
   rather than the usual `YYYY-MM`, and a strict `format="%Y-%m"` parse raised `ValueError` on them; fixed
   with `format="mixed"`, with a regression test guarding it. 2 more new tests; 422/422 passing overall.
 
+**Second immediate follow-up, same session: closed the dataset's remaining zero-coverage gap.** Bahrain,
+Kuwait, and Oman each had 0 tracked investment-flow deals -- the one gap in this module genuinely worth a
+targeted research pass, since (unlike undisclosed dollar values, which are usually private by design) a
+government-linked entity from these three countries doing *some* real, findable AI/tech deal was a
+reasonable bet. It paid off cleanly: a `WebSearch` pass found 6 real, verified deals, one US-bound and one
+China-bound for each country (Mumtalakat/SandboxAQ + Batelco/Huawei for Bahrain; Kuwait Investment
+Authority's AI Infrastructure Partnership stake + Zain Kuwait/Huawei's AI Center of Excellence for Kuwait;
+Omantel/Huawei's national-cloud deal + Oman Data Park's NVIDIA H200 deployment for Oman) -- bringing the
+dataset to 24 deals covering all 8 relevant source countries, up from 5. None of the six new deals has a
+disclosed dollar value, so all three countries' Capital Alignment Ratios still correctly read "insufficient
+data" rather than a fabricated number -- the fix was closing the *coverage* gap (no deal on file at all),
+not the *unconfirmed-value* gap, which for many of these deal types (sovereign-fund partnerships, telecom-
+vendor MoUs) may simply not have a public number to find. The research explicitly ruled out two tempting
+near-misses rather than force a result into the gap: a Ooredoo-Group GPU deployment that happens to mention
+Oman was not re-attributed to an Omani source (Ooredoo's own HQ and deal announcement are Qatari, already
+tracked as such at deals 007/018), and no Oman Investment Authority-specific deal (as distinct from its
+Omantel/Oman Data Park holdings, which were used instead) was found or included. One test updated to match
+the new reality (Bahrain now has 2 tracked deals, still correctly shows an insufficient-data ratio since
+neither has a confirmed value) rather than the old "0 deals" assumption. 422/422 passing overall.
+
 **Previous session: fixed a real mobile-navigation bug, then built a new Sanctions & Entity List
 Exposure module end to end from the project owner's detailed spec.** Two pieces of work:
 
