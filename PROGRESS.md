@@ -5,7 +5,71 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: closed out the "9+/10 credibility upgrade" brief -- Strategic Risk, 12-Month
+**Most recent session: closed five self-identified "more detail" gaps -- historical backfill, the BIS
+confidence gap, expanded Policy Event Tracker coverage, and more AI/compute hub sites.** Prompted by the
+project owner asking what could be made more thorough, then approving all five suggestions at once
+("lets do all of these tehn"). All five are real, sourced, tested additions -- nothing here is estimated
+or backdated without evidence.
+
+1. **Historical backfill** (`src/historical_backfill.py`, new module, 19 tests). Score Momentum and Trend
+   had exactly one dated snapshot since they shipped (`data/computed/composite_scores_history.csv`), so
+   every call returned "Insufficient data" by design -- correct, but not useful until a second snapshot
+   existed. Rather than waiting months for the daily pipeline to accumulate history, this reconstructs 18
+   additional dated snapshots **today, from evidence that already exists in this project's own curated
+   data**:
+   - AI investment and compute-capacity deals are filtered by their own existing `announced_date` column
+     (`ai_investment_deals.csv` / `compute_capacity_deals.csv`) -- a deal simply isn't counted before its
+     own disclosed announcement date. Purely mechanical, no judgment calls.
+   - Two documented export-control tier step-changes, both already cited in `export_control_tier.csv`'s
+     rationale text: Saudi Arabia tier 0->3 on 2025-11-19 (HUMAIN's capped authorization) and the UAE
+     tier ->4 on 2026-07-10 (BIS Country Group A:5 upgrade). The UAE's *pre-upgrade* value (2) is an
+     explicit **analyst inference** -- the same Country Group D:3/D:4 bucket Qatar/Bahrain are scored in
+     today, not a directly sourced historical figure -- flagged via a dedicated `us_tier_inferred` column
+     and called out by name everywhere it surfaces.
+   - Every other country's tier, and every country's Chinese-tie/governance factors, are held constant at
+     today's curated values across all historical dates, because no dated evidence exists for when those
+     specific relationships or scores changed. **This is disclosed, not hidden**: a `source` column
+     (`"backfilled"` vs. `"live_pipeline"`) now distinguishes reconstructed rows from the real daily
+     pipeline snapshot, and Country Deep Dive's new Trend chart (a real Plotly line chart, added because a
+     19-point trend line finally exists to draw) carries an explicit caption whenever backfilled rows are
+     present in view, plus a matching caption on the Regional Dashboard's regional-trend line.
+   - Net effect: Momentum and Trend went from permanently "Insufficient data" to functioning end-to-end --
+     verified in-browser (Saudi Arabia's Trend chart now visibly shows the real 2025-05 and 2025-11 US
+     Integration Depth jumps against a flat China Exposure Depth line).
+
+2. **BIS confidence-gap closure** (`data/curated/export_control_tier.csv`). Five countries were carrying
+   `Low` confidence on their export-control tier because `bis.gov` itself has been unreachable all session
+   (`WebFetch` returns `EGRESS_BLOCKED` for every external domain tried this session, not just bis.gov --
+   confirmed again this round against `cov.com` and `kpmg.com`). A `WebSearch` query surfaced a real, named
+   law-firm export-control alert (Covington & Burling LLP, Oct 2023) explicitly classifying Bahrain,
+   Kuwait, Oman, and Qatar under Country Group D:4 -- consistent with, and corroborating, this project's
+   existing tier scores for those four countries. Their confidence was raised `Low` -> `Medium` (not
+   `High`: this is a secondary-source corroboration, not a primary bis.gov read) with the new citation
+   appended to each row's rationale. **Turkey's gap was NOT closed** -- repeated follow-up searches
+   targeting Turkey's specific BIS Country Group classification found nothing citable, so it stays `Low`
+   confidence with the failed search attempts documented in its rationale rather than guessed at.
+
+3. **Policy Event Tracker expanded 8 -> 16 events** (`data/curated/policy_events.csv`). A background
+   research agent, briefed with the exact existing schema and an explicit non-duplication list, sourced 8
+   more real, dated, cited chip/AI export-control events spanning Dec 2024-Dec 2025 from BIS, Congress.gov,
+   DOJ, and trade-press sources -- including the Dec 2024 BIS semiconductor package that the existing 8
+   events' own Jan 2025 AI Diffusion Rule was built on top of, both 2025 GAIN AI Act legislative vehicles,
+   and a second DOJ smuggling enforcement action (Operation Gatekeeper, $160m).
+
+4. **AI/compute hub map expanded 9 -> 14 sites, 7 -> 12 countries** (`data/curated/ai_hubs.csv`). A second
+   background agent, held to the same "a specific named site in a real citable source, never inferred from
+   HQ or capital-city defaults" rule the existing 9 rows already followed, found 5 more real, named sites:
+   UAE (Khazna's Masdar City AI-ready data center), Qatar (Microsoft's Doha Azure region), Bahrain (AWS's
+   Saar facility), Oman (Equinix/Omantel's Barka interconnection hub), and Pakistan (Huawei-partnered
+   Karachi Technopolis). Kuwait, Lebanon, Iran, Yemen, and Afghanistan genuinely turned up no qualifying
+   named site and were correctly left uncovered rather than filled in with a guess.
+
+`src/data_validation.py`'s `validate_all()` returns zero issues against the full updated data set. 352/352
+tests passing (19 new: `test_historical_backfill.py`). Verified in-browser via Playwright: Country Deep
+Dive's new Trend chart, the Regional Dashboard's updated trend caption, and the 16-event Policy Events feed
+all render without error.
+
+**Previous session: closed out the "9+/10 credibility upgrade" brief -- Strategic Risk, 12-Month
 Outlook, data validation, chart-color centralization, and a fuller PDF export (Tiers 3-5).** This
 completes every tier of the brief except a handful of items explicitly judged not defensible without
 fabrication (see "Deliberately not built" below) or genuinely out of proportion for a portfolio project

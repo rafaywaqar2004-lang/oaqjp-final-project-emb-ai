@@ -6,11 +6,18 @@ moving. This module is the honest gate between "we have historical data" and
 rather than fabricating a trend when fewer than the required number of dated
 snapshots exist, per this project's standing no-fabrication rule.
 
-As of this module's introduction, the history file holds exactly one dated
-snapshot (the day this feature shipped) -- so every call currently returns
-INSUFFICIENT_DATA. That is the correct, honest behavior, not a bug: momentum
-becomes real the day a second dated snapshot lands, with no code change
-required here.
+As of this module's introduction, the history file held exactly one dated
+snapshot -- so every call returned INSUFFICIENT_DATA. That was the correct,
+honest behavior, not a bug. src/historical_backfill.py later reconstructed 18
+additional dated snapshots from real, dated evidence already in this
+project's curated data (deal announcement dates, two documented
+export-control tier step-changes) -- see that module's docstring for exactly
+what is reconstructed vs. held constant. This module's own classification
+logic needed no change: a "backfilled" snapshot is just another dated
+observation in the history file. Callers that display momentum/trend results
+should still disclose when backfilled rows are in view (see
+app_pages/country_deep_dive.py's Trend section for the pattern) since a
+reconstruction is not the same claim as a point-in-time measurement.
 """
 
 from __future__ import annotations

@@ -215,17 +215,25 @@ def main() -> None:
         mime="application/pdf",
     )
 
-    regional_trend = regional_momentum(load_history())
+    _hist = load_history()
+    regional_trend = regional_momentum(_hist)
     if regional_trend.direction == "Insufficient data":
         st.caption(
-            f"**Regional trend:** Trend unavailable -- historical score tracking began September 2026 "
+            f"**Regional trend:** Trend unavailable "
             f"({regional_trend.n_observations} dated snapshot{'s' if regional_trend.n_observations != 1 else ''} on file so far). "
             "A second dated snapshot will make a real regional trend computable for the first time."
         )
     else:
+        has_backfilled = "source" in _hist.columns and (_hist["source"] == "backfilled").any()
+        backfill_note = (
+            " Most of these are a reconstruction from real dated deal-announcement and export-control-tier "
+            "step-change evidence, not point-in-time historical measurements -- see any country's Deep Dive "
+            "page or Sources & Data for the full disclosure."
+            if has_backfilled else ""
+        )
         st.caption(
             f"**Regional trend:** Net Alignment {regional_trend.direction} "
-            f"({regional_trend.change:+.1f} vs. previous snapshot, {regional_trend.n_observations} observations)."
+            f"({regional_trend.change:+.1f} vs. previous snapshot, {regional_trend.n_observations} dated snapshots on file).{backfill_note}"
         )
 
     most_us = scored.loc[scored["net_alignment_score"].idxmax()] if not scored.empty else None
