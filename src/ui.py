@@ -69,9 +69,18 @@ def inject_base_css() -> None:
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
-        #MainMenu, footer, header[data-testid="stHeader"] {{ visibility: hidden; height: 0; }}
+        #MainMenu, footer {{ visibility: hidden; height: 0; }}
         div[data-testid="stDecoration"] {{ display: none; }}
         a[href*="streamlit.io/cloud"], div[data-testid="stStatusWidget"] {{ display: none; }}
+        /* Keep header[data-testid="stHeader"] itself visible (not hidden) --
+        it contains the sidebar expand/collapse toggle button
+        (data-testid="stExpandSidebarButton"), which is the ONLY way to
+        reopen the sidebar once Streamlit auto-collapses it on a narrow/
+        mobile viewport. Hiding the whole header (a prior version of this
+        rule did) silently hid that control along with it -- a real bug on
+        mobile, not a cosmetic one. Made transparent/borderless instead so
+        it still reads as "no chrome" on desktop. */
+        header[data-testid="stHeader"] {{ background: transparent; box-shadow: none; }}
 
         h1, h2, h3, h4 {{ font-family: 'Source Serif 4', Georgia, serif !important; }}
 
