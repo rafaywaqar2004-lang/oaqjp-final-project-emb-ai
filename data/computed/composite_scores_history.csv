@@ -1,18 +1,324 @@
-snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignment_score
-2026-09-02,Afghanistan,AFG,0.0,10.0,45.0
-2026-09-02,Bahrain,BHR,40.0,30.0,55.0
-2026-09-02,Egypt,EGY,25.163365135227068,60.0,32.581682567613534
-2026-09-02,Iran,IRN,0.0,50.0,25.0
-2026-09-02,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335
-2026-09-02,Israel,ISR,63.19072482084576,10.0,76.59536241042288
-2026-09-02,Jordan,JOR,40.95655634317569,30.0,55.478278171587846
-2026-09-02,Kuwait,KWT,20.0,70.0,25.0
-2026-09-02,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084
-2026-09-02,Oman,OMN,20.0,60.0,30.0
-2026-09-02,Pakistan,PAK,20.0,80.0,20.0
-2026-09-02,Qatar,QAT,40.0,40.0,50.0
-2026-09-02,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936
-2026-09-02,Syria,SYR,6.406911043453157,50.0,28.203455521726582
-2026-09-02,Turkey,TUR,40.0,70.0,35.0
-2026-09-02,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177
-2026-09-02,Yemen,YEM,0.0,20.0,40.0
+snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignment_score,source
+2023-11-19,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2023-11-19,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2023-11-19,Egypt,EGY,20.9378220573697,60.0,30.46891102868485,backfilled
+2023-11-19,Iran,IRN,0.0,50.0,25.0,backfilled
+2023-11-19,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2023-11-19,Israel,ISR,80.0,10.0,85.0,backfilled
+2023-11-19,Jordan,JOR,20.0,30.0,45.0,backfilled
+2023-11-19,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2023-11-19,Lebanon,LBN,0.0,30.0,35.0,backfilled
+2023-11-19,Oman,OMN,20.0,60.0,30.0,backfilled
+2023-11-19,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2023-11-19,Qatar,QAT,40.0,40.0,50.0,backfilled
+2023-11-19,Saudi Arabia,SAU,0.0,70.0,15.0,backfilled
+2023-11-19,Syria,SYR,0.0,50.0,25.0,backfilled
+2023-11-19,Turkey,TUR,40.0,70.0,35.0,backfilled
+2023-11-19,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2023-11-19,Yemen,YEM,0.0,20.0,40.0,backfilled
+2024-05-21,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2024-05-21,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2024-05-21,Egypt,EGY,22.57913120770374,60.0,31.28956560385187,backfilled
+2024-05-21,Iran,IRN,0.0,50.0,25.0,backfilled
+2024-05-21,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2024-05-21,Israel,ISR,80.0,10.0,85.0,backfilled
+2024-05-21,Jordan,JOR,20.0,30.0,45.0,backfilled
+2024-05-21,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2024-05-21,Lebanon,LBN,0.0,30.0,35.0,backfilled
+2024-05-21,Oman,OMN,20.0,60.0,30.0,backfilled
+2024-05-21,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2024-05-21,Qatar,QAT,40.0,40.0,50.0,backfilled
+2024-05-21,Saudi Arabia,SAU,0.0,70.0,15.0,backfilled
+2024-05-21,Syria,SYR,0.0,50.0,25.0,backfilled
+2024-05-21,Turkey,TUR,40.0,70.0,35.0,backfilled
+2024-05-21,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2024-05-21,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-01-01,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-01-01,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-01-01,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-01-01,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-01-01,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-01-01,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-01-01,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-01-01,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-01-01,Lebanon,LBN,0.0,30.0,35.0,backfilled
+2025-01-01,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-01-01,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-01-01,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-01-01,Saudi Arabia,SAU,34.121059506698685,70.0,32.06052975334934,backfilled
+2025-01-01,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-01-01,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-01-01,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2025-01-01,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-02-01,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-02-01,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-02-01,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-02-01,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-02-01,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-02-01,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-02-01,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-02-01,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-02-01,Lebanon,LBN,0.0,30.0,35.0,backfilled
+2025-02-01,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-02-01,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-02-01,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-02-01,Saudi Arabia,SAU,34.40747768868003,70.0,32.20373884434002,backfilled
+2025-02-01,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-02-01,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-02-01,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2025-02-01,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-04-17,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-04-17,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-04-17,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-04-17,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-04-17,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-04-17,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-04-17,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-04-17,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-04-17,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-04-17,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-04-17,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-04-17,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-04-17,Saudi Arabia,SAU,34.40747768868003,70.0,32.20373884434002,backfilled
+2025-04-17,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-04-17,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-04-17,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2025-04-17,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-05-01,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-05-01,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-05-01,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-05-01,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-05-01,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-05-01,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-05-01,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-05-01,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-05-01,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-05-01,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-05-01,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-05-01,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-05-01,Saudi Arabia,SAU,53.01247339748189,70.0,41.50623669874095,backfilled
+2025-05-01,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-05-01,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-05-01,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2025-05-01,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-05-13,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-05-13,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-05-13,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-05-13,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-05-13,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-05-13,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-05-13,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-05-13,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-05-13,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-05-13,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-05-13,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-05-13,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-05-13,Saudi Arabia,SAU,55.562449815345886,70.0,42.781224907672936,backfilled
+2025-05-13,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-05-13,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-05-13,United Arab Emirates,ARE,40.0,60.0,40.0,backfilled
+2025-05-13,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-05-14,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-05-14,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-05-14,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-05-14,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-05-14,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-05-14,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-05-14,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-05-14,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-05-14,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-05-14,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-05-14,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-05-14,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-05-14,Saudi Arabia,SAU,55.562449815345886,70.0,42.781224907672936,backfilled
+2025-05-14,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-05-14,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-05-14,United Arab Emirates,ARE,48.98275431158338,60.0,44.491377155791696,backfilled
+2025-05-14,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-11-03,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-11-03,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-11-03,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-11-03,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-11-03,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-11-03,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-11-03,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-11-03,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-11-03,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-11-03,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-11-03,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-11-03,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-11-03,Saudi Arabia,SAU,55.562449815345886,70.0,42.781224907672936,backfilled
+2025-11-03,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-11-03,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-11-03,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2025-11-03,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-11-19,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-11-19,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-11-19,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-11-19,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-11-19,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-11-19,Israel,ISR,80.0,10.0,85.0,backfilled
+2025-11-19,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-11-19,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-11-19,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-11-19,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-11-19,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-11-19,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-11-19,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2025-11-19,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-11-19,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-11-19,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2025-11-19,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-12-17,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-12-17,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-12-17,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-12-17,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-12-17,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-12-17,Israel,ISR,53.3863040138545,10.0,71.69315200692725,backfilled
+2025-12-17,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-12-17,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-12-17,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-12-17,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-12-17,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-12-17,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-12-17,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2025-12-17,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-12-17,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-12-17,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2025-12-17,Yemen,YEM,0.0,20.0,40.0,backfilled
+2025-12-18,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2025-12-18,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2025-12-18,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2025-12-18,Iran,IRN,0.0,50.0,25.0,backfilled
+2025-12-18,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2025-12-18,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2025-12-18,Jordan,JOR,20.0,30.0,45.0,backfilled
+2025-12-18,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2025-12-18,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2025-12-18,Oman,OMN,20.0,60.0,30.0,backfilled
+2025-12-18,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2025-12-18,Qatar,QAT,40.0,40.0,50.0,backfilled
+2025-12-18,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2025-12-18,Syria,SYR,0.0,50.0,25.0,backfilled
+2025-12-18,Turkey,TUR,40.0,70.0,35.0,backfilled
+2025-12-18,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2025-12-18,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-02-07,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-02-07,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-02-07,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2026-02-07,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-02-07,Iraq,IRQ,0.0,50.0,25.0,backfilled
+2026-02-07,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2026-02-07,Jordan,JOR,20.0,30.0,45.0,backfilled
+2026-02-07,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-02-07,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-02-07,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-02-07,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-02-07,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-02-07,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-02-07,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-07,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-02-07,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2026-02-07,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-02-09,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-02-09,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-02-09,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2026-02-09,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-02-09,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
+2026-02-09,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2026-02-09,Jordan,JOR,20.0,30.0,45.0,backfilled
+2026-02-09,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-02-09,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-02-09,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-02-09,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-02-09,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-02-09,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-02-09,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-09,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-02-09,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2026-02-09,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-02-23,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-02-23,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-02-23,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
+2026-02-23,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-02-23,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
+2026-02-23,Israel,ISR,63.19072482084576,10.0,76.59536241042288,backfilled
+2026-02-23,Jordan,JOR,20.0,30.0,45.0,backfilled
+2026-02-23,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-02-23,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-02-23,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-02-23,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-02-23,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-02-23,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-02-23,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-23,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-02-23,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2026-02-23,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-06-15,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-06-15,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-06-15,Egypt,EGY,25.163365135227068,60.0,32.581682567613534,backfilled
+2026-06-15,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-06-15,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
+2026-06-15,Israel,ISR,63.19072482084576,10.0,76.59536241042288,backfilled
+2026-06-15,Jordan,JOR,20.0,30.0,45.0,backfilled
+2026-06-15,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-06-15,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-06-15,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-06-15,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-06-15,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-06-15,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-06-15,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-06-15,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-06-15,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
+2026-06-15,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-07-10,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-07-10,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-07-10,Egypt,EGY,25.163365135227068,60.0,32.581682567613534,backfilled
+2026-07-10,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-07-10,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
+2026-07-10,Israel,ISR,63.19072482084576,10.0,76.59536241042288,backfilled
+2026-07-10,Jordan,JOR,20.0,30.0,45.0,backfilled
+2026-07-10,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-07-10,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-07-10,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-07-10,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-07-10,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-07-10,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-07-10,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-07-10,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-07-10,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,backfilled
+2026-07-10,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-07-28,Afghanistan,AFG,0.0,10.0,45.0,backfilled
+2026-07-28,Bahrain,BHR,40.0,30.0,55.0,backfilled
+2026-07-28,Egypt,EGY,25.163365135227068,60.0,32.581682567613534,backfilled
+2026-07-28,Iran,IRN,0.0,50.0,25.0,backfilled
+2026-07-28,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
+2026-07-28,Israel,ISR,63.19072482084576,10.0,76.59536241042288,backfilled
+2026-07-28,Jordan,JOR,40.95655634317569,30.0,55.478278171587846,backfilled
+2026-07-28,Kuwait,KWT,20.0,70.0,25.0,backfilled
+2026-07-28,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
+2026-07-28,Oman,OMN,20.0,60.0,30.0,backfilled
+2026-07-28,Pakistan,PAK,20.0,80.0,20.0,backfilled
+2026-07-28,Qatar,QAT,40.0,40.0,50.0,backfilled
+2026-07-28,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
+2026-07-28,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-07-28,Turkey,TUR,40.0,70.0,35.0,backfilled
+2026-07-28,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,backfilled
+2026-07-28,Yemen,YEM,0.0,20.0,40.0,backfilled
+2026-09-02,Afghanistan,AFG,0.0,10.0,45.0,live_pipeline
+2026-09-02,Bahrain,BHR,40.0,30.0,55.0,live_pipeline
+2026-09-02,Egypt,EGY,25.163365135227068,60.0,32.581682567613534,live_pipeline
+2026-09-02,Iran,IRN,0.0,50.0,25.0,live_pipeline
+2026-09-02,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,live_pipeline
+2026-09-02,Israel,ISR,63.19072482084576,10.0,76.59536241042288,live_pipeline
+2026-09-02,Jordan,JOR,40.95655634317569,30.0,55.478278171587846,live_pipeline
+2026-09-02,Kuwait,KWT,20.0,70.0,25.0,live_pipeline
+2026-09-02,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,live_pipeline
+2026-09-02,Oman,OMN,20.0,60.0,30.0,live_pipeline
+2026-09-02,Pakistan,PAK,20.0,80.0,20.0,live_pipeline
+2026-09-02,Qatar,QAT,40.0,40.0,50.0,live_pipeline
+2026-09-02,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,live_pipeline
+2026-09-02,Syria,SYR,6.406911043453157,50.0,28.203455521726585,live_pipeline
+2026-09-02,Turkey,TUR,40.0,70.0,35.0,live_pipeline
+2026-09-02,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,live_pipeline
+2026-09-02,Yemen,YEM,0.0,20.0,40.0,live_pipeline

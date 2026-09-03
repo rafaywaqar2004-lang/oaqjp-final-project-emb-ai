@@ -270,7 +270,7 @@ class TestAppendHistorySnapshot:
 
         assert history_path.exists()
         df = pd.read_csv(history_path)
-        assert set(df.columns) == {"snapshot_date", "country", "iso3", "us_integration_depth", "china_exposure_depth", "net_alignment_score"}
+        assert set(df.columns) == {"snapshot_date", "country", "iso3", "us_integration_depth", "china_exposure_depth", "net_alignment_score", "source"}
         assert len(df) == len(COUNTRIES)
 
     def test_same_day_rerun_replaces_not_duplicates(self, tmp_path):

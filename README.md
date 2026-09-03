@@ -248,6 +248,7 @@ src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
   momentum.py                       # Score Momentum -- honest "Insufficient data" until >=2 dated snapshots exist
+  historical_backfill.py            # Reconstructs dated historical snapshots from real, dated evidence (see its docstring)
   watch_next.py                     # Loads/filters data/curated/watch_indicators.csv for the Watch Next component
   economic_analysis_engine.py       # Correlation logic backing the Economic Analysis page (no regression fit)
   strategic_risk_engine.py          # The 4-dimension risk-rating logic backing the Strategic Risk page
@@ -435,10 +436,11 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
 - **Phase 1:** Composite index, choropleth, radar/bar comparison. ✅
 - **Phase 3:** Country deep-dive pages -- auto-generated brief, investment/compute timelines, downloadable
   PDF brief. ✅ (built ahead of Phase 2 -- see `PROGRESS.md` for why)
-- **Phase 2:** Policy Event Tracker tab -- a chronological, sourced feed of 8 chip-policy events (the AI
-  Diffusion Rule's issuance and rescission, the Chip Security Act's introduction and committee markup, the
-  Nov 2025 Saudi/UAE chip authorizations, the March 2026 smuggling indictments, the UAE's July 2026 Country
-  Group upgrade). ✅
+- **Phase 2:** Policy Event Tracker tab -- a chronological, sourced feed, now 16 chip-policy events (the
+  Dec 2024 BIS semiconductor package, the AI Diffusion Rule's issuance and rescission, both GAIN AI Act
+  vehicles, the Chip Security Act's introduction and committee markup, the Nov 2025 Saudi/UAE chip
+  authorizations, two DOJ smuggling enforcement actions, the UAE's July 2026 Country Group upgrade, and
+  more). ✅
 - **Phase 4:** Scenario Lab (originally "Scenario Explorer," renamed for consistency with the wider
   redesign -- see PROGRESS.md) -- live reweighting of the US Integration Depth sub-weights, the China
   Exposure Depth sub-weights (telecom penetration vs. AI/cloud/digital ties), and the US-vs-China axis
@@ -460,14 +462,16 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
     political-status questions: Israel is labeled with Tel Aviv (its tech/financial hub) rather than the
     internationally disputed designation of Jerusalem, and Yemen is labeled with Sana'a as the
     constitutional capital, independent of which government currently controls it.
-  - **AI / compute hubs** (`data/curated/ai_hubs.csv`) -- 9 specific, named infrastructure sites (NEOM;
-    Ashdod, Mevo Carmel, and Kiryat Tivon in Israel; Cairo/Maadi Technology Park; Baghdad; the Al-Risha gas
-    field in eastern Jordan; Tartus, Syria; and Istanbul), each geocoded from a site name **already
-    explicitly named** in this project's existing sourced deal data (`ai_investment_deals.csv`,
-    `compute_capacity_deals.csv`, or `chinese_digital_ties.csv`'s rationale) -- never inferred from a
-    company's headquarters or an announcement venue. Hovering a star shows the deal, its scale, and its
-    source. Jordan's marker is explicitly flagged as an approximate regional location, not a precise site
-    coordinate, since only the gas field's general area (not exact coordinates) is disclosed in reporting.
+  - **AI / compute hubs** (`data/curated/ai_hubs.csv`) -- 14 specific, named infrastructure sites across 12
+    countries (NEOM; Ashdod, Mevo Carmel, and Kiryat Tivon in Israel; Cairo/Maadi Technology Park; Baghdad;
+    the Al-Risha gas field in eastern Jordan; Tartus, Syria; Istanbul; Masdar City, UAE; Doha, Qatar; Saar,
+    Bahrain; Barka, Oman; and Karachi Technopolis, Pakistan), each geocoded from a site name **already
+    explicitly named** in a real, cited source (this project's own deal data or an independent
+    press release/trade-press report) -- never inferred from a company's headquarters or an announcement
+    venue. Hovering a star shows the deal, its scale, and its source. Jordan's marker is explicitly flagged
+    as an approximate regional location, not a precise site coordinate, since only the gas field's general
+    area (not exact coordinates) is disclosed in reporting. Kuwait, Lebanon, Iran, Yemen, and Afghanistan
+    have no marker because no source found so far names a specific qualifying site in those countries.
 - **China Exposure Depth gained a second factor** -- Chinese AI/cloud/digital-infrastructure ties, scored
   0-5 and blended 50/50 with the existing telecom-penetration factor via the same renormalizing
   weighted-average pattern already used for US Integration Depth. Closes the project's longest-standing
@@ -476,9 +480,10 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
 - **Executive Key Findings, Score Momentum, Watch Next, and a rebuilt Country Deep Dive** (a "credibility
   upgrade" pass): the Overview's bottom-line callout became a 4-part KEY FINDINGS card (Bottom Line / Key
   Judgment / Confidence / Why It Matters, all computed from live data -- `ui.key_findings_card()`); a new
-  `src/momentum.py` module computes Score Momentum from `composite_scores_history.csv`, correctly returning
-  `Insufficient data` while only one dated snapshot exists rather than fabricating a trend, and is wired
-  into both the Overview and Country Deep Dive; a new reusable `Watch Next` component
+  `src/momentum.py` module computes Score Momentum from `composite_scores_history.csv` -- honestly returning
+  `Insufficient data` until enough dated snapshots exist, and real once they do (`src/historical_backfill.py`,
+  added in a later session, reconstructed 18 additional dated snapshots from real evidence -- see below and
+  that module's docstring) -- and is wired into both the Overview and Country Deep Dive; a new reusable `Watch Next` component
   (`data/curated/watch_indicators.csv`, 6 leading indicators, each tied to a specific already-cited
   pending/target/unresolved item elsewhere in the curated data -- e.g. Egypt's unresolved Huawei/iFlytek AI
   data-center bid, Jordan's not-yet-built Al-Risha 400MW target) appears on the Overview and every Country
@@ -526,6 +531,26 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   Implications / What to Watch / Data Quality sections (still works with just a brief, for backward
   compatibility), and a new `build_executive_pdf()` renders the regional Key Findings, Country Rankings,
   What Changed, and Strategic Risk matrix into a downloadable executive assessment from the Overview page.
+- **Historical backfill, closed BIS confidence gap, expanded Policy Event Tracker and AI/compute hub map**
+  (five self-identified depth gaps, all approved and built in one pass): a new `src/historical_backfill.py`
+  reconstructs 18 additional dated snapshots into `composite_scores_history.csv` using only real, dated
+  evidence already in this project's curated data -- investment/compute deals filtered by their own
+  `announced_date`, plus two documented export-control tier step-changes (Saudi Arabia 2025-11-19, the UAE
+  2026-07-10, the latter's pre-upgrade value explicitly flagged as an analyst inference via a
+  `us_tier_inferred` column). Every reconstructed row is tagged `source="backfilled"` (vs.
+  `"live_pipeline"` for the real daily snapshot) so it's distinguishable everywhere it's read, and Country
+  Deep Dive's new Trend line chart plus the Regional Dashboard's trend caption both carry an explicit
+  disclosure whenever backfilled rows are in view -- this is a reconstruction run today, not a claim that
+  anyone measured these scores on those historical dates. Score Momentum and Trend, previously permanently
+  "Insufficient data" behind a single snapshot, are now real end-to-end. Separately: four of five
+  previously `Low`-confidence export-control-tier rows (Qatar, Bahrain, Kuwait, Oman) were raised to
+  `Medium` on a real corroborating law-firm citation found via `WebSearch` (`bis.gov` itself stayed
+  unreachable all session); Turkey's gap was searched for again and genuinely not found, so it stays `Low`
+  with the failed attempts documented rather than guessed. The Policy Event Tracker grew from 8 to 16 real,
+  dated, cited events (Dec 2024-Dec 2025 BIS/Congress/DOJ actions). The AI/compute hub map grew from 9 to
+  14 named sites across 12 (up from 7) countries -- UAE, Qatar, Bahrain, Oman, and Pakistan all gained a
+  real, specifically-named site; Kuwait, Lebanon, Iran, Yemen, and Afghanistan turned up no qualifying
+  named site and were correctly left uncovered.
 
 ### How the Scenario Lab stays honest
 

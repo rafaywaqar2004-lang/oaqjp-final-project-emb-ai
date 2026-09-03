@@ -239,10 +239,16 @@ def append_history_snapshot(result: pd.DataFrame, history_path: str | Path = "da
 
     snapshot = result[["country", "iso3", "us_integration_depth", "china_exposure_depth", "net_alignment_score"]].copy()
     snapshot.insert(0, "snapshot_date", today)
+    snapshot["source"] = "live_pipeline"
 
     if history_path.exists():
         existing = pd.read_csv(history_path)
-        existing = existing[existing["snapshot_date"] != today]
+        if "source" not in existing.columns:
+            existing["source"] = "live_pipeline"
+        # Only replace a same-day *live_pipeline* row -- never drop a
+        # historical_backfill.py "backfilled" row that happens to share
+        # today's date (see historical_backfill.py's source tagging).
+        existing = existing[~((existing["snapshot_date"] == today) & (existing["source"] == "live_pipeline"))]
         combined = pd.concat([existing, snapshot], ignore_index=True)
     else:
         combined = snapshot

@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -25,7 +26,8 @@ from policy_events import _affected_countries  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from watch_next import load_watch_indicators, watch_items_for  # noqa: E402
 from ui import (  # noqa: E402
-    inject_base_css, page_header, confidence_pill, momentum_badge, watch_item, watch_next, footer, GRAY,
+    inject_base_css, page_header, confidence_pill, momentum_badge, watch_item, watch_next, footer,
+    BLUE, RED, GRAY,
 )
 
 
@@ -256,6 +258,39 @@ def main() -> None:
                     f"{momentum_badge(m.direction)} &nbsp; {m.previous:.0f} &rarr; {m.current:.0f} ({m.change:+.1f}) &middot; {m.note}",
                     unsafe_allow_html=True,
                 )
+
+    country_history = history[history["country"] == country].sort_values("snapshot_date")
+    if len(country_history) >= 2:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=country_history["snapshot_date"], y=country_history["us_integration_depth"],
+            name="US Integration Depth", mode="lines+markers", line=dict(color=BLUE, width=2),
+        ))
+        fig.add_trace(go.Scatter(
+            x=country_history["snapshot_date"], y=country_history["china_exposure_depth"],
+            name="China Exposure Depth", mode="lines+markers", line=dict(color=RED, width=2),
+        ))
+        fig.add_trace(go.Scatter(
+            x=country_history["snapshot_date"], y=country_history["net_alignment_score"],
+            name="Net Alignment", mode="lines+markers", line=dict(color=GRAY, width=2, dash="dot"),
+        ))
+        fig.update_layout(
+            height=320, margin=dict(l=10, r=10, t=10, b=10),
+            yaxis=dict(title="Score (0-100)", range=[0, 100]),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        has_backfilled = "source" in country_history.columns and (country_history["source"] == "backfilled").any()
+        if has_backfilled:
+            st.caption(
+                "Dates before the most recent snapshot are a **reconstruction**, not point-in-time historical "
+                "measurements: investment/compute figures are real deals filtered by their own disclosed "
+                "announcement date, and Saudi Arabia's/the UAE's export-control tier reflects two documented "
+                "step-changes (see Methodology). Chinese-tie and governance factors are held at today's curated "
+                "values across all historical dates because no dated evidence of when they changed exists in "
+                "this project's sourcing -- so pre-2026 China Exposure Depth may understate how gradually those "
+                "ties actually built up. See the Sources & Data page for full provenance."
+            )
 
     st.divider()
     st.subheader("What Changed")
