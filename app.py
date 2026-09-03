@@ -33,6 +33,9 @@ pg = st.navigation(
             st.Page("app_pages/strategic_risk.py", title="Strategic Risk"),
             st.Page("app_pages/outlook.py", title="12-Month Outlook"),
         ],
+        "Sanctions & Risk": [
+            st.Page("app_pages/sanctions_exposure.py", title="Sanctions Exposure"),
+        ],
         "Research": [
             st.Page("app_pages/methodology.py", title="Methodology"),
             st.Page("app_pages/economic_analysis.py", title="Economic Analysis"),

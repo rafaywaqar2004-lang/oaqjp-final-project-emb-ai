@@ -41,7 +41,7 @@ _REGISTRY: list[DatasetEntry] = [
         source_type="Computed, append-only (one dated snapshot per refresh)",
         update_cadence="One row set appended per calendar day a refresh runs (same-day re-runs replace, not duplicate)",
         methodology_note="Backs Score Momentum (src/momentum.py) -- see the Trend section on any Country Deep Dive.",
-        limitations="Only 1 dated snapshot exists as of this catalog -- too few observations for any trend to be computable yet. This is expected, not a data-quality gap: history only started accumulating recently.",
+        limitations="Most dated snapshots before the most recent one are a reconstruction (src/historical_backfill.py) from real dated evidence already in this project's curated data -- investment/compute deals filtered by their own announced_date, plus two documented export-control tier step-changes -- not point-in-time historical measurements. See any Country Deep Dive's Trend section for the full disclosure.",
     ),
     DatasetEntry(
         name="US Export-Control Tier",
@@ -49,7 +49,7 @@ _REGISTRY: list[DatasetEntry] = [
         source_type="Manually curated",
         update_cadence="Ad hoc, as bilateral chip-access deals or BIS regulatory changes are disclosed",
         methodology_note="0-5 ordinal rubric -- see Methodology page. Feeds US Integration Depth at 40% weight.",
-        limitations="Qatar, Bahrain, Kuwait, Oman, and Turkey remain Low confidence pending direct access to BIS's own Country Group table (blocked in this project's research sandbox).",
+        limitations="Turkey remains Low confidence pending direct access to BIS's own Country Group table (blocked in this project's research sandbox). Qatar, Bahrain, Kuwait, and Oman were raised to Medium confidence on a corroborating secondary-source citation (a law-firm export-control alert), not a primary bis.gov read.",
     ),
     DatasetEntry(
         name="Chinese Telecom Penetration",
@@ -123,7 +123,7 @@ _REGISTRY: list[DatasetEntry] = [
         source_type="Manually curated",
         update_cadence="Ad hoc, alongside the investment/compute/digital-ties datasets these sites are drawn from",
         methodology_note="A hub only appears if its site is explicitly named in an already-cited deal elsewhere in the curated data.",
-        limitations="Only 9 sites across 6 countries meet this bar -- not an exhaustive map of regional AI infrastructure.",
+        limitations="Only 14 sites across 12 of 17 countries meet this bar -- not an exhaustive map of regional AI infrastructure. Kuwait, Lebanon, Iran, Yemen, and Afghanistan have no marker because no source found so far names a specific qualifying site.",
     ),
     DatasetEntry(
         name="Non-Oil Diversification (manual research)",
@@ -132,6 +132,14 @@ _REGISTRY: list[DatasetEntry] = [
         update_cadence="Ad hoc -- built specifically to supply real data for the Economic Analysis page while the live World Bank pipeline below is unpopulated in this sandbox",
         methodology_note="Real non-oil GDP share figures for the 8 countries where the concept applies and a source could be found; the other 9 are marked structurally not-applicable (not hydrocarbon-rent economies), never estimated. See the Economic Analysis page's supplementary finding.",
         limitations="Only 8 of 17 countries have a usable figure. Confidence varies per row (High for a named national-statistics release, Medium for a press-relayed figure, Low for Iran's dated 2021 secondary-sourced figure) -- see each row's own confidence/rationale.",
+    ),
+    DatasetEntry(
+        name="Sanctions & Entity List Exposure",
+        path=Path(CURATED_DIR) / "sanctions_data.csv",
+        source_type="Manually curated (BIS/OFAC/EU official sources + reputable secondary reporting)",
+        update_cadence="Ad hoc -- intended quarterly, tracking BIS, OFAC, and EU official releases",
+        methodology_note="Feeds the Sanctions Exposure Score (src/sanctions_engine.py) -- a weighted average over 6 factors, renormalized over whichever have verified data. BIS tier restrictiveness is reused directly from this project's own export_control_tier.csv, never re-derived. See the Sanctions Exposure page's View Calculation expander for the full formula.",
+        limitations="entity_list_count is RESEARCH_NEEDED for all 17 countries -- no source publishes a live per-country tally of the BIS Entity List (it is a rolling list built from decades of individual Federal Register rules, not a country-indexed database), and the two ways to derive one directly (bis.gov, trade.gov's Consolidated Screening List) were both network-blocked in this project's research sandbox. secondary_sanctions_risk and sanctions_evasion_risk are analyst judgments, populated only for Iran, Turkey, Pakistan, and Syria; every other country's score is currently backed by only 2 of 6 weighted factors (BIS tier + CAATSA status).",
     ),
     DatasetEntry(
         name="World Bank Indicators (non-oil diversification proxy, FDI)",

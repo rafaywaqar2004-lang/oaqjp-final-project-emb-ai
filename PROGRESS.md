@@ -5,7 +5,47 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: closed five self-identified "more detail" gaps -- historical backfill, the BIS
+**Most recent session: fixed a real mobile-navigation bug, then built a new Sanctions & Entity List
+Exposure module end to end from the project owner's detailed spec.** Two pieces of work:
+
+1. **Sidebar navigation was completely unreachable on mobile/narrow viewports.** The project owner
+   reported "the sidebar which shows the different tabs isn't showing up." Root cause:
+   `ui.inject_base_css()` hid the entire `header[data-testid="stHeader"]` element via
+   `visibility: hidden` -- but that header is also where Streamlit renders the sidebar's
+   expand/collapse toggle button. On desktop this went unnoticed (sidebar starts open), but on any
+   narrow viewport Streamlit auto-collapses the sidebar on load, and with the header hidden there was
+   no control left to reopen it. Reproduced locally via Playwright at 390px width (confirmed the toggle
+   and sidebar were both fully invisible), fixed by keeping the header visible but transparent/borderless
+   instead of hiding it outright, verified the fix at both mobile and desktop widths, shipped as its own
+   PR (#7) separate from the feature work below.
+
+2. **Sanctions & Entity List Exposure** -- a new module built from a detailed project-owner spec (data
+   file schema, page layout, scoring formula, admin data editor, all specified up front). Followed the
+   spec closely while applying this project's own no-fabrication discipline to every field: real,
+   well-documented facts the owner supplied (Iran's OFAC programs, Turkey's 2020 CAATSA designation) were
+   kept as given; every other field was either genuinely researched via `WebSearch` this session or
+   explicitly marked `RESEARCH_NEEDED` (the owner's own requested convention) rather than guessed.
+   A background research agent confirmed BIS Entity List counts are **not obtainable** for any of the 17
+   countries from any source it could find -- not BIS's own site, not the trade.gov Consolidated
+   Screening List (both network-blocked in this sandbox anyway) -- because the Entity List has no
+   published per-country tally; it's a rolling list built from decades of individual Federal Register
+   rules. That field stays `RESEARCH_NEEDED` for all 17 countries rather than estimated. The same pass
+   found real, cited OFAC/EU/CAATSA answers for all 17 countries, including some genuinely nuanced ones
+   (Egypt's 2019 CAATSA sanctions were *threatened but never imposed* over a Su-35 purchase; Syria's 2025
+   sanctions relief left the chip-specific BIS restriction in place while OFAC's own program page is now
+   titled "Inactive and Archived"). A real bug was caught and fixed during the build: pandas silently
+   reads a bare cell value of exactly `"None"` or `"N/A"` as a missing value (`NaN`) under its default
+   `na_values` list -- two countries' `caatsa_status` cells were silently nulled out by this until every
+   such cell was reworded to avoid the exact NA-lookalike tokens (`"None on file"` instead of bare
+   `"None"`), with a regression test now guarding the whole curated CSV against it recurring. The
+   Sanctions Exposure Score itself reuses this project's own already-cited `export_control_tier.csv`
+   `tier_score` for the BIS-tier factor rather than re-deriving a fresh judgment call, so the two modules
+   can't drift apart on the same underlying facts. 41 new tests (`test_sanctions_engine.py`); 393/393
+   passing overall. Verified in-browser via Playwright: the summary table, heatmap, ranked bar chart,
+   positioning scatter, and admin `st.data_editor` panel all render without error, and the new Sanctions
+   Profile sub-section renders correctly on Country Deep Dive.
+
+**Previous session: closed five self-identified "more detail" gaps -- historical backfill, the BIS
 confidence gap, expanded Policy Event Tracker coverage, and more AI/compute hub sites.** Prompted by the
 project owner asking what could be made more thorough, then approving all five suggestions at once
 ("lets do all of these tehn"). All five are real, sourced, tested additions -- nothing here is estimated

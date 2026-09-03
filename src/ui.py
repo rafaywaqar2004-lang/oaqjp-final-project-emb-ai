@@ -52,6 +52,22 @@ def sequential_map_scale(end_color: str) -> list[str]:
     Governance -> gold, etc.)."""
     return [MAP_NEUTRAL, end_color]
 
+
+# 5-band severity scale (green -> dark red) used by the Sanctions Exposure
+# heatmap and any future severity-banded visualization. "Insufficient data"
+# is a distinct sixth color (gray, matching this project's other data-gap
+# indicators) -- it must never share a color with "None" (verified zero
+# risk), since a data gap and a real zero finding are not the same claim.
+SEVERITY_COLORS = {
+    "None": GREEN,
+    "Low": "#C9B872",
+    "Moderate": "#C97A3D",
+    "High": RED,
+    "Severe": "#7A2A20",
+    "Insufficient data": GRAY,
+}
+SEVERITY_BAND_ORDER = ["Insufficient data", "None", "Low", "Moderate", "High", "Severe"]
+
 _CONFIDENCE_COLORS = {
     "high": (GREEN_SOFT, GREEN),
     "moderate": (GOLD_SOFT, GOLD),
