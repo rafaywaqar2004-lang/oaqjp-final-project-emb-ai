@@ -75,6 +75,15 @@ class TestCrossBorderFlows:
         dom = domestic_sovereign_deals(flows)
         assert len(cb) + len(dom) == len(flows)
 
+    def test_stargate_and_airtrunk_are_also_domestic(self, flows):
+        """Same modeling choice as HUMAIN's own launch (deal 003): a joint
+        venture whose infrastructure is built and owned within the source
+        country stays a domestic buildout even when foreign (US) partners
+        are involved -- deals 014 (Stargate UAE) and 017 (AirTrunk/
+        Blackstone, Saudi Arabia) both apply this."""
+        dom = domestic_sovereign_deals(flows)
+        assert {"003", "014", "017"} <= set(dom["deal_id"])
+
     def test_humain_sovereign_launch_is_domestic(self, flows):
         dom = domestic_sovereign_deals(flows)
         assert "003" in set(dom["deal_id"])
@@ -136,14 +145,22 @@ class TestByQuarterAndSector:
         assert "US" in result.columns
         assert "China" in result.columns
 
+    def test_by_quarter_handles_mixed_date_precision(self, flows):
+        """Regression guard: most deals use 'YYYY-MM' dates, but a few
+        (e.g. 011, 012, 017) carry a disclosed exact 'YYYY-MM-DD' date --
+        a strict format="%Y-%m" parse used to raise ValueError on those."""
+        assert (flows["date"].str.len() == 10).any()  # at least one YYYY-MM-DD row exists
+        by_quarter(flows)  # must not raise
+
     def test_by_quarter_excludes_unconfirmed_and_domestic(self, flows):
         result = by_quarter(flows)
-        # Only 3 of 10 deals have a confirmed value AND a confirmed date AND
-        # are cross-border with a US/China bloc: Microsoft->G42 ($1500M US),
-        # SCAI->SenseTime ($206.54M China), and the Pakistan-China fiber
-        # loan ($44M China).
-        assert result["US"].sum() == pytest.approx(1500.0)
-        assert result["China"].sum() == pytest.approx(250.54)
+        # Cross-border, US/China-bloc, confirmed-value, confirmed-date deals:
+        # US -- Microsoft->G42 ($1500M), AMD ($10000M), AWS ($5000M),
+        #       Microsoft->G42/Khazna ($15200M) = $31700M.
+        # China -- SCAI->SenseTime ($206.54M), Pakistan fiber loan ($44M),
+        #          Alat->Dahua ($200M) = $450.54M.
+        assert result["US"].sum() == pytest.approx(31700.0)
+        assert result["China"].sum() == pytest.approx(450.54)
 
     def test_by_sector_has_no_unconfirmed_totals(self, flows):
         result = by_sector(flows)

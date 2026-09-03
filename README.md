@@ -272,7 +272,7 @@ data/
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
     non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
     sanctions_data.csv               # BIS Entity List / OFAC / EU / CAATSA exposure per country -- most fields RESEARCH_NEEDED pending further sourcing
-    investment_flows.csv             # 10 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
+    investment_flows.csv             # 18 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -607,11 +607,29 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   cable project's real counterparty (the Special Communications Organization) and $44m financing figure.
   The page includes a Sankey diagram, quarterly and by-sector charts, a filterable/exportable deal table,
   a Capital Alignment Ratio bar chart, and a Capital-Alignment-vs-Net-Alignment positioning scatter with
-  quadrant framing -- which immediately surfaces a real, interesting divergence in the tracked data: Saudi
-  Arabia scores mid-pack on Net Alignment but 0% on Capital Alignment (its only confirmed cross-border deal
-  is the China-bound SenseTime JV), while the UAE scores high on both. Every Country Deep Dive gained an
-  Investment Flows sub-section (reusing the same rendering function as this page, so the two can't drift
-  apart), and Sources & Data gained sovereign-fund reference links (PIF, G42, MGX, QIA, Mubadala).
+  quadrant framing. Every Country Deep Dive gained an Investment Flows sub-section (reusing the same
+  rendering function as this page, so the two can't drift apart), and Sources & Data gained sovereign-fund
+  reference links (PIF, G42, MGX, QIA, Mubadala).
+- **The dataset above grew from 10 to 18 deals in an immediate same-session follow-up**, via the same
+  verification discipline, not a blind data replacement: a proposed batch of "corrections" was checked
+  against its own cited sources before anything changed, catching two proposed reversions that didn't hold
+  up (the HUMAIN "$40bn" figure -- PIF's own launch press release, fetched in full, states no dollar figure
+  at all -- and the SenseTime deal value, where a cited secondary source turned out to be repeating the
+  same SAR/USD currency-labeling error already caught and corrected in the first pass) alongside 7 newly-
+  proposed deals that all checked out as real (HUMAIN's $10bn AMD and $5bn+ AWS partnerships, Microsoft's
+  $15.2bn UAE pledge, the $10bn Stargate UAE joint venture, a $200m Alat/Dahua Technology JV, a du/Huawei
+  5G-Advanced partnership, and a $3bn HUMAIN/AirTrunk/Blackstone data-center JV -- the last with a corrected
+  date and a swapped-out unusable source). A genuine bonus: verifying a proposed 2020 Ooredoo/Huawei deal
+  found it was real and factually distinct from the existing 2024 one, not a duplicate -- added as an 18th
+  deal. Two structural modeling choices are made explicit in the engine module's docstring: reversed-
+  direction deals (US capital flowing into a Gulf state, e.g. Microsoft->G42) are kept with the Gulf state
+  as `source_country` so they aren't silently dropped from that country's own alignment ratio; and
+  joint-venture deals with heavy foreign participation but infrastructure built within the Gulf state
+  (Stargate UAE, the AirTrunk/Blackstone JV) are treated as domestic buildouts using the same precedent
+  HUMAIN's own sovereign launch already established. Net effect on the numbers: Saudi Arabia's Capital
+  Alignment Ratio moved from an unrepresentative 0% (only the small China-bound SenseTime JV was
+  previously tracked) to 97% once the AMD and AWS deals are correctly counted -- not a data revision for
+  its own sake, but exactly the kind of correction this project's no-fabrication discipline exists to catch.
 
 ### How the Scenario Lab stays honest
 

@@ -293,10 +293,23 @@ def investment_flows_section(country: str | None = None) -> None:
 
 def main() -> None:
     inject_base_css()
+
+    with st.spinner("Loading investment data..."):
+        try:
+            df = _flows()
+        except (FileNotFoundError, KeyError) as e:
+            page_header(
+                "Sovereign AI Investment Flow Tracker",
+                "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc",
+                meta=["MANUALLY CURATED"],
+            )
+            st.error(f"Could not load investment flow data: {e}")
+            return
+
     page_header(
         "Sovereign AI Investment Flow Tracker",
         "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc",
-        meta=["10 TRACKED DEALS", "MANUALLY CURATED"],
+        meta=[f"{len(df)} TRACKED DEALS", "MANUALLY CURATED"],
     )
 
     st.warning(
@@ -305,13 +318,6 @@ def main() -> None:
         "where this project has not yet independently verified a figure -- those deals are excluded from "
         "dollar totals, not guessed."
     )
-
-    with st.spinner("Loading investment data..."):
-        try:
-            df = _flows()
-        except (FileNotFoundError, KeyError) as e:
-            st.error(f"Could not load investment flow data: {e}")
-            return
 
     bluf, key_judgment, why = _key_findings(df)
     key_findings_card(bluf, key_judgment, "Moderate", why)
