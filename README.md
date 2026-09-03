@@ -272,7 +272,7 @@ data/
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
     non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
     sanctions_data.csv               # BIS Entity List / OFAC / EU / CAATSA exposure per country -- most fields RESEARCH_NEEDED pending further sourcing
-    investment_flows.csv             # 18 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
+    investment_flows.csv             # 24 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -630,6 +630,20 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   Alignment Ratio moved from an unrepresentative 0% (only the small China-bound SenseTime JV was
   previously tracked) to 97% once the AMD and AWS deals are correctly counted -- not a data revision for
   its own sake, but exactly the kind of correction this project's no-fabrication discipline exists to catch.
+- **A targeted follow-up closed the dataset's remaining zero-coverage gap: Bahrain, Kuwait, and Oman each
+  had 0 tracked deals.** A `WebSearch` research pass found 6 real, verified deals -- one US-bound and one
+  China-bound for each of the three countries (Mumtalakat/SandboxAQ and Batelco/Huawei for Bahrain; Kuwait
+  Investment Authority's stake in the BlackRock/Microsoft/MGX AI Infrastructure Partnership and Zain
+  Kuwait/Huawei's AI Center of Excellence for Kuwait; Omantel/Huawei's national-cloud partnership and Oman
+  Data Park's NVIDIA H200 deployment for Oman) -- bringing the dataset to 24 deals covering all 8 relevant
+  source countries. None of the six has a disclosed dollar value (deal values for sovereign-fund
+  partnerships and telecom-vendor infrastructure deals are rarely made public), so all three countries'
+  Capital Alignment Ratios still correctly read "insufficient data" rather than a fabricated number --
+  coverage improved without inventing a figure that doesn't exist. The research explicitly ruled out
+  several tempting near-misses rather than force a result: a Ooredoo-Group GPU deployment mentioning Oman
+  was not re-attributed to an Omani source (Ooredoo's HQ and deal announcement are Qatari), and no
+  Oman-Investment-Authority-specific deal (as distinct from its Omantel/Oman Data Park holdings) was
+  found and included.
 
 ### How the Scenario Lab stays honest
 
