@@ -176,6 +176,21 @@ class TestBuildSanctionsComposite:
         assert by_country["Iran"] > by_country["United Arab Emirates"]
         assert by_country["Syria"] > by_country["United Arab Emirates"]
 
+    def test_every_country_has_at_least_five_of_six_factors(self, sanctions):
+        """secondary_sanctions_risk/sanctions_evasion_risk were extended to
+        all 17 countries (derived transparently from the OFAC/EU/CAATSA
+        facts already on file, never a fresh unsourced claim) -- only
+        entity_list_count should still be missing anywhere."""
+        assert (sanctions["sanctions_factors_available"] >= 5).all()
+
+    def test_no_country_has_research_needed_judgment_fields(self):
+        """Regression guard: every country's secondary_sanctions_risk and
+        sanctions_evasion_risk should be a real judgment, not the
+        RESEARCH_NEEDED placeholder, now that all 17 have been populated."""
+        df = load_sanctions()
+        assert not df["secondary_sanctions_risk"].str.upper().str.startswith("RESEARCH_NEEDED").any()
+        assert not df["sanctions_evasion_risk"].str.upper().str.startswith("RESEARCH_NEEDED").any()
+
 
 class TestHeatmapMatrix:
     def test_has_a_row_per_country_and_expected_columns(self, sanctions):

@@ -3,14 +3,17 @@ Sanctions & Entity List Exposure -- a Sanctions Exposure Score (0-100) built
 from data/curated/sanctions_data.csv, following this project's standing
 missing-data rule: a factor with no verified value is EXCLUDED from the
 weighted average (weights renormalized over whatever is available), never
-scored as zero or guessed. As of this module's introduction, most of the 17
-countries have real data for only 2 of the 6 weighted factors (BIS tier and
-CAATSA status) -- entity-list counts, OFAC program details, and
-secondary-sanctions/evasion-risk judgments are marked "RESEARCH_NEEDED" in
-the curated CSV for every country not yet independently researched, per this
-project's no-fabrication rule. `factors_available` is carried through so the
-UI can disclose exactly how many of the 6 factors backed each country's
-score, the same way scoring.py discloses `*_factors_available` for the two
+scored as zero or guessed. Every country currently has real data for 5 of
+the 6 weighted factors (BIS tier, OFAC programs, CAATSA status, secondary-
+sanctions risk, and evasion risk -- the last two are analyst judgments
+derived transparently from the OFAC/EU/CAATSA facts already in the same
+row, see each country's `rationale`). Only `entity_list_count` stays
+"RESEARCH_NEEDED" in the curated CSV for all 17 countries: no source found
+publishes a live per-country tally of the BIS Entity List (it's a rolling
+list built from decades of individual Federal Register rules, not a
+country-indexed database). `factors_available` is carried through so the UI
+can disclose exactly how many of the 6 factors backed each country's score,
+the same way scoring.py discloses `*_factors_available` for the two
 composite axes.
 
 BIS tier restrictiveness is deliberately NOT re-typed here as a fresh
