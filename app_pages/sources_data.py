@@ -56,6 +56,27 @@ def main() -> None:
                         )
 
     st.divider()
+    st.subheader("Official sanctions & export-control reference sources")
+    st.caption(
+        "The Sanctions Exposure page's underlying data is manually curated from the sources below (and "
+        "reputable secondary reporting citing them) -- not a live feed. See that page's data_editor for the "
+        "exact citation used for each field. Sanctions data may lag official updates by 30-60 days."
+    )
+    _SANCTIONS_SOURCES = [
+        ("US BIS Entity List", "https://www.bis.doc.gov/index.php/policy-guidance/lists-of-parties-of-concern/entity-list", "2026-09-03"),
+        ("OFAC Sanctions List Search", "https://ofac.treasury.gov/", "2026-09-03"),
+        ("EU Consolidated Financial Sanctions List", "https://webgate.ec.europa.eu/fsd/fsf", "2026-09-03"),
+        ("UN Security Council Consolidated List", "https://www.un.org/securitycouncil/content/un-sc-consolidated-list", "2026-09-03"),
+    ]
+    for name, url, last_updated in _SANCTIONS_SOURCES:
+        st.markdown(f"- [{name}]({url}) &middot; *Last checked: {last_updated}*", unsafe_allow_html=True)
+    st.caption(
+        "Sanctions data on the Sanctions Exposure page is manually curated from official government sources. "
+        "May lag official updates by 30-60 days -- verify with the sources above before relying on this data "
+        "for any real decision."
+    )
+
+    st.divider()
     st.caption(
         "**Manually curated** means a specific analyst-desk research pass, cited row by row (source_name, "
         "source_url, confidence, as_of_date, rationale) -- see the Methodology page for the ordinal rubrics "

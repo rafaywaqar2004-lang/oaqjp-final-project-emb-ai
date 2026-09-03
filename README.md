@@ -244,6 +244,7 @@ app_pages/
   methodology.py                    # In-app weights/rubrics/limitations reference (mirrors this README)
   economic_analysis.py              # The one serious empirical economic-analysis module (QUESTION/DATA/.../LIMITATION)
   sources_data.py                   # Research data catalog -- every dataset, computed live, with CSV downloads
+  sanctions_exposure.py             # Sanctions Exposure Score: summary table, heatmap, ranked bar, positioning scatter, admin data editor
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
@@ -253,6 +254,7 @@ src/
   economic_analysis_engine.py       # Correlation logic backing the Economic Analysis page (no regression fit)
   strategic_risk_engine.py          # The 4-dimension risk-rating logic backing the Strategic Risk page
   outlook_engine.py                 # Base Case / Alternative Case construction backing the 12-Month Outlook page
+  sanctions_engine.py               # Sanctions Exposure Score: 6-factor renormalizing weighted average, reuses export_control_tier.csv's own tier_score
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
@@ -267,6 +269,7 @@ data/
     ai_hubs.csv                     # Map reference layer: named, cited AI/compute/telecom infrastructure sites
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
     non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
+    sanctions_data.csv               # BIS Entity List / OFAC / EU / CAATSA exposure per country -- most fields RESEARCH_NEEDED pending further sourcing
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -551,6 +554,31 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   14 named sites across 12 (up from 7) countries -- UAE, Qatar, Bahrain, Oman, and Pakistan all gained a
   real, specifically-named site; Kuwait, Lebanon, Iran, Yemen, and Afghanistan turned up no qualifying
   named site and were correctly left uncovered.
+- **Sanctions & Entity List Exposure** (`app_pages/sanctions_exposure.py` + `src/sanctions_engine.py`,
+  new "Sanctions & Risk" nav group): a Sanctions Exposure Score (0-100) per country, built the same way as
+  every other composite in this project -- a weighted average over 6 factors (BIS Entity List count, BIS
+  tier restrictiveness, OFAC active programs, CAATSA status, secondary-sanctions risk, evasion risk),
+  renormalized over whichever factors actually have verified data, never scored as zero when missing. As
+  shipped, most countries' scores rest on only 2-3 of 6 factors: `entity_list_count` is `RESEARCH_NEEDED`
+  for all 17 countries (a `WebSearch` research pass this session confirmed no source -- not BIS's own site,
+  not the trade.gov Consolidated Screening List -- publishes a live per-country tally of the Entity List; it's
+  a rolling list built from decades of individual Federal Register rules, not a country-indexed database),
+  and `secondary_sanctions_risk`/`sanctions_evasion_risk` are analyst judgments populated only for Iran,
+  Turkey, Pakistan, and Syria. `OFAC programs`, `EU sanctions`, and `CAATSA status` are real, cited findings
+  for all 17 countries from the same research pass (e.g. Turkey's Dec 2020 CAATSA Section 231 designation,
+  Egypt's 2019 threatened-but-never-imposed CAATSA case, Syria's largely-revoked-but-partially-reinstated
+  2025-2026 OFAC/EU picture). BIS tier restrictiveness is never re-derived as a fresh judgment call -- it's
+  computed directly from this project's own already-cited `export_control_tier.csv` `tier_score`
+  (`(5 - tier_score) / 5 * 100`), so the two modules can't silently disagree about the same underlying BIS
+  Country Group facts. The page includes a summary table, a severity-banded heatmap (6 factors x 17
+  countries, with "Insufficient data" gray kept visually distinct from a verified "None" finding), a ranked
+  bar chart, a Sanctions-Exposure-vs-Net-Alignment positioning scatter with quadrant framing, and an
+  in-app `st.data_editor` admin panel for updating the curated CSV directly (with an explicit disclosure
+  that most hosted deployments have an ephemeral filesystem, so an edit there isn't a substitute for
+  committing a real update to the repository). Every Country Deep Dive gained a Sanctions Profile
+  sub-section. The Sources & Data page lists the four official reference sources (BIS Entity List, OFAC,
+  EU Consolidated Sanctions List, UN Security Council Consolidated List) this module is meant to be
+  refreshed against.
 
 ### How the Scenario Lab stays honest
 

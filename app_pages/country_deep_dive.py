@@ -23,6 +23,7 @@ from country_brief import _alignment_band, generate_brief, load_curated  # noqa:
 from momentum import compute_momentum, load_history  # noqa: E402
 from pdf_export import build_country_pdf  # noqa: E402
 from policy_events import _affected_countries  # noqa: E402
+from sanctions_engine import build_sanctions_composite  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from watch_next import load_watch_indicators, watch_items_for  # noqa: E402
 from ui import (  # noqa: E402
@@ -50,6 +51,11 @@ def _curated() -> dict[str, pd.DataFrame]:
 @st.cache_data(ttl=3600)
 def _brief(country: str):
     return generate_brief(country, curated=_curated(), composite=_composite())
+
+
+@st.cache_data(ttl=3600)
+def _sanctions() -> pd.DataFrame:
+    return build_sanctions_composite()
 
 
 @st.cache_data(ttl=3600)
@@ -331,6 +337,47 @@ def main() -> None:
             watch_item(r["indicator"], r["why_it_matters"], r["current_signal"], r["direction"], r["confidence"])
             for _, r in watch_df.iterrows()
         ])
+
+    st.divider()
+    st.subheader("Sanctions Profile")
+    sanctions_row = _sanctions().loc[lambda d: d["country"] == country]
+    if sanctions_row.empty:
+        st.caption("No sanctions data on file for this country.")
+    else:
+        s = sanctions_row.iloc[0]
+        sc1, sc2 = st.columns([1, 3])
+        with sc1:
+            st.markdown("**Sanctions Exposure Score**")
+            if pd.notna(s["sanctions_exposure_score"]):
+                st.markdown(f"### {s['sanctions_exposure_score']:.0f}/100")
+                st.caption(f"Based on {int(s['sanctions_factors_available'])}/6 weighted factors -- see the Sanctions Exposure page for the full methodology.")
+            else:
+                st.markdown("### N/A")
+                st.caption("Insufficient verified data to compute a score.")
+        with sc2:
+            st.markdown(f"**Active sanctions programs:** {esc(s['ofac_programs'])}")
+            st.markdown(f"**EU sanctions:** {esc(s['eu_sanctions'])}")
+            st.markdown(f"**BIS tier classification:** {esc(s['bis_tier'])}")
+            st.caption(esc(s["bis_tier_history"]))
+            st.markdown(f"**CAATSA status:** {esc(s['caatsa_status'])}")
+            st.markdown(f"**Entity List entities on file:** {esc(s['entity_list_entities'])}")
+            st.markdown(f"**Secondary sanctions risk:** {esc(s['secondary_sanctions_risk'])}")
+        net_alignment = row.get("net_alignment_score")
+        if pd.notna(s["sanctions_exposure_score"]) and pd.notna(net_alignment):
+            if net_alignment < 50 and s["sanctions_exposure_score"] >= 60:
+                positioning_note = (
+                    f"{country} combines below-neutral Net Alignment ({net_alignment:.0f}/100, China-leaning) with a "
+                    f"high Sanctions Exposure Score ({s['sanctions_exposure_score']:.0f}/100) -- the highest-risk "
+                    "combination this tracker's own Sanctions Exposure page quadrant framing identifies."
+                )
+            else:
+                positioning_note = (
+                    f"{country}'s Net Alignment ({net_alignment:.0f}/100) and Sanctions Exposure Score "
+                    f"({s['sanctions_exposure_score']:.0f}/100) do not both fall in the highest-risk range together -- "
+                    "see the Sanctions Exposure page's positioning scatter for this country plotted against all others."
+                )
+            st.caption(positioning_note)
+        st.caption("See the **Sanctions Exposure** page for the full 17-country comparison, heatmap, and calculation methodology.")
 
     st.divider()
     col_inv, col_compute = st.columns(2)
