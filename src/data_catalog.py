@@ -142,6 +142,15 @@ _REGISTRY: list[DatasetEntry] = [
         limitations="entity_list_count is RESEARCH_NEEDED for all 17 countries -- no source publishes a live per-country tally of the BIS Entity List (it is a rolling list built from decades of individual Federal Register rules, not a country-indexed database), and the two ways to derive one directly (bis.gov, trade.gov's Consolidated Screening List) were both network-blocked in this project's research sandbox. secondary_sanctions_risk and sanctions_evasion_risk are analyst judgments (Iran/Turkey/Pakistan/Syria's are project-owner-supplied or independently well-documented; the other 13 countries' are derived transparently from the OFAC/EU/CAATSA facts already in the same row -- see each row's rationale). Every country's score is currently backed by 5 of 6 weighted factors, with only entity_list_count missing.",
     ),
     DatasetEntry(
+        name="Sovereign AI Investment Flows",
+        path=Path(CURATED_DIR) / "investment_flows.csv",
+        source_type="Manually curated (sovereign fund/corporate press releases, government announcements, verified news reports)",
+        update_cadence="Ad hoc -- intended quarterly",
+        methodology_note="Feeds the Capital Alignment Ratio (src/investment_flow_engine.py) = US-bound / (US-bound + China-bound) confirmed-value cross-border investment, per source country. Same-country 'sovereign launch' deals (e.g. HUMAIN's domestic buildout) are excluded from that ratio -- see the module's own docstring for why. RESEARCH_NEEDED deal values are excluded from every dollar total, never treated as zero.",
+        limitations="10 deals tracked, covering 5 of the 8 relevant source countries so far (Bahrain, Kuwait, and Oman have no tracked deal yet). 7 of 10 deals have an unconfirmed (RESEARCH_NEEDED) dollar value -- deal values for chip-export authorizations and telecom-vendor MoUs are rarely publicly disclosed. Not all deals are publicly disclosed; this is a curated sample, not an exhaustive record.",
+        country_col="source_country",
+    ),
+    DatasetEntry(
         name="World Bank Indicators (non-oil diversification proxy, FDI)",
         path=Path(WORLDBANK_DIR) / "worldbank_latest.csv",
         source_type="Live, automated (World Bank API v2)",

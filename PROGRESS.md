@@ -5,7 +5,70 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: fixed a real mobile-navigation bug, then built a new Sanctions & Entity List
+**Most recent session: built the Sovereign AI Investment Flow Tracker end to end from another detailed
+project-owner spec, following the exact same pattern the Sanctions module established.** New "Capital
+Flows" nav group -> Investment Flows page (`app_pages/investment_flows.py` + `src/investment_flow_engine.py`
++ `data/curated/investment_flows.csv`, 10 tracked deals). Deliberately kept as a separate dataset from the
+existing `ai_investment_deals.csv` (which measures investment *received* in-country and feeds the composite
+score) rather than merged with it -- this module measures capital *sent out* by Gulf sovereign funds and
+which bloc's ecosystem it lands in, a genuinely different signal.
+
+**The most consequential part of this round wasn't building the page -- it was that the research pass
+found the project owner's own pre-drafted deal details didn't all check out**, and those were corrected,
+not preserved verbatim, per this project's standing no-fabrication rule:
+- A commonly-repeated "$1.5bn MGX invested in OpenAI, Sept 2024" figure doesn't check out against any
+  source found. What's real: MGX was reported considering joining OpenAI's Sept 2024 raise, then did
+  participate in the ~$6.6bn round that closed Oct 2, 2024 -- but no source discloses MGX's individual
+  dollar stake. That $1.5bn figure actually belongs to a *different* deal (Microsoft's investment into
+  G42), whose own date was also wrong in the original draft by 9 months (April 2024, not January 2025).
+- A "$40bn" figure commonly cited for HUMAIN's May 2025 sovereign AI launch traces to a *different*, year-
+  earlier Reuters/NYT story (March 2024) about a separate PIF fund plan that predates HUMAIN's existence.
+  HUMAIN's own launch materials don't appear to cite a single headline dollar figure in what could be
+  retrieved this session (pif.gov.sa was network-blocked) -- so rather than keep a wrong-but-specific
+  number, this field is honestly RESEARCH_NEEDED, with the misattribution explained in the row's own notes.
+- Two more deal dates were off by roughly a year (an e&/Huawei MetaAAU 5G deployment: real date August
+  2025, not May 2024; an Ooredoo/Huawei 5G-Advanced partnership: real date March 2024, not March 2025).
+- Two deals that were originally open research items ("find any real PIF-China deal," "find the real
+  Pakistan-China counterparty") were resolved with specific, well-sourced answers: PIF subsidiary SCAI's
+  SenseTime MEA joint venture ($206.54m, Sept 2022 -- which also caught and corrected an Arab News
+  currency-labeling error reporting the same underlying SAR 776m figure as "$776m"), and the Pakistan-China
+  Cross-Border Optical Fiber Cable Project's real counterparty (Pakistan's Special Communications
+  Organization, jointly operating the cable with China Telecom, Huawei as EPC contractor) and its $44m
+  Chinese concessional-loan financing figure.
+
+Two judgment calls are made explicit in `src/investment_flow_engine.py`'s own docstring, not buried in the
+numbers: same-country "sovereign launch" deals (HUMAIN's own domestic buildout, source country == destination
+country) are excluded from every cross-border flow calculation as a category error, not a data point -- at
+a headline $40bn (now RESEARCH_NEEDED) it would have swamped every other deal in the dataset by 25x+ if
+included; and the Capital Alignment Ratio is computed strictly over `bloc_affiliation` in `{"US", "China"}`,
+deliberately excluding the "US-aligned" label used for HUMAIN's own buildout characterization.
+
+The page itself (Sankey diagram, quarterly and by-sector bar/pie charts, a filterable and CSV-exportable
+deal table, a Capital Alignment Ratio bar chart, a Capital-Alignment-vs-Net-Alignment positioning scatter
+with the requested quadrant framing, and an `st.data_editor` admin panel with an "Add New Deal" form) is a
+close structural mirror of the Sanctions Exposure page, reusing the same design patterns (key findings
+card, severity-style disclosure of unconfirmed values, ephemeral-filesystem warning on the admin editor).
+One real finding the scatter surfaces immediately: Saudi Arabia scores mid-pack on the existing Net
+Alignment Score but 0% on Capital Alignment (its only confirmed-value cross-border deal is the China-bound
+SenseTime joint venture), while the UAE scores high on both axes -- exactly the kind of score/capital
+divergence the spec's own quadrant framing was designed to surface. Every Country Deep Dive gained an
+Investment Flows sub-section built from the *same* rendering function the main page uses
+(`investment_flows_section()`), so the two views can never drift apart on what counts as a country's
+tracked investment. Sources & Data gained sovereign-fund reference links (PIF, G42, MGX, QIA, Mubadala).
+
+A repeat of the exact bug class caught in the Sanctions module was avoided by regression-testing for it up
+front: `test_csv_has_no_bare_na_lookalike_cells` guards `investment_flows.csv` against pandas silently
+reading a bare `"None"`/`"N/A"` cell as `NaN`. Also caught and fixed during the build: a dollar-sign
+LaTeX-escaping bug where `\$` (correct inside plain `st.markdown()` calls elsewhere in this app, to stop
+Streamlit's Markdown renderer from treating a pair of dollar signs as a math span) was mistakenly copied
+into text that instead flows through `ui.key_findings_card()`'s raw-HTML rendering path, where the
+backslash has no such meaning and shows up as a literal stray character -- fixed by keeping the escape only
+where the rendering path actually needs it. 25 new tests (`test_investment_flow_engine.py`); 420/420
+passing overall. Verified in-browser via Playwright: the full page (Sankey, charts, deal table, admin
+editor), the Country Deep Dive integration (including the empty-state "No tracked investment for X" case
+for a country outside the 5 currently covered), and the corrected figures all render without error.
+
+**Previous session: fixed a real mobile-navigation bug, then built a new Sanctions & Entity List
 Exposure module end to end from the project owner's detailed spec.** Two pieces of work:
 
 1. **Sidebar navigation was completely unreachable on mobile/narrow viewports.** The project owner
