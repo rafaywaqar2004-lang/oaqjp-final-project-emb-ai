@@ -68,6 +68,57 @@ passing overall. Verified in-browser via Playwright: the full page (Sankey, char
 editor), the Country Deep Dive integration (including the empty-state "No tracked investment for X" case
 for a country outside the 5 currently covered), and the corrected figures all render without error.
 
+**Immediate follow-up, same session: a second, larger data-revision request arrived proposing corrections
+to the 10 existing deals and 7 new ones -- applied the exact same verification discipline as the module's
+initial build, not a blind overwrite.** Several of the proposed "corrections" directly contradicted facts
+already checked against multiple independent sources in the first pass, so a dedicated verification agent
+re-checked all 12 disputed/new claims individually before anything was changed:
+- **Two proposed reversions were checked and rejected**, keeping this project's own earlier-verified
+  figures: the HUMAIN "$40bn" figure (the agent fetched PIF's own launch press release in full this round
+  and confirmed it states no dollar figure at all -- the $40bn traces to a different, year-earlier PIF fund
+  story, exactly as found in the first pass) and the SenseTime deal value (a middleeastbriefing.com article
+  was fetched directly and found to be repeating the same SAR/USD currency-labeling error Arab News made,
+  not an independent $776m confirmation -- TradeArabia's and Zawya's $206.54m stands).
+- **One proposed date/counterparty change was checked against its own cited source and rejected**: the
+  Pakistan deal's proposed generic "1998-ongoing" framing cited cpec.gov.pk/information-technology as its
+  source -- fetching that exact page found it describes nothing but the specific $44m fiber-optic cable
+  project already in this project's data, contradicting the generic framing its own citation was supposed
+  to support.
+- **All 7 newly-proposed deals were independently verified as real** (AMD $10bn, AWS $5bn+, Microsoft
+  $15.2bn UAE, Stargate UAE $10bn, Alat/Dahua $200m, du/Huawei Dec 2025, HUMAIN/AirTrunk/Blackstone $3bn) --
+  though one date was wrong (AirTrunk/Blackstone: real announcement date is 2025-10-28, not the proposed
+  May 2025) and one proposed source was unusable (houseofsaud.com returned a server error on every fetch
+  attempt and its URL slug suggested a mismatched $5bn figure; replaced with Blackstone's, AirTrunk's, and
+  Bloomberg's own coverage, all confirming $3bn).
+- **A genuine bonus finding, not requested by either the original spec or the revision**: verifying the
+  proposed 2020 Ooredoo/Huawei deal turned up that it's real and factually distinct from the existing 2024
+  deal (different country list -- Kuwait/Oman/Indonesia/Tunisia/Maldives vs. Qatar/Kuwait/Oman/Iraq/
+  Tunisia/Algeria/Maldives -- and a different technology generation), not a duplicate or misdating. Added
+  as an 18th deal.
+- **Two structural modeling choices, made explicit and applied consistently, not silently decided**: (1)
+  two of the newly-verified deals (Microsoft->G42/Khazna $15.2bn, and the earlier Microsoft->G42 $1.5bn)
+  represent capital flowing INTO a Gulf state rather than out of one -- kept with the Gulf state as
+  `source_country` anyway (not flipped to source=US), because this module measures a Gulf state's
+  bloc-alignment signal, and flipping the direction would silently drop the UAE's clearest pro-US capital
+  ties out of its own Capital Alignment Ratio. (2) Two of the newly-verified deals (Stargate UAE, HUMAIN's
+  AirTrunk/Blackstone data-center JV) are joint ventures with heavy foreign-capital participation but
+  infrastructure built and owned within the Gulf state itself -- treated as domestic buildouts (same-country,
+  excluded from cross-border metrics) using the identical precedent HUMAIN's own launch (deal 003) already
+  established, rather than inventing a third category.
+- **Net effect on the numbers**: Saudi Arabia's Capital Alignment Ratio moved from an unrepresentative 0%
+  (its only previously-tracked confirmed-value deal was the small China-bound SenseTime JV) to 97%, once
+  the AMD and AWS deals -- both real, both large, both previously untracked -- are correctly counted. The
+  positioning scatter's quadrant assignment for Saudi Arabia changed accordingly, from "consistently
+  China-aligned" to "aligned on paper and in capital," alongside the UAE. This is exactly the kind of
+  correction this project's no-fabrication discipline exists to catch: the earlier 0% figure wasn't
+  fabricated, but it was misleadingly incomplete in a way that verified additional data fixed.
+- Also fixed during this round: the page's `10 TRACKED DEALS` header count was hard-typed rather than
+  computed from the actual data -- exactly the kind of staleness bug this project's Sources & Data page
+  exists to prevent -- now computed live (`len(df)`) like every other count on the page. A real bug in
+  `by_quarter()` surfaced by the new data: a handful of deals carry a disclosed exact `YYYY-MM-DD` date
+  rather than the usual `YYYY-MM`, and a strict `format="%Y-%m"` parse raised `ValueError` on them; fixed
+  with `format="mixed"`, with a regression test guarding it. 2 more new tests; 422/422 passing overall.
+
 **Previous session: fixed a real mobile-navigation bug, then built a new Sanctions & Entity List
 Exposure module end to end from the project owner's detailed spec.** Two pieces of work:
 

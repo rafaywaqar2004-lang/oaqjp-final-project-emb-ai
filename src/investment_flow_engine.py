@@ -157,7 +157,9 @@ def by_quarter(df: pd.DataFrame) -> pd.DataFrame:
     flows = flows[~flows["date"].apply(_is_research_needed)]
     flows = flows.dropna(subset=["deal_value_usd_millions_parsed"])
     flows = flows.copy()
-    flows["quarter"] = pd.PeriodIndex(pd.to_datetime(flows["date"], format="%Y-%m"), freq="Q").astype(str)
+    # date is "YYYY-MM" for most deals but "YYYY-MM-DD" for a few with a
+    # disclosed exact date -- format="mixed" handles both without guessing.
+    flows["quarter"] = pd.PeriodIndex(pd.to_datetime(flows["date"], format="mixed"), freq="Q").astype(str)
     pivot = flows.pivot_table(
         index="quarter", columns="bloc_affiliation", values="deal_value_usd_millions_parsed",
         aggfunc="sum",
