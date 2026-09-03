@@ -27,6 +27,7 @@ from investment_flow_engine import (  # noqa: E402
     unconfirmed_value_count, with_parsed_value,
 )
 from ui import inject_base_css, page_header, key_findings_card, kpi_card, kpi_row, footer, BLUE, RED, GRAY, NAVY  # noqa: E402
+from pdf_export import generate_investment_flow_brief  # noqa: E402
 
 FLOWS_CSV_PATH = Path(CURATED_DIR) / "investment_flows.csv"
 
@@ -321,6 +322,13 @@ def main() -> None:
 
     bluf, key_judgment, why = _key_findings(df)
     key_findings_card(bluf, key_judgment, "Moderate", why)
+
+    st.download_button(
+        "\U0001F4C4 Download Investment Flow Brief (PDF)",
+        data=generate_investment_flow_brief(df, per_country_summary(df), bluf, key_judgment, why),
+        file_name="gulf_investment_flow_brief.pdf",
+        mime="application/pdf",
+    )
 
     st.divider()
     st.subheader("Summary")

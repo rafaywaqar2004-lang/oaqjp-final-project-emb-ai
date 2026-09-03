@@ -27,6 +27,7 @@ from ui import (  # noqa: E402
     inject_base_css, page_header, key_findings_card, confidence_pill, footer,
     SEVERITY_COLORS, SEVERITY_BAND_ORDER, GRAY, NAVY,
 )
+from pdf_export import generate_sanctions_brief  # noqa: E402
 
 SANCTIONS_CSV_PATH = Path(CURATED_DIR) / "sanctions_data.csv"
 
@@ -227,9 +228,28 @@ def main() -> None:
     bluf, key_judgment, why = _score_band_summary(df)
     key_findings_card(bluf, key_judgment, "Moderate", why)
 
+    st.download_button(
+        "\U0001F4C4 Download Sanctions Brief (PDF)",
+        data=generate_sanctions_brief(df, bluf, key_judgment, why),
+        file_name="gulf_sanctions_exposure_brief.pdf",
+        mime="application/pdf",
+    )
+
     st.divider()
     st.subheader("Summary")
-    st.dataframe(_summary_table(df), hide_index=True, use_container_width=True)
+    st.dataframe(
+        _summary_table(df), hide_index=True, use_container_width=True, row_height=220,
+        column_config={
+            "Country": st.column_config.TextColumn("Country", width=140),
+            "Entity List Count": st.column_config.TextColumn("Entity List Count", width=160),
+            "BIS Tier": st.column_config.TextColumn("BIS Tier", width=300),
+            "OFAC Programs": st.column_config.TextColumn("OFAC Programs", width=350),
+            "CAATSA Status": st.column_config.TextColumn("CAATSA Status", width=220),
+            "Secondary Sanctions Risk": st.column_config.TextColumn("Secondary Sanctions Risk", width=220),
+            "Evasion Risk": st.column_config.TextColumn("Evasion Risk", width=220),
+            "Composite Sanctions Score": st.column_config.TextColumn("Composite Sanctions Score", width=220),
+        },
+    )
     _view_calculation_expander()
 
     st.divider()
