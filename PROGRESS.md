@@ -45,6 +45,28 @@ Exposure module end to end from the project owner's detailed spec.** Two pieces 
    positioning scatter, and admin `st.data_editor` panel all render without error, and the new Sanctions
    Profile sub-section renders correctly on Country Deep Dive.
 
+3. **Extended `secondary_sanctions_risk`/`sanctions_evasion_risk` to all 17 countries** (a "keep on going"
+   follow-up), closing the module's biggest remaining completeness gap without any new external research.
+   The insight: the OFAC/EU/CAATSA research already gathered in step 2 already contained real signal for
+   these two judgment fields on the 13 countries that still read `RESEARCH_NEEDED` -- e.g. the UAE's and
+   Bahrain's own `ofac_programs` cells already disclosed targeted Iran-sanctions-evasion-adjacent
+   designations against in-country actors, which by a documented, deterministic rubric (Low/Moderate/High
+   secondary risk; Low/Moderate/High/Severe evasion risk, each tier's criteria spelled out in
+   `extend_judgments.py`'s rubric comment and echoed into every row's `rationale`) earns each a `Moderate`
+   rating rather than a guessed `Low`. Applied the same rubric to the other 11 countries, always tracing
+   the rating back to a specific fact already in that row's own `ofac_programs`/`eu_sanctions`/
+   `caatsa_status`/`entity_list_entities` cells -- e.g. Lebanon and Afghanistan both rate `High`/`High`
+   because their own `ofac_programs` cells already name Lebanon-based Hezbollah-linked *financiers*
+   specifically, and Afghanistan's own governing authority (the Taliban) and its central bank reserves,
+   respectively -- never a fresh unsourced claim about smuggling routes or evasion mechanics not already on
+   file. Net effect: every one of the 17 countries now has 5 of 6 weighted factors verified (only
+   `entity_list_count` remains `RESEARCH_NEEDED` everywhere, for the reason explained in step 2) -- the
+   heatmap went from mostly gray outside the BIS Tier/CAATSA columns to fully populated across 5 of 6
+   columns. Also fixed the page's/module's/catalog's generated summary text, which had gone stale/
+   ungrammatical the moment coverage hit 17/17 ("Only 17 of 17 countries..."), to branch cleanly on the
+   full-coverage case. 2 new regression tests (`test_every_country_has_at_least_five_of_six_factors`,
+   `test_no_country_has_research_needed_judgment_fields`); 395/395 passing overall.
+
 **Previous session: closed five self-identified "more detail" gaps -- historical backfill, the BIS
 confidence gap, expanded Policy Event Tracker coverage, and more AI/compute hub sites.** Prompted by the
 project owner asking what could be made more thorough, then approving all five suggestions at once

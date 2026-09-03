@@ -558,16 +558,20 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   new "Sanctions & Risk" nav group): a Sanctions Exposure Score (0-100) per country, built the same way as
   every other composite in this project -- a weighted average over 6 factors (BIS Entity List count, BIS
   tier restrictiveness, OFAC active programs, CAATSA status, secondary-sanctions risk, evasion risk),
-  renormalized over whichever factors actually have verified data, never scored as zero when missing. As
-  shipped, most countries' scores rest on only 2-3 of 6 factors: `entity_list_count` is `RESEARCH_NEEDED`
-  for all 17 countries (a `WebSearch` research pass this session confirmed no source -- not BIS's own site,
-  not the trade.gov Consolidated Screening List -- publishes a live per-country tally of the Entity List; it's
-  a rolling list built from decades of individual Federal Register rules, not a country-indexed database),
-  and `secondary_sanctions_risk`/`sanctions_evasion_risk` are analyst judgments populated only for Iran,
-  Turkey, Pakistan, and Syria. `OFAC programs`, `EU sanctions`, and `CAATSA status` are real, cited findings
-  for all 17 countries from the same research pass (e.g. Turkey's Dec 2020 CAATSA Section 231 designation,
-  Egypt's 2019 threatened-but-never-imposed CAATSA case, Syria's largely-revoked-but-partially-reinstated
-  2025-2026 OFAC/EU picture). BIS tier restrictiveness is never re-derived as a fresh judgment call -- it's
+  renormalized over whichever factors actually have verified data, never scored as zero when missing. Every
+  country's score is currently backed by 5 of 6 factors: `entity_list_count` is `RESEARCH_NEEDED` for all
+  17 countries (a `WebSearch` research pass this session confirmed no source -- not BIS's own site, not the
+  trade.gov Consolidated Screening List -- publishes a live per-country tally of the Entity List; it's a
+  rolling list built from decades of individual Federal Register rules, not a country-indexed database).
+  `OFAC programs`, `EU sanctions`, and `CAATSA status` are real, cited findings for all 17 countries from
+  the same research pass (e.g. Turkey's Dec 2020 CAATSA Section 231 designation, Egypt's 2019
+  threatened-but-never-imposed CAATSA case, Syria's largely-revoked-but-partially-reinstated 2025-2026
+  OFAC/EU picture). `secondary_sanctions_risk`/`sanctions_evasion_risk` are analyst judgments: Iran's,
+  Turkey's, Pakistan's, and Syria's were project-owner-supplied or independently well-documented; the
+  other 13 countries' were derived transparently from the OFAC/EU/CAATSA facts already in the same
+  row -- e.g. the UAE and Bahrain rows' own `ofac_programs` field already discloses targeted Iran-sanctions-
+  evasion-adjacent designations against in-country actors, which is what earns each a `Moderate` rather
+  than `Low` rating, not a fresh unsourced claim. BIS tier restrictiveness is never re-derived as a fresh judgment call -- it's
   computed directly from this project's own already-cited `export_control_tier.csv` `tier_score`
   (`(5 - tier_score) / 5 * 100`), so the two modules can't silently disagree about the same underlying BIS
   Country Group facts. The page includes a summary table, a severity-banded heatmap (6 factors x 17

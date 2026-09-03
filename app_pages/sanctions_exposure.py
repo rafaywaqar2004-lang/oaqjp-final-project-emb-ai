@@ -1,14 +1,13 @@
 """
 Sanctions & Entity List Exposure -- a Sanctions Exposure Score (0-100) per
 country built from data/curated/sanctions_data.csv (see
-src/sanctions_engine.py for the scoring logic). As of this page's
-introduction, most countries' scores are backed by only 2 of 6 weighted
-factors (BIS export-control tier, reused from this project's own
-already-cited export_control_tier.csv, and CAATSA status) -- BIS Entity List
-counts, OFAC program details, and secondary-sanctions/evasion-risk judgments
-are marked "RESEARCH_NEEDED" for every country not yet independently
-researched, per this project's no-fabrication rule. That is disclosed on
-this page, not hidden behind a number that looks more complete than it is.
+src/sanctions_engine.py for the scoring logic). Every country's score is
+currently backed by 5 of the 6 weighted factors (BIS tier, OFAC programs,
+CAATSA status, secondary-sanctions risk, and evasion risk) -- only BIS
+Entity List count is "RESEARCH_NEEDED" for all 17 countries, since no
+source found publishes a live per-country tally of the Entity List (see
+src/sanctions_engine.py's docstring). That gap is disclosed on this page,
+not hidden behind a number that looks more complete than it is.
 """
 
 import sys
@@ -49,13 +48,21 @@ def _score_band_summary(df: pd.DataFrame) -> tuple[str, str, str]:
         )
     top = scored.sort_values("sanctions_exposure_score", ascending=False).iloc[0]
     bottom = scored.sort_values("sanctions_exposure_score", ascending=True).iloc[0]
+    if n_full_data == len(df):
+        coverage_clause = (
+            f"All {len(df)} countries currently have verified data for 5 or more of the 6 weighted factors -- "
+            "only BIS Entity List count remains RESEARCH_NEEDED across the board, since no source found "
+            "publishes a live per-country tally of the Entity List."
+        )
+    else:
+        coverage_clause = (
+            f"Only {n_full_data} of {len(df)} countries currently have verified data for 5 or more of the 6 "
+            "weighted factors -- the rest still have one or more RESEARCH_NEEDED factors pending further sourcing."
+        )
     bluf = (
         f"Of {len(scored)} tracked countries, {top['country']} carries the highest disclosed Sanctions Exposure "
         f"Score ({top['sanctions_exposure_score']:.0f}/100) and {bottom['country']} the lowest "
-        f"({bottom['sanctions_exposure_score']:.0f}/100). Only {n_full_data} of {len(df)} countries currently have "
-        f"verified data for 5 or more of the 6 weighted factors -- most scores today rest mainly on BIS export-control "
-        "tier and CAATSA status, with entity-list and OFAC-program detail still marked RESEARCH_NEEDED pending "
-        "further sourcing."
+        f"({bottom['sanctions_exposure_score']:.0f}/100). {coverage_clause}"
     )
     key_judgment = (
         f"{top['country']}'s exposure is driven primarily by its BIS Country Group classification "
