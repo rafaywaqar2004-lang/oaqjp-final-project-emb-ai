@@ -245,6 +245,7 @@ app_pages/
   economic_analysis.py              # The one serious empirical economic-analysis module (QUESTION/DATA/.../LIMITATION)
   sources_data.py                   # Research data catalog -- every dataset, computed live, with CSV downloads
   sanctions_exposure.py             # Sanctions Exposure Score: summary table, heatmap, ranked bar, positioning scatter, admin data editor
+  investment_flows.py               # Sovereign AI Investment Flow Tracker: Sankey, quarterly/sector charts, deal table, Capital Alignment Ratio, admin data editor
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
@@ -255,6 +256,7 @@ src/
   strategic_risk_engine.py          # The 4-dimension risk-rating logic backing the Strategic Risk page
   outlook_engine.py                 # Base Case / Alternative Case construction backing the 12-Month Outlook page
   sanctions_engine.py               # Sanctions Exposure Score: 6-factor renormalizing weighted average, reuses export_control_tier.csv's own tier_score
+  investment_flow_engine.py         # Capital Alignment Ratio = US-bound / (US-bound + China-bound) confirmed-value cross-border investment; excludes same-country "sovereign launch" deals
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
@@ -270,6 +272,7 @@ data/
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
     non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
     sanctions_data.csv               # BIS Entity List / OFAC / EU / CAATSA exposure per country -- most fields RESEARCH_NEEDED pending further sourcing
+    investment_flows.csv             # 10 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
@@ -583,6 +586,32 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   sub-section. The Sources & Data page lists the four official reference sources (BIS Entity List, OFAC,
   EU Consolidated Sanctions List, UN Security Council Consolidated List) this module is meant to be
   refreshed against.
+- **Sovereign AI Investment Flow Tracker** (`app_pages/investment_flows.py` + `src/investment_flow_engine.py`,
+  new "Capital Flows" nav group): tracks Gulf-state sovereign-fund/government-directed AI and tech capital
+  flows and derives a Capital Alignment Ratio (US-bound / (US-bound + China-bound) confirmed-value
+  cross-border investment) per source country -- a genuinely different signal from this tracker's existing
+  composite Net Alignment Score, kept as a separate dataset from `ai_investment_deals.csv` (which measures
+  investment *received* in-country and feeds the composite score) rather than merged with it. Two judgment
+  calls made explicit in the module's own docstring: same-country "sovereign launch" deals (e.g. HUMAIN's
+  domestic buildout) are excluded from cross-border flow metrics as a category error, not a data point; and
+  the ratio is computed strictly over `bloc_affiliation` in `{"US", "China"}`, excluding "US-aligned" labels
+  from the ratio itself. **A `WebSearch` research pass surfaced real corrections to several of the
+  originally-proposed deals, not just fill-ins for open items** -- these were corrected, not preserved:
+  a $1.5bn/Sept 2024 MGX-OpenAI figure didn't check out against any source (the real $1.5bn/2024 UAE-AI
+  figure belongs to a different deal, Microsoft's investment into G42, whose date was itself wrong by 9
+  months); a commonly-cited "$40bn" HUMAIN launch figure turned out to trace to a different, year-earlier
+  PIF plan, not HUMAIN's own May 2025 launch; and two deal dates (an e&/Huawei 5G deployment, an
+  Ooredoo/Huawei partnership) were off by over a year. Two previously-open research items were resolved
+  with real, cited deals: PIF's SenseTime joint venture ($206.54m, Sept 2022 -- also catching and correcting
+  an Arab News currency-labeling error that misreported it as $776m) and the Pakistan-China fiber-optic
+  cable project's real counterparty (the Special Communications Organization) and $44m financing figure.
+  The page includes a Sankey diagram, quarterly and by-sector charts, a filterable/exportable deal table,
+  a Capital Alignment Ratio bar chart, and a Capital-Alignment-vs-Net-Alignment positioning scatter with
+  quadrant framing -- which immediately surfaces a real, interesting divergence in the tracked data: Saudi
+  Arabia scores mid-pack on Net Alignment but 0% on Capital Alignment (its only confirmed cross-border deal
+  is the China-bound SenseTime JV), while the UAE scores high on both. Every Country Deep Dive gained an
+  Investment Flows sub-section (reusing the same rendering function as this page, so the two can't drift
+  apart), and Sources & Data gained sovereign-fund reference links (PIF, G42, MGX, QIA, Mubadala).
 
 ### How the Scenario Lab stays honest
 

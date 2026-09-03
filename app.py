@@ -36,6 +36,9 @@ pg = st.navigation(
         "Sanctions & Risk": [
             st.Page("app_pages/sanctions_exposure.py", title="Sanctions Exposure"),
         ],
+        "Capital Flows": [
+            st.Page("app_pages/investment_flows.py", title="Investment Flows"),
+        ],
         "Research": [
             st.Page("app_pages/methodology.py", title="Methodology"),
             st.Page("app_pages/economic_analysis.py", title="Economic Analysis"),

@@ -77,6 +77,27 @@ def main() -> None:
     )
 
     st.divider()
+    st.subheader("Sovereign AI investment flow sources")
+    st.caption(
+        "Investment flow data is manually curated from sovereign wealth fund annual reports, corporate press "
+        "releases, government announcements, and verified news reports. Every source URL used is on the "
+        "Investment Flows page's Deal-Level Table (click a row's Source URL to open it). Not all deals are "
+        "publicly disclosed. Values marked RESEARCH_NEEDED indicate known deals where public confirmation of "
+        "deal value was not available at time of writing -- they are excluded from every dollar total, not "
+        "treated as zero."
+    )
+    _SOVEREIGN_FUND_LINKS = [
+        ("PIF (Public Investment Fund, Saudi Arabia)", "https://www.pif.gov.sa/"),
+        ("G42", "https://www.g42.ai/"),
+        ("MGX", "https://www.mgx.ai/"),
+        ("QIA (Qatar Investment Authority)", "https://www.qia.qa/"),
+        ("Mubadala", "https://www.mubadala.com/"),
+    ]
+    for name, url in _SOVEREIGN_FUND_LINKS:
+        st.markdown(f"- [{name}]({url})", unsafe_allow_html=True)
+    st.caption("Last updated: 2026-09-03.")
+
+    st.divider()
     st.caption(
         "**Manually curated** means a specific analyst-desk research pass, cited row by row (source_name, "
         "source_url, confidence, as_of_date, rationale) -- see the Methodology page for the ordinal rubrics "

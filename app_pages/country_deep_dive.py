@@ -22,6 +22,7 @@ from constants import COUNTRIES, CURATED_DIR  # noqa: E402
 from country_brief import _alignment_band, generate_brief, load_curated  # noqa: E402
 from momentum import compute_momentum, load_history  # noqa: E402
 from pdf_export import build_country_pdf  # noqa: E402
+from investment_flows import investment_flows_section  # noqa: E402
 from policy_events import _affected_countries  # noqa: E402
 from sanctions_engine import build_sanctions_composite  # noqa: E402
 from scoring import build_composite  # noqa: E402
@@ -378,6 +379,11 @@ def main() -> None:
                 )
             st.caption(positioning_note)
         st.caption("See the **Sanctions Exposure** page for the full 17-country comparison, heatmap, and calculation methodology.")
+
+    st.divider()
+    st.subheader("Investment Flows")
+    investment_flows_section(country)
+    st.caption("See the **Investment Flows** page for the full deal-level table, Sankey diagram, and Capital Alignment Ratio methodology.")
 
     st.divider()
     col_inv, col_compute = st.columns(2)
