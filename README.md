@@ -205,6 +205,7 @@ ties score instead reflects the mainstream-reported, still-unresolved Huawei/iFl
 | Layer | Type | Refresh cadence | Where |
 |---|---|---|---|
 | Non-oil diversification proxy, FDI net inflows | **Live, automated** | Weekly (GitHub Actions, Mondays) | World Bank API v2, `src/data_pipeline/fetch_worldbank.py` → `data/worldbank/` |
+| Candidate events queue (research-assist only, not curated data) | **Live, automated** | Daily (GitHub Actions) | Federal Register API + OFAC Recent Actions, `src/data_pipeline/fetch_candidate_events.py` → `data/candidate_events/` |
 | US export-control tier, Chinese telecom penetration, Chinese AI/cloud/digital ties, AI governance maturity | **Manually curated** | Ad hoc, as bilateral deals/policy events are disclosed | `data/curated/*.csv`, one row per country with `source_name`, `source_url`, `confidence`, `as_of_date`, `rationale` |
 | AI investment deals, compute-capacity deals | **Manually curated**, long-format (one row per deal) | Ad hoc | `data/curated/ai_investment_deals.csv`, `data/curated/compute_capacity_deals.csv` |
 | Map reference layers: major cities, named AI/compute hub sites | **Manually curated** (map display only, not scored) | Ad hoc | `data/curated/major_cities.csv`, `data/curated/ai_hubs.csv` |
@@ -238,6 +239,7 @@ app_pages/
   country_comparison.py             # Radar + bar comparison across all 6 scored factors
   country_deep_dive.py              # Country intelligence profile: drivers, trend, what changed, implications, watch, full PDF export
   policy_events.py                  # Chronological, sourced feed of chip-policy events + direction + model-impact links
+  candidate_events.py               # Research-assist review queue (Federal Register + OFAC) -- not a live feed; human confirms before anything is added
   scenario_lab.py                   # Live reweighting (incl. China Exposure sub-weights) + robustness / rank-stability analysis
   strategic_risk.py                 # Regional risk matrix (4 dimensions) + per-country transmission-channel implications
   outlook.py                        # 12-Month Outlook: Base Case / Alternative Case, analyst-judgment probability bands
@@ -257,13 +259,15 @@ src/
   outlook_engine.py                 # Base Case / Alternative Case construction backing the 12-Month Outlook page
   sanctions_engine.py               # Sanctions Exposure Score: 6-factor renormalizing weighted average, reuses export_control_tier.csv's own tier_score
   investment_flow_engine.py         # Capital Alignment Ratio = US-bound / (US-bound + China-bound) confirmed-value cross-border investment; excludes same-country "sovereign launch" deals
+  candidate_review.py               # Loads the candidate-events queue + review log, filters out already-triaged items
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a country brief AND the regional executive assessment to PDF via reportlab
   ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, chart-color tokens, footer
-  data_pipeline/fetch_worldbank.py  # The one automated data pipeline
+  data_pipeline/fetch_worldbank.py        # World Bank layer -- non-oil diversification proxy, FDI net inflows
+  data_pipeline/fetch_candidate_events.py # Candidate-events queue -- Federal Register (BIS) + OFAC Recent Actions, stdlib-only
 data/
   curated/                          # Manually researched, cited, dated
     policy_events.csv               # The Policy Event Tracker's sourced event record (incl. direction column)
@@ -644,6 +648,25 @@ See [`PROGRESS.md`](PROGRESS.md) for full detail. All four phases from the origi
   was not re-attributed to an Omani source (Ooredoo's HQ and deal announcement are Qatari), and no
   Oman-Investment-Authority-specific deal (as distinct from its Omantel/Oman Data Park holdings) was
   found and included.
+- **Candidate Events queue** (`app_pages/candidate_events.py` + `src/candidate_review.py` +
+  `src/data_pipeline/fetch_candidate_events.py`, new page in the "Policy Monitor" nav group): a
+  research-assist review queue, explicitly not a live feed. Two official, free, public sources -- the
+  Federal Register API (BIS documents) and OFAC's Recent Actions page -- are polled daily by a GitHub
+  Actions workflow and written to `data/candidate_events/candidates.csv`. OFAC has no public JSON/RSS feed
+  for Recent Actions (its RSS feed was retired), so that source is parsed from the page's HTML with a
+  regex tuned to its current, stable, repeated block structure; a layout change would degrade to zero OFAC
+  candidates (logged as a warning), never crash the Federal Register half. Every candidate is checked
+  against this project's own tracked-country list (best-effort substring match, shown as a hint, not a
+  filter) and against a review log so already-triaged items don't keep resurfacing. Nothing fetched is
+  ever added to `data/curated/policy_events.csv` automatically -- a human reviews each candidate on the
+  page and either dismisses it or opens a pre-filled "Add to Policy Events" form (date/title pulled from
+  the source, category/direction/countries left for the human to actually decide, exactly the same
+  category and direction values the Policy Events page itself uses) before it becomes a real, curated
+  event. This keeps the project's standing rule intact: a fact enters the tracker because a person read
+  the source and decided it belongs, never because an API returned it. Seeded at launch with 19 real
+  candidates (9 Federal Register, 10 OFAC) captured this session, including a live example of exactly the
+  kind of lead this queue exists to surface: a BIS rule removing an entity from the Entity List under the
+  destination of Turkey.
 
 ### How the Scenario Lab stays honest
 
