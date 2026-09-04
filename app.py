@@ -25,6 +25,7 @@ pg = st.navigation(
         ],
         "Policy Monitor": [
             st.Page("app_pages/policy_events.py", title="Policy Events"),
+            st.Page("app_pages/candidate_events.py", title="Candidate Events (Admin)"),
         ],
         "Forecasting": [
             st.Page("app_pages/scenario_lab.py", title="Scenario Lab"),

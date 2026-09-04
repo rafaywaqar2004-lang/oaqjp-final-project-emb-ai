@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from constants import COUNTRIES, CURATED_DIR, COMPUTED_DIR, WORLDBANK_DIR
+from constants import COUNTRIES, CURATED_DIR, COMPUTED_DIR, WORLDBANK_DIR, CANDIDATE_EVENTS_DIR
 
 
 @dataclass
@@ -157,6 +157,15 @@ _REGISTRY: list[DatasetEntry] = [
         update_cadence="Weekly, GitHub Actions (Mondays)",
         methodology_note="`src/data_pipeline/fetch_worldbank.py`. Non-oil diversification proxy = 100 - Oil rents (% of GDP).",
         limitations="This project's development sandbox blocks api.worldbank.org outbound -- the columns are currently unpopulated here. Resolves automatically on Render/GitHub Actions, which have normal outbound access; not a code defect. See the Economic Analysis page for a manually-sourced substitute used while this pipeline is unpopulated.",
+    ),
+    DatasetEntry(
+        name="Candidate Events Queue",
+        path=Path(CANDIDATE_EVENTS_DIR) / "candidates.csv",
+        source_type="Live, automated (Federal Register API for BIS documents, OFAC Recent Actions page)",
+        update_cadence="Daily, GitHub Actions",
+        methodology_note="`src/data_pipeline/fetch_candidate_events.py`. NOT part of this tracker's scored data -- a candidate becomes a real Policy Event only once a human reviews it on the Candidate Events (Admin) page and submits it, exactly like every other curated fact in this project. See that page's own docstring.",
+        limitations="OFAC has no public JSON/RSS feed for Recent Actions (its RSS feed was retired) -- that source is parsed from the page's HTML with a regex tuned to its current structure, which could silently return zero results if the page layout changes (logged as a warning in the pipeline's own output, not surfaced here). Federal Register coverage is limited to the Bureau of Industry and Security agency filter; it does not cover every agency whose actions could be relevant.",
+        country_col=None,
     ),
 ]
 

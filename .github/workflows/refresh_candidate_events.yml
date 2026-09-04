@@ -1,0 +1,43 @@
+name: Refresh candidate events queue
+
+# Polls two official, free, public sources (Federal Register API for BIS
+# documents, OFAC's Recent Actions page) and writes data/candidate_events/
+# candidates.csv. This is a *candidate* queue, not curated data -- nothing
+# it touches feeds the composite score, and nothing here is added to
+# data/curated/policy_events.csv automatically. A human reviews each
+# candidate on the Candidate Events (Admin) page and decides whether it
+# belongs; see src/data_pipeline/fetch_candidate_events.py's own docstring.
+
+on:
+  schedule:
+    - cron: "40 4 * * *"  # daily, 04:40 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch candidate events
+        run: python src/data_pipeline/fetch_candidate_events.py
+
+      - name: Run test suite before committing
+        run: |
+          pip install -r requirements-dev.txt
+          python -m pytest tests/ -v
+
+      - name: Commit updated candidates if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/candidate_events/candidates.csv
+          git diff --cached --quiet || git commit -m "chore: scheduled candidate events refresh"
+          git push

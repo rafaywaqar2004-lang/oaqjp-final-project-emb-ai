@@ -5,7 +5,45 @@ owner returning after a break. It's meant to make re-explaining the project unne
 
 ## Where things stand
 
-**Most recent session: built the Sovereign AI Investment Flow Tracker end to end from another detailed
+**Most recent session: three rounds of quality work on the Sanctions/Investment Flows modules, then a new
+Candidate Events review queue.** In order:
+
+1. Fixed the sanctions summary table's text truncation (`row_height=220` + explicit per-column widths on
+   `st.dataframe`) and added one-click PDF export to both the Sanctions Exposure and Investment Flows pages
+   (`generate_sanctions_brief()`/`generate_investment_flow_brief()` in `src/pdf_export.py`).
+2. An adversarial code review of that diff found 4 real issues, all fixed: `requirements.txt` claimed
+   `streamlit>=1.38` but `row_height` needs >=1.45 (verified against the actual wheel contents, not just the
+   review's claim); both new PDF exports were rebuilding on every page rerun instead of being cached; a
+   NaN deal value would have rendered as the literal string `"$nanM"` in the investment brief.
+3. A second, whole-codebase (not just the last diff) review then caught something more serious: `_is_research_needed()`
+   in `investment_flow_engine.py` (and, latently, `sanctions_engine.py`) decided "unconfirmed" from
+   `not isinstance(value, str)` -- which misclassifies every real value as unconfirmed the moment a
+   `pd.read_csv` column has zero remaining `RESEARCH_NEEDED` cells left and pandas infers a numeric dtype.
+   That's not hypothetical: closing exactly those gaps is this project's own ongoing goal. Fixed to check
+   `pd.isna()` instead. Writing the regression test for it then caught two more real bugs (a ReportLab crash
+   on zero tracked deals; zero test coverage for either new PDF function) -- both fixed, 8 new tests added.
+4. Checked the two new pages on an actual mobile viewport for the first time (all prior testing was
+   desktop-width) -- found the sanctions table needs horizontal scroll on a phone (inherent to 8 dense
+   columns, not fixable by resizing), fixed by pinning the Country column so row context survives the
+   scroll.
+5. **New feature, approved after discussing what would make the project "more live":** a Candidate Events
+   review queue (`app_pages/candidate_events.py` + `src/candidate_review.py` +
+   `src/data_pipeline/fetch_candidate_events.py`), explicitly framed as a research-assist queue, not a live
+   feed. Two official, free, public sources -- the Federal Register API (BIS documents) and OFAC's Recent
+   Actions page -- are polled daily via GitHub Actions. OFAC has no public JSON/RSS feed (its RSS was
+   retired), so that source is parsed from the page's HTML with a regex verified against a real captured
+   sample (all 10 real entries parsed correctly, including an apostrophe in "Syria's designation"); a
+   layout change degrades to zero OFAC candidates rather than crashing. Nothing fetched is ever
+   auto-added to `data/curated/policy_events.csv` -- a human reviews each candidate and either dismisses it
+   or opens a pre-filled form (date/title from the source; category/direction left for the human to
+   actually decide) before it becomes a real event, keeping the project's standing rule intact. Seeded at
+   launch with 19 real candidates captured this session, including a genuinely relevant live example (a BIS
+   rule removing an entity from the Entity List under the destination of Turkey). Caught and fixed one
+   process near-miss while building this: `src/candidate_events.py` and the new
+   `app_pages/candidate_events.py` would have shared a basename -- the exact naming-collision bug class this
+   project has hit before -- renamed to `src/candidate_review.py` before it ever got committed.
+
+**Previous session: built the Sovereign AI Investment Flow Tracker end to end from another detailed
 project-owner spec, following the exact same pattern the Sanctions module established.** New "Capital
 Flows" nav group -> Investment Flows page (`app_pages/investment_flows.py` + `src/investment_flow_engine.py`
 + `data/curated/investment_flows.csv`, 10 tracked deals). Deliberately kept as a separate dataset from the
