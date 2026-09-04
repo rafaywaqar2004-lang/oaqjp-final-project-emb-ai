@@ -39,6 +39,18 @@ def _flows() -> pd.DataFrame:
     return load_flows()
 
 
+@st.cache_data(ttl=3600)
+def _investment_flow_brief_pdf_cached(
+    df: pd.DataFrame, summary: pd.DataFrame, bluf: str, key_judgment: str, why: str,
+) -> bytes:
+    """Wraps generate_investment_flow_brief() (a nontrivial ReportLab render)
+    behind Streamlit's cache -- without this it would re-render on every
+    script rerun (e.g. toggling a deal-table filter), not just when the
+    underlying data actually changes. Same pattern as regional_dashboard.py's
+    _build_executive_pdf_cached()."""
+    return generate_investment_flow_brief(df, summary, bluf, key_judgment, why)
+
+
 def _key_findings(df: pd.DataFrame) -> tuple[str, str, str]:
     totals = bloc_totals(df)
     us_total = totals.get("US", 0.0)
@@ -325,7 +337,7 @@ def main() -> None:
 
     st.download_button(
         "\U0001F4C4 Download Investment Flow Brief (PDF)",
-        data=generate_investment_flow_brief(df, per_country_summary(df), bluf, key_judgment, why),
+        data=_investment_flow_brief_pdf_cached(df, per_country_summary(df), bluf, key_judgment, why),
         file_name="gulf_investment_flow_brief.pdf",
         mime="application/pdf",
     )

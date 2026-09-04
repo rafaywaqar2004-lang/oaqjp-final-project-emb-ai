@@ -18,7 +18,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from country_brief import CountryBrief
-from investment_flow_engine import bloc_totals, capital_alignment_ratio, unconfirmed_value_count
+from investment_flow_engine import bloc_totals, capital_alignment_ratio, unconfirmed_value_count, with_parsed_value
 from sanctions_engine import heatmap_matrix, severity_band
 
 INK = colors.HexColor("#1b1e22")
@@ -446,12 +446,9 @@ def generate_investment_flow_brief(
 
     story.append(Paragraph("TRACKED DEALS", s["section"]))
     deal_rows = []
-    for _, row in flows_df.sort_values("date").iterrows():
-        value = str(row["deal_value_usd_millions"]).strip()
-        try:
-            value_disp = f"${float(value):,.0f}M"
-        except ValueError:
-            value_disp = "Unconfirmed value"
+    for _, row in with_parsed_value(flows_df).sort_values("date").iterrows():
+        parsed = row["deal_value_usd_millions_parsed"]
+        value_disp = f"${parsed:,.0f}M" if pd.notna(parsed) else "Unconfirmed value"
         left = f"<b>{row['date']}</b> -- {row['source_fund']} ({row['source_country']}) -&gt; {row['destination_company']} ({row['destination_country']})"
         right = f"{value_disp} &middot; {row['bloc_affiliation']}-bound &middot; {row['source_url']}"
         deal_rows.append([left, right])
