@@ -381,6 +381,15 @@ def generate_sanctions_brief(
     return buf.getvalue()
 
 
+def _format_deal_value(parsed_value: float) -> str:
+    """Renders a single deal's already-parsed dollar value for the Tracked
+    Deals list -- factored out from generate_investment_flow_brief() so the
+    NaN case (an unconfirmed/missing value) is independently unit-testable
+    without needing to parse rendered PDF bytes. NaN must render as
+    "Unconfirmed value", never as the literal string "$nanM"."""
+    return f"${parsed_value:,.0f}M" if pd.notna(parsed_value) else "Unconfirmed value"
+
+
 def generate_investment_flow_brief(
     flows_df: pd.DataFrame, summary_df: pd.DataFrame, bluf: str, key_judgment: str, why_it_matters: str,
     as_of: str = "September 2026",
@@ -445,14 +454,16 @@ def generate_investment_flow_brief(
     story.append(_simple_table(country_rows, [1.9 * inch, 1.5 * inch, 1.6 * inch, 1.1 * inch], s))
 
     story.append(Paragraph("TRACKED DEALS", s["section"]))
-    deal_rows = []
-    for _, row in with_parsed_value(flows_df).sort_values("date").iterrows():
-        parsed = row["deal_value_usd_millions_parsed"]
-        value_disp = f"${parsed:,.0f}M" if pd.notna(parsed) else "Unconfirmed value"
-        left = f"<b>{row['date']}</b> -- {row['source_fund']} ({row['source_country']}) -&gt; {row['destination_company']} ({row['destination_country']})"
-        right = f"{value_disp} &middot; {row['bloc_affiliation']}-bound &middot; {row['source_url']}"
-        deal_rows.append([left, right])
-    story.append(_simple_table(deal_rows, [3.0 * inch, 3.1 * inch], s))
+    if flows_df.empty:
+        story.append(Paragraph("No tracked deals on file.", s["body"]))
+    else:
+        deal_rows = []
+        for _, row in with_parsed_value(flows_df).sort_values("date").iterrows():
+            value_disp = _format_deal_value(row["deal_value_usd_millions_parsed"])
+            left = f"<b>{row['date']}</b> -- {row['source_fund']} ({row['source_country']}) -&gt; {row['destination_company']} ({row['destination_country']})"
+            right = f"{value_disp} &middot; {row['bloc_affiliation']}-bound &middot; {row['source_url']}"
+            deal_rows.append([left, right])
+        story.append(_simple_table(deal_rows, [3.0 * inch, 3.1 * inch], s))
 
     story.append(Paragraph("METHODOLOGY", s["section"]))
     story.append(Paragraph(

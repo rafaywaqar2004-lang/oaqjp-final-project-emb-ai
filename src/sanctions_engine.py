@@ -88,7 +88,16 @@ def _bis_tier_score(tier_score: float) -> float:
 
 
 def _is_research_needed(value) -> bool:
-    return not isinstance(value, str) or value.strip().lower().startswith("research_needed")
+    """Same dtype-safety rule as investment_flow_engine.py's own
+    _is_research_needed(): a non-string is "research needed" only if it's
+    actually missing (NaN/None), never just because it fails isinstance(str)
+    -- currently inert here since ofac_programs/caatsa_status/etc. are
+    free-text fields pandas never infers as numeric, but a bare
+    `not isinstance(value, str)` check would silently misclassify a real
+    value the moment that stops being true, so it's fixed defensively."""
+    if isinstance(value, str):
+        return value.strip().lower().startswith("research_needed")
+    return pd.isna(value)
 
 
 def _ofac_score(programs) -> float:

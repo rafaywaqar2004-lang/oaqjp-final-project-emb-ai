@@ -53,8 +53,37 @@ class TestIsResearchNeeded:
     def test_recognizes_real_values(self):
         assert _is_research_needed("1500") is False
 
-    def test_non_string_is_research_needed(self):
+    def test_missing_value_is_research_needed(self):
         assert _is_research_needed(float("nan")) is True
+        assert _is_research_needed(None) is True
+
+    def test_real_numeric_value_is_not_research_needed(self):
+        """Regression guard: pd.read_csv infers a numeric dtype (int64/
+        float64) for a column with zero remaining RESEARCH_NEEDED cells --
+        a bare `not isinstance(value, str)` check would then misclassify
+        every real, confirmed dollar value as unconfirmed the moment a
+        country's data gap is fully closed. A real int/float must never be
+        flagged as research-needed just because it isn't a str."""
+        assert _is_research_needed(1500) is False
+        assert _is_research_needed(1500.0) is False
+        assert _is_research_needed(0) is False
+
+    def test_all_numeric_csv_column_is_not_misread_as_unconfirmed(self):
+        """Reproduces the actual failure mode via the real pd.read_csv code
+        path, not just the bare function: once every deal in a column has a
+        disclosed value, pandas infers int64/float64 for that column and
+        every cell becomes a Python/numpy number, never a str."""
+        import io
+        csv = (
+            "deal_id,source_country,destination_country,deal_value_usd_millions\n"
+            "001,Saudi Arabia,United States,1500\n"
+            "002,Saudi Arabia,China,200\n"
+        )
+        df = pd.read_csv(io.StringIO(csv))
+        assert df["deal_value_usd_millions"].dtype != object
+        assert unconfirmed_value_count(df) == 0
+        parsed = with_parsed_value(df)["deal_value_usd_millions_parsed"]
+        assert parsed.tolist() == [1500.0, 200.0]
 
 
 class TestParseValue:

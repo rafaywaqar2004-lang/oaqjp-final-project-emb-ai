@@ -57,8 +57,18 @@ class TestIsResearchNeeded:
         assert _is_research_needed("None (country level)") is False
         assert _is_research_needed("IRAN; IRGC; SDN") is False
 
-    def test_non_string_is_research_needed(self):
+    def test_missing_value_is_research_needed(self):
         assert _is_research_needed(float("nan")) is True
+        assert _is_research_needed(None) is True
+
+    def test_real_numeric_value_is_not_research_needed(self):
+        """Same dtype-safety regression guard as investment_flow_engine.py's
+        own test: a real, non-missing number must never be flagged as
+        research-needed just because it isn't a str -- currently inert here
+        since these fields are always free-text, but the underlying helper
+        must stay correct regardless."""
+        assert _is_research_needed(3) is False
+        assert _is_research_needed(0) is False
 
 
 class TestEntityListScore:
