@@ -3,7 +3,9 @@ import pytest
 
 from constants import COUNTRIES
 from country_brief import generate_brief, load_curated
-from pdf_export import build_country_pdf, build_executive_pdf
+from investment_flow_engine import load_flows, per_country_summary
+from pdf_export import build_country_pdf, build_executive_pdf, generate_investment_flow_brief, generate_sanctions_brief
+from sanctions_engine import build_sanctions_composite
 from scoring import build_composite
 from strategic_risk_engine import assess_all
 
@@ -99,3 +101,43 @@ def test_executive_pdf_includes_every_tracked_country_in_rankings(composite, cur
     # this at least confirms it isn't silently truncating to a handful of rows.
     small_pdf = build_executive_pdf(key_findings, composite.head(2), [], risk_matrix.head(2))
     assert len(pdf_bytes) > len(small_pdf)
+
+
+def test_generate_sanctions_brief_produces_a_valid_pdf():
+    df = build_sanctions_composite()
+    pdf_bytes = generate_sanctions_brief(df, "Test BLUF.", "Test key judgment.", "Test why it matters.")
+    assert pdf_bytes[:4] == b"%PDF"
+    assert len(pdf_bytes) > 500
+
+
+def test_generate_investment_flow_brief_produces_a_valid_pdf():
+    flows = load_flows()
+    summary = per_country_summary(flows)
+    pdf_bytes = generate_investment_flow_brief(flows, summary, "Test BLUF.", "Test key judgment.", "Test why it matters.")
+    assert pdf_bytes[:4] == b"%PDF"
+    assert len(pdf_bytes) > 500
+
+
+def test_generate_investment_flow_brief_handles_a_country_with_no_deals():
+    """No tracked deals for a country must not crash the per-country
+    capital-alignment table or the deal list."""
+    flows = load_flows()
+    empty_flows = flows.iloc[0:0]
+    summary = per_country_summary(empty_flows)
+    pdf_bytes = generate_investment_flow_brief(empty_flows, summary, "x", "x", "x")
+    assert pdf_bytes[:4] == b"%PDF"
+
+
+class TestFormatDealValue:
+    """Regression coverage for the bug this project's own adversarial code
+    review caught: an unconfirmed (NaN) deal value must render as
+    "Unconfirmed value", never as the literal string "$nanM"."""
+
+    def test_real_value_formats_as_currency(self):
+        from pdf_export import _format_deal_value
+        assert _format_deal_value(1500.0) == "$1,500M"
+
+    def test_nan_value_renders_as_unconfirmed(self):
+        from pdf_export import _format_deal_value
+        assert _format_deal_value(float("nan")) == "Unconfirmed value"
+        assert "nan" not in _format_deal_value(float("nan")).lower()

@@ -52,7 +52,17 @@ TRACKED_SOURCE_COUNTRIES = [
 
 
 def _is_research_needed(value) -> bool:
-    return not isinstance(value, str) or value.strip().upper() == "RESEARCH_NEEDED"
+    """A string is "research needed" only if it's literally the marker text;
+    any other non-string is "research needed" only if it's actually missing
+    (NaN/None) -- NOT simply because it isn't a str. A column with zero
+    remaining RESEARCH_NEEDED cells gets read back by pandas as a numeric
+    dtype (int64/float64), so a bare `not isinstance(value, str)` check would
+    misclassify every real, confirmed dollar value as unconfirmed the moment
+    a country's data gap is fully closed -- exactly the scenario this
+    project's own research passes are working toward."""
+    if isinstance(value, str):
+        return value.strip().upper() == "RESEARCH_NEEDED"
+    return pd.isna(value)
 
 
 def load_flows() -> pd.DataFrame:
