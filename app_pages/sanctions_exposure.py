@@ -37,6 +37,16 @@ def _sanctions_composite() -> pd.DataFrame:
     return build_sanctions_composite()
 
 
+@st.cache_data(ttl=3600)
+def _sanctions_brief_pdf_cached(df: pd.DataFrame, bluf: str, key_judgment: str, why: str) -> bytes:
+    """Wraps generate_sanctions_brief() (a nontrivial ReportLab render) behind
+    Streamlit's cache -- without this it would re-render on every script
+    rerun (e.g. expanding "View Calculation"), not just when the underlying
+    data actually changes. Same pattern as regional_dashboard.py's
+    _build_executive_pdf_cached()."""
+    return generate_sanctions_brief(df, bluf, key_judgment, why)
+
+
 def _score_band_summary(df: pd.DataFrame) -> tuple[str, str, str]:
     """Bottom line / key judgment / why-it-matters text, generated from the
     actual current data -- never hard-coded example findings."""
@@ -230,7 +240,7 @@ def main() -> None:
 
     st.download_button(
         "\U0001F4C4 Download Sanctions Brief (PDF)",
-        data=generate_sanctions_brief(df, bluf, key_judgment, why),
+        data=_sanctions_brief_pdf_cached(df, bluf, key_judgment, why),
         file_name="gulf_sanctions_exposure_brief.pdf",
         mime="application/pdf",
     )
