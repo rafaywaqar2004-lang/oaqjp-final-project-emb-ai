@@ -250,7 +250,13 @@ def main() -> None:
     st.dataframe(
         _summary_table(df), hide_index=True, use_container_width=True, row_height=220,
         column_config={
-            "Country": st.column_config.TextColumn("Country", width=140),
+            # Pinned so the row's country stays visible while scrolling
+            # horizontally through the remaining columns -- on a phone-width
+            # screen this table is wider than the viewport no matter how the
+            # column widths are tuned, so keeping row context in view during
+            # that scroll (rather than trying to eliminate the scroll
+            # entirely) is the actual fix.
+            "Country": st.column_config.TextColumn("Country", width=140, pinned=True),
             "Entity List Count": st.column_config.TextColumn("Entity List Count", width=160),
             "BIS Tier": st.column_config.TextColumn("BIS Tier", width=300),
             "OFAC Programs": st.column_config.TextColumn("OFAC Programs", width=350),
