@@ -191,7 +191,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2025-12-18,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
 2025-12-18,Iran,IRN,0.0,50.0,25.0,backfilled
 2025-12-18,Iraq,IRQ,0.0,50.0,25.0,backfilled
-2025-12-18,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2025-12-18,Israel,ISR,56.97245207698776,10.0,73.48622603849388,backfilled
 2025-12-18,Jordan,JOR,20.0,30.0,45.0,backfilled
 2025-12-18,Kuwait,KWT,20.0,70.0,25.0,backfilled
 2025-12-18,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
@@ -208,7 +208,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-02-07,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
 2026-02-07,Iran,IRN,0.0,50.0,25.0,backfilled
 2026-02-07,Iraq,IRQ,0.0,50.0,25.0,backfilled
-2026-02-07,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2026-02-07,Israel,ISR,56.97245207698776,10.0,73.48622603849388,backfilled
 2026-02-07,Jordan,JOR,20.0,30.0,45.0,backfilled
 2026-02-07,Kuwait,KWT,20.0,70.0,25.0,backfilled
 2026-02-07,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
@@ -216,7 +216,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-02-07,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-02-07,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-02-07,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-02-07,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-07,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-02-07,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-02-07,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
 2026-02-07,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -225,7 +225,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-02-09,Egypt,EGY,23.411702194731177,60.0,31.70585109736559,backfilled
 2026-02-09,Iran,IRN,0.0,50.0,25.0,backfilled
 2026-02-09,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,backfilled
-2026-02-09,Israel,ISR,56.972452076987764,10.0,73.48622603849388,backfilled
+2026-02-09,Israel,ISR,56.97245207698776,10.0,73.48622603849388,backfilled
 2026-02-09,Jordan,JOR,20.0,30.0,45.0,backfilled
 2026-02-09,Kuwait,KWT,20.0,70.0,25.0,backfilled
 2026-02-09,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,backfilled
@@ -233,7 +233,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-02-09,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-02-09,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-02-09,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-02-09,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-09,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-02-09,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-02-09,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
 2026-02-09,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -250,7 +250,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-02-23,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-02-23,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-02-23,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-02-23,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-02-23,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-02-23,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-02-23,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
 2026-02-23,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -267,7 +267,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-06-15,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-06-15,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-06-15,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-06-15,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-06-15,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-06-15,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-06-15,United Arab Emirates,ARE,57.91934593292352,60.0,48.95967296646177,backfilled
 2026-06-15,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -284,7 +284,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-07-10,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-07-10,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-07-10,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-07-10,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-07-10,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-07-10,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-07-10,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,backfilled
 2026-07-10,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -301,7 +301,7 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-07-28,Pakistan,PAK,20.0,80.0,20.0,backfilled
 2026-07-28,Qatar,QAT,40.0,40.0,50.0,backfilled
 2026-07-28,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,backfilled
-2026-07-28,Syria,SYR,6.406911043453157,50.0,28.203455521726582,backfilled
+2026-07-28,Syria,SYR,6.406911043453157,50.0,28.203455521726585,backfilled
 2026-07-28,Turkey,TUR,40.0,70.0,35.0,backfilled
 2026-07-28,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,backfilled
 2026-07-28,Yemen,YEM,0.0,20.0,40.0,backfilled
@@ -322,3 +322,20 @@ snapshot_date,country,iso3,us_integration_depth,china_exposure_depth,net_alignme
 2026-09-02,Turkey,TUR,40.0,70.0,35.0,live_pipeline
 2026-09-02,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,live_pipeline
 2026-09-02,Yemen,YEM,0.0,20.0,40.0,live_pipeline
+2026-09-07,Afghanistan,AFG,0.0,10.0,45.0,live_pipeline
+2026-09-07,Bahrain,BHR,40.0,30.0,55.0,live_pipeline
+2026-09-07,Egypt,EGY,25.163365135227068,60.0,32.581682567613534,live_pipeline
+2026-09-07,Iran,IRN,0.0,50.0,25.0,live_pipeline
+2026-09-07,Iraq,IRQ,12.635681235586706,50.0,31.31784061779335,live_pipeline
+2026-09-07,Israel,ISR,63.19072482084576,10.0,76.59536241042288,live_pipeline
+2026-09-07,Jordan,JOR,40.95655634317569,30.0,55.478278171587846,live_pipeline
+2026-09-07,Kuwait,KWT,20.0,70.0,25.0,live_pipeline
+2026-09-07,Lebanon,LBN,0.5318158105561672,30.0,35.265907905278084,live_pipeline
+2026-09-07,Oman,OMN,20.0,60.0,30.0,live_pipeline
+2026-09-07,Pakistan,PAK,20.0,80.0,20.0,live_pipeline
+2026-09-07,Qatar,QAT,40.0,40.0,50.0,live_pipeline
+2026-09-07,Saudi Arabia,SAU,79.56244981534589,70.0,54.781224907672936,live_pipeline
+2026-09-07,Syria,SYR,6.406911043453157,50.0,28.203455521726582,live_pipeline
+2026-09-07,Turkey,TUR,40.0,70.0,35.0,live_pipeline
+2026-09-07,United Arab Emirates,ARE,73.91934593292352,60.0,56.95967296646177,live_pipeline
+2026-09-07,Yemen,YEM,0.0,20.0,40.0,live_pipeline
