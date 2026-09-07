@@ -34,6 +34,10 @@ FLOWS_CSV_PATH = Path(CURATED_DIR) / "investment_flows.csv"
 _BLOC_COLOR = {"US": BLUE, "China": RED, "US-aligned": "#8FB6DC", "Neutral": GRAY}
 
 
+def esc(text) -> str:
+    return "" if text is None or (isinstance(text, float) and pd.isna(text)) else str(text).replace("$", "\\$")
+
+
 @st.cache_data(ttl=3600)
 def _flows() -> pd.DataFrame:
     return load_flows()
@@ -190,6 +194,21 @@ def _deal_table(df: pd.DataFrame) -> None:
         file_name="investment_flows_filtered.csv", mime="text/csv",
     )
 
+    st.markdown("**Deal Notes & Verification**")
+    st.caption(
+        "Every deal below has a full verification note already in the underlying CSV -- source cross-"
+        "checks, modeling-choice explanations, and (for several deals) a specific correction this project "
+        "made after checking a proposed figure against its own cited source. Expand a deal to read it."
+    )
+    for _, row in filtered.sort_values("date", ascending=False).iterrows():
+        value = str(row["deal_value_usd_millions"]).strip()
+        value_disp = "unconfirmed value" if value.upper() == "RESEARCH_NEEDED" else f"${value}M"
+        label = f"{row['date']} -- {row['source_fund']} -> {row['destination_company']} ({value_disp})"
+        with st.expander(label):
+            st.caption(esc(row["notes"]))
+            st.markdown(f"[Source]({row['source_url']})")
+            st.caption(f"Last updated: {esc(row['last_updated'])}")
+
 
 def _admin_data_editor() -> None:
     with st.expander("Edit Investment Data (admin)"):
@@ -298,6 +317,11 @@ def investment_flows_section(country: str | None = None) -> None:
             hide_index=True, use_container_width=True,
         )
 
+    for _, row in df.sort_values("date", ascending=False).iterrows():
+        with st.expander(f"Verification note -- {row['date']} {row['destination_company']}"):
+            st.caption(esc(row["notes"]))
+            st.markdown(f"[Source]({row['source_url']})")
+
     if not cb.empty:
         st.plotly_chart(_sankey_figure(df), use_container_width=True)
 
@@ -313,7 +337,9 @@ def main() -> None:
         except (FileNotFoundError, KeyError) as e:
             page_header(
                 "Sovereign AI Investment Flow Tracker",
-                "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc",
+                "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc -- "
+                "every deal below is tagged US-aligned, China, or domestic-buildout based on where the capital or "
+                "counted infrastructure actually lands, not on the nationality of the fund writing the check.",
                 meta=["MANUALLY CURATED"],
             )
             st.error(f"Could not load investment flow data: {e}")
@@ -321,7 +347,9 @@ def main() -> None:
 
     page_header(
         "Sovereign AI Investment Flow Tracker",
-        "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc",
+        "Gulf-state sovereign-fund and government-directed AI/tech capital flows, by destination bloc -- "
+        "every deal below is tagged US-aligned, China, or domestic-buildout based on where the capital or "
+        "counted infrastructure actually lands, not on the nationality of the fund writing the check.",
         meta=[f"{len(df)} TRACKED DEALS", "MANUALLY CURATED"],
     )
 

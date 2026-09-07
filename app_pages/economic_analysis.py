@@ -21,6 +21,10 @@ from scoring import build_composite  # noqa: E402
 from ui import inject_base_css, page_header, footer, NAVY, GRAY  # noqa: E402
 
 
+def esc(text) -> str:
+    return "" if text is None or (isinstance(text, float) and pd.isna(text)) else str(text).replace("$", "\\$")
+
+
 @st.cache_data(ttl=3600)
 def _composite() -> pd.DataFrame:
     return build_composite()
@@ -175,6 +179,13 @@ def main() -> None:
             }),
             hide_index=True, use_container_width=True,
         )
+        st.caption("Full analyst rationale for every figure (and for every country marked not-applicable) below.")
+        for _, r in div.sort_values("country").iterrows():
+            label = f"{r['country']} -- {r['non_oil_gdp_share_pct']:.0f}%" if pd.notna(r["non_oil_gdp_share_pct"]) else f"{r['country']} -- not applicable"
+            with st.expander(label):
+                st.caption(esc(r["rationale"]))
+                if pd.notna(r.get("source_url")) and str(r.get("source_url")).strip():
+                    st.markdown(f"[{esc(r.get('source_name'))}]({r['source_url']})")
 
     with st.expander("Other relationships considered and rejected -- and why"):
         st.caption(

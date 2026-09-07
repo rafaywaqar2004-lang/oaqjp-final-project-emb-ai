@@ -16,6 +16,9 @@ from scoring import COMPUTE_CEILING_MW, INVESTMENT_CEILING_USD_BN  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
 
+def esc(text) -> str:
+    return "" if text is None or (isinstance(text, float) and pd.isna(text)) else str(text).replace("$", "\\$")
+
 
 def main() -> None:
     inject_base_css()
@@ -172,8 +175,33 @@ Iran sanctions/missing-data problem.
     st.caption(
         "Count of countries at each confidence level, per factor. `Low`-confidence rows are flagged for "
         "follow-up in each CSV's own `rationale` column rather than presented at the same weight as "
-        "well-sourced ones -- see README.md's Known Limitations section for exactly which rows and why."
+        "well-sourced ones -- see below for exactly which rows and why."
     )
+
+    @st.cache_data(ttl=3600)
+    def _low_confidence_rows() -> pd.DataFrame:
+        frames = []
+        for name, col in [
+            ("Export control tier", "export_control_tier.csv"),
+            ("Chinese telecom penetration", "chinese_tech_penetration.csv"),
+            ("Chinese AI/cloud/digital ties", "chinese_digital_ties.csv"),
+            ("Governance maturity", "governance_maturity.csv"),
+        ]:
+            df = pd.read_csv(Path(CURATED_DIR) / col)
+            low = df[df["confidence"] == "Low"].copy()
+            low["factor"] = name
+            frames.append(low)
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    low_df = _low_confidence_rows()
+    if not low_df.empty:
+        with st.expander(f"Every Low-confidence row on file ({len(low_df)}), with the analyst's own rationale"):
+            for _, r in low_df.sort_values(["factor", "country"]).iterrows():
+                st.markdown(f"**{r['country']}** &mdash; {r['factor']}")
+                st.caption(esc(r["rationale"]))
+                if pd.notna(r.get("source_url")) and str(r.get("source_url")).strip():
+                    st.markdown(f"[{esc(r.get('source_name'))}]({r['source_url']})")
+                st.divider()
 
     st.divider()
     st.caption(
