@@ -247,6 +247,22 @@ def main() -> None:
     st.caption("The factor-level components underlying US Integration Depth and China Exposure Depth for this country.")
     st.dataframe(_key_drivers_table(row, curated, country), hide_index=True, use_container_width=True)
 
+    with st.expander("Why these scores -- full analyst rationale per factor"):
+        for key, label in (
+            ("tier", "US Export-Control Tier"), ("china", "Chinese Telecom Penetration"),
+            ("china_digital", "Chinese AI/Cloud/Digital Ties"), ("governance", "AI Governance Maturity"),
+        ):
+            factor_row = curated[key][curated[key]["country"] == country]
+            if factor_row.empty:
+                continue
+            f = factor_row.iloc[0]
+            st.markdown(f"**{label}**")
+            if "rationale" in f and pd.notna(f.get("rationale")):
+                st.caption(esc(f["rationale"]))
+            if "source_name" in f and pd.notna(f.get("source_name")):
+                st.markdown(f"[{esc(f['source_name'])}]({f.get('source_url', '')})")
+            st.divider()
+
     st.divider()
     st.subheader("Trend")
     history = load_history()
@@ -363,6 +379,9 @@ def main() -> None:
             st.markdown(f"**CAATSA status:** {esc(s['caatsa_status'])}")
             st.markdown(f"**Entity List entities on file:** {esc(s['entity_list_entities'])}")
             st.markdown(f"**Secondary sanctions risk:** {esc(s['secondary_sanctions_risk'])}")
+            st.markdown(f"**Sanctions evasion risk:** {esc(s['sanctions_evasion_risk'])}")
+            st.markdown(f"**Documented Chinese retaliation:** {esc(s['chinese_retaliation'])}")
+            st.caption(f"{esc(s['confidence'])} confidence -- see this country's expander on the Sanctions Exposure page for the full analyst rationale and citations.")
         net_alignment = row.get("net_alignment_score")
         if pd.notna(s["sanctions_exposure_score"]) and pd.notna(net_alignment):
             if net_alignment < 50 and s["sanctions_exposure_score"] >= 60:
@@ -402,6 +421,8 @@ def main() -> None:
                 st.markdown(f"**{r['announced_date']}** &mdash; {esc(r['deal_name'])}")
                 st.caption(f"{esc(amount)} &middot; {r['deal_type']} &middot; {counted}")
                 st.caption(esc(r["notes"]))
+                if pd.notna(r.get("source_url")) and str(r.get("source_url")).strip():
+                    st.caption(f"[{esc(r.get('source_name') or 'Source')}]({r['source_url']})")
 
     with col_compute:
         st.subheader("Compute / data-center timeline")
@@ -414,6 +435,8 @@ def main() -> None:
                 st.markdown(f"**{r['announced_date']}** &mdash; {esc(r['project_name'])}")
                 st.caption(f"{esc(capacity)} &middot; {r['status']} &middot; {counted}")
                 st.caption(esc(r["notes"]))
+                if pd.notna(r.get("source_url")) and str(r.get("source_url")).strip():
+                    st.caption(f"[{esc(r.get('source_name') or 'Source')}]({r['source_url']})")
 
     st.divider()
     st.subheader("Data Quality")

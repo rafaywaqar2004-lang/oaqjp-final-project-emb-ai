@@ -32,6 +32,10 @@ from pdf_export import generate_sanctions_brief  # noqa: E402
 SANCTIONS_CSV_PATH = Path(CURATED_DIR) / "sanctions_data.csv"
 
 
+def esc(text) -> str:
+    return "" if text is None or (isinstance(text, float) and pd.isna(text)) else str(text).replace("$", "\\$")
+
+
 @st.cache_data(ttl=3600)
 def _sanctions_composite() -> pd.DataFrame:
     return build_sanctions_composite()
@@ -193,6 +197,33 @@ def _positioning_scatter(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def _country_detail_expanders(df: pd.DataFrame) -> None:
+    """Every field below is already in sanctions_data.csv and already
+    individually sourced -- it's just never been rendered anywhere on this
+    page. The summary table above only shows 6 of the CSV's 17 columns; this
+    surfaces the rest (named Entity List entities where any are known, the
+    BIS tier history, EU sanctions status, any documented Chinese
+    retaliation, the confidence rating, the citation, and the full analyst
+    rationale) so the composite number is never presented without the
+    underlying evidence a reader would need to check it."""
+    ranked = df.sort_values("sanctions_exposure_score", ascending=False, na_position="last")
+    for _, row in ranked.iterrows():
+        score = row["sanctions_exposure_score"]
+        label = f"{row['country']} -- {score:.0f}/100" if pd.notna(score) else f"{row['country']} -- Insufficient data"
+        with st.expander(label):
+            st.markdown(confidence_pill(f"{row['confidence']} confidence"), unsafe_allow_html=True)
+            st.markdown(f"**Named Entity List entries on file:** {esc(row['entity_list_entities'])}")
+            st.markdown(f"**BIS tier history:** {esc(row['bis_tier_history'])}")
+            st.markdown(f"**EU sanctions:** {esc(row['eu_sanctions'])}")
+            st.markdown(f"**Documented Chinese retaliation:** {esc(row['chinese_retaliation'])}")
+            st.markdown("**Analyst rationale:**")
+            st.caption(esc(row["rationale"]))
+            st.markdown(f"**Source:** {esc(row['source_name'])}")
+            for i, url in enumerate([u.strip() for u in str(row["source_url"]).split(";") if u.strip()], start=1):
+                st.markdown(f"[Citation {i}]({url})")
+            st.caption(f"Last updated: {esc(row['last_updated'])}")
+
+
 def _admin_data_editor() -> None:
     with st.expander("Edit sanctions data (admin)"):
         st.caption(
@@ -216,7 +247,9 @@ def main() -> None:
     inject_base_css()
     page_header(
         "Sanctions & Entity List Exposure",
-        "US/EU/UN sanctions, export-control restrictiveness, and evasion-risk exposure, alongside this tracker's own Net Alignment Score",
+        "US/EU/UN sanctions, export-control restrictiveness, and evasion-risk exposure, alongside this tracker's own Net Alignment Score -- "
+        "a country can score deep on US chip access and still carry real sanctions exposure on an unrelated axis (e.g. human-rights designations, "
+        "residual UN regimes), so the two numbers are read side by side below, never collapsed into one.",
         meta=["17 COUNTRIES", "MANUALLY CURATED -- VERIFY BEFORE RELYING ON THIS DATA"],
     )
 
@@ -267,6 +300,16 @@ def main() -> None:
         },
     )
     _view_calculation_expander()
+
+    st.divider()
+    st.subheader("Full Country Detail")
+    st.caption(
+        "Every field here is already in this page's underlying data and already individually sourced -- "
+        "the summary table above only shows a subset of the curated CSV's columns. Expand a country for "
+        "its named Entity List entries (where any are known), BIS tier history, EU sanctions status, any "
+        "documented Chinese retaliation, confidence rating, and the full analyst rationale."
+    )
+    _country_detail_expanders(df)
 
     st.divider()
     st.subheader("Sanctions heatmap")

@@ -17,7 +17,7 @@ from constants import COUNTRIES  # noqa: E402
 from outlook_engine import build_outlook  # noqa: E402
 from scoring import build_composite  # noqa: E402
 from watch_next import load_watch_indicators, watch_items_for  # noqa: E402
-from ui import inject_base_css, page_header, confidence_pill, footer  # noqa: E402
+from ui import inject_base_css, page_header, confidence_pill, footer, watch_item, watch_next  # noqa: E402
 
 
 @st.cache_data(ttl=3600)
@@ -83,11 +83,10 @@ def main() -> None:
             "still shift this country's position indirectly."
         )
     else:
-        for _, item in outlook.watch_items.iterrows():
-            with st.container(border=True):
-                st.markdown(f"**{item['indicator']}**")
-                st.caption(item["why_it_matters"])
-                st.caption(f"Current signal: {item['current_signal']}")
+        watch_next([
+            watch_item(item["indicator"], item["why_it_matters"], item["current_signal"], item["direction"], item["confidence"])
+            for _, item in outlook.watch_items.iterrows()
+        ], label="WATCH NEXT")
 
     st.caption(
         "See the Country Deep Dive page for this country's full Key Judgments, Key Drivers, and Strategic "
