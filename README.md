@@ -1,6 +1,6 @@
 # Gulf AI & Tech-Bloc Alignment Tracker
 
-A companion piece to the [MENASA Risk Monitor](#): tracks how Gulf states -- plus a wider set of 11
+A companion piece to the [MENASA Risk Monitor](https://github.com/rafaywaqar2004-lang/overeign-risk-index): tracks how Gulf states -- plus a wider set of 11
 non-Gulf regional states and comparators -- are navigating the US-China AI/chip competition, and what that
 means for regional stability and Western strategic interests. Started as an 8-country Gulf-focused tracker
 and later grew to 17 countries so the Overview map's neighboring states, originally shown only as unscored
