@@ -1,0 +1,25 @@
+name: Keep live app warm
+
+# The live Streamlit app runs on Render's free tier, which spins the
+# container down after ~15 minutes of no incoming requests -- the next
+# visitor then eats a ~15-30s cold start. This workflow pings the live
+# URL often enough that Render never sees that idle gap, so anyone
+# clicking the link (e.g. from a shared LinkedIn post) gets an
+# already-warm instance instead of a cold start.
+#
+# This does not replace the app's own cold-start loading screen
+# (patch_og_tags.py) -- that still covers the rare case where this
+# workflow's own schedule slips (GitHub does not guarantee exact cron
+# timing) or the service was redeployed since the last ping.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # every 10 minutes
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping live app
+        run: curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 60 https://oaqjp-final-project-emb-ai-c8u6.onrender.com/
