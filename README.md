@@ -1,5 +1,15 @@
 # Gulf AI & Tech-Bloc Alignment Tracker
 
+![Gulf AI & Tech-Bloc Alignment Tracker — live app screenshot](docs/screenshot.png)
+
+> **Problem:** Are Gulf and regional states picking a side in the US-China AI/chip race, or hedging both simultaneously — and can that actually be measured rather than asserted?
+> **Approach:** A two-axis composite index (US Integration Depth vs. China Exposure Depth) across 17 countries, built on cited, dated bilateral deals and export-control tiers rather than a single blended score that would hide the hedging pattern.
+> **Result:** 8 of 17 tracked countries currently lean China without significant US integration; AI governance maturity correlates with a country's US export-control tier at r = 0.68.
+>
+> **[Live app →](https://oaqjp-final-project-emb-ai-c8u6.onrender.com)**
+
+---
+
 A companion piece to the [MENASA Risk Monitor](https://github.com/rafaywaqar2004-lang/overeign-risk-index): tracks how Gulf states -- plus a wider set of 11
 non-Gulf regional states and comparators -- are navigating the US-China AI/chip competition, and what that
 means for regional stability and Western strategic interests. Started as an 8-country Gulf-focused tracker
