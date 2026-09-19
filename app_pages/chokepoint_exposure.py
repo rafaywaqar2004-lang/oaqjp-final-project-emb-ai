@@ -19,13 +19,6 @@ from ui import inject_base_css, page_header, footer  # noqa: E402
 
 CURATED_DIR = Path(__file__).resolve().parents[1] / "data" / "curated"
 COMPUTED_DIR = Path(__file__).resolve().parents[1] / "data" / "computed"
-GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "region_countries.geojson"
-
-
-@st.cache_data(ttl=3600)
-def load_geojson() -> dict:
-    with open(GEOJSON_PATH) as f:
-        return json.load(f)
 
 
 @st.cache_data(ttl=3600)
@@ -84,14 +77,15 @@ def main() -> None:
     show_buffers = st.checkbox("Show 250 / 500 / 1000km geodesic buffer rings", value=True)
     fig = build_exposure_figure(
         hubs, chokepoints, cable_stations,
-        show_buffers=show_buffers, geojson=load_geojson(), qgis_buffers=load_qgis_buffers(),
+        show_buffers=show_buffers, qgis_buffers=load_qgis_buffers(),
     )
     st.plotly_chart(fig, use_container_width=True)
     st.caption(
-        "Buffer rings are real QGIS output -- generated offline by "
-        "`src/data_pipeline/generate_qgis_geodata.py` via PyQGIS's own geometry engine "
-        "(`QgsGeometry.buffer()` in a locally-centered azimuthal-equidistant projection), not "
-        "approximated at render time. See the Methodology section below."
+        "The basemap and buffer rings are both real QGIS output, not Plotly-drawn approximations: "
+        "the basemap is a rendered `QgsMapSettings` export (`src/data_pipeline/generate_qgis_basemap.py`), "
+        "and the buffer rings come from PyQGIS's own geometry engine "
+        "(`QgsGeometry.buffer()` in a locally-centered azimuthal-equidistant projection, via "
+        "`src/data_pipeline/generate_qgis_geodata.py`). See the Methodology section below."
     )
 
     st.divider()
