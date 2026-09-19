@@ -38,6 +38,15 @@ an authoritative government assessment. Where public data was too thin to respon
 that gap is shown explicitly (`"insufficient public data"`) rather than filled with an estimate presented
 as fact -- the same principle the MENASA Risk Monitor applies to Iran-sanctions data gaps.
 
+The underlying methodology is open-source intelligence (OSINT) research, not proprietary or classified
+data: every curated figure across this tracker traces to a named, linked public source -- government
+releases (BIS, DOJ, EIA, IMF), company/press announcements, congressional bill text, and reputable news
+reporting -- gathered and cross-verified the way an analyst would build a sourced brief, never invented.
+The Chokepoint Exposure Map (see "Infrastructure" in the app) adds a geospatial layer to that same
+discipline: verified coordinates and cited infrastructure facts (EIA, IMF, Wikipedia/Wikidata,
+submarinenetworks.com) run through real geodesic distance/buffer analysis (`pyproj`), the same underlying
+computation QGIS's own processing tools use.
+
 ## Country set
 
 **Gulf (6):** Saudi Arabia, United Arab Emirates, Qatar, Bahrain, Kuwait, Oman
