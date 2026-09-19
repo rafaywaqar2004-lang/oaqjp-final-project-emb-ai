@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from constants import CURATED_DIR  # noqa: E402
+from constants import CURATED_DIR, COMPUTED_DIR  # noqa: E402
 from scoring import COMPUTE_CEILING_MW, INVESTMENT_CEILING_USD_BN  # noqa: E402
 from ui import inject_base_css, footer  # noqa: E402
 
@@ -202,6 +202,49 @@ Iran sanctions/missing-data problem.
                 if pd.notna(r.get("source_url")) and str(r.get("source_url")).strip():
                     st.markdown(f"[{esc(r.get('source_name'))}]({r['source_url']})")
                 st.divider()
+
+    st.divider()
+    st.subheader("Historical validation against known events -- an honest gap, not a hidden one")
+
+    @st.cache_data(ttl=3600)
+    def _live_pipeline_span() -> tuple[int, str]:
+        hist_path = Path(COMPUTED_DIR) / "composite_scores_history.csv"
+        if not hist_path.exists():
+            return 0, "no live-pipeline snapshots yet"
+        hist = pd.read_csv(hist_path)
+        live = hist[hist.get("source") == "live_pipeline"]
+        if live.empty:
+            return 0, "no live-pipeline snapshots yet"
+        dates = pd.to_datetime(live["snapshot_date"])
+        span_days = int((dates.max() - dates.min()).days)
+        return span_days, f"{dates.min():%Y-%m-%d} to {dates.max():%Y-%m-%d}"
+
+    _live_days, _live_range = _live_pipeline_span()
+
+    st.markdown(
+        f"""
+The companion **MENASA Risk Monitor** backtests its composite score against six well-documented crises and
+discloses the result including a real miss (see its Methodology tab). This index does not yet have an
+equivalent check, and the reason is specific: it's not that no relevant events exist -- `data/curated/
+policy_events.csv` has 16 real, dated US/China chip-export policy events -- it's that most of this index's
+pre-September-2026 history in `composite_scores_history.csv` is *reconstructed*, not measured at the time.
+
+`src/historical_backfill.py` builds those earlier rows by re-running today's scoring logic as of each past
+date, using each deal's own `announced_date` and two documented export-control tier step-changes (Saudi
+Arabia, effective 2025-11-19; the UAE, effective 2026-07-10) as the exact dates the score moves. Checking
+whether the score moved on the same date as a real event would be circular for these rows: the backfill
+script places the step there *because* that's the event's real date, not because an independent,
+point-in-time measurement happened to land there. Presenting that as a validated "same-day capture," the
+way MENASA's crisis backtest genuinely earns that claim from independently-collected annual WDI/WGI data,
+would be exactly the kind of fabricated rigor this project's own no-fabrication rule exists to rule out --
+so it's disclosed here instead of built.
+
+**What a genuine version of this check would need:** enough `source="live_pipeline"` snapshots -- written
+automatically by the real nightly pipeline, not reconstructed -- to span a real future event end-to-end.
+As of this page's last load, live-pipeline history covers only **{_live_days} days** ({_live_range}), with
+no qualifying policy event inside that window yet. This section will carry a real backtest once one does.
+        """
+    )
 
     st.divider()
     st.caption(
