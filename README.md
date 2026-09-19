@@ -291,6 +291,7 @@ src/
   data_pipeline/fetch_worldbank.py        # World Bank layer -- non-oil diversification proxy, FDI net inflows
   data_pipeline/fetch_candidate_events.py # Candidate-events queue -- Federal Register (BIS) + OFAC Recent Actions, stdlib-only
   data_pipeline/generate_qgis_geodata.py  # Offline PyQGIS step -- real QGIS distance matrix + buffer rings for the Chokepoint Exposure Map (see note below)
+  data_pipeline/generate_qgis_basemap.py  # Offline PyQGIS step -- real QGIS map render (styled basemap PNG) for the Chokepoint Exposure Map (see note below)
 data/
   curated/                          # Manually researched, cited, dated
     policy_events.csv               # The Policy Event Tracker's sourced event record (incl. direction column)
@@ -312,6 +313,7 @@ briefs/
 .streamlit/config.toml              # Custom theme + static-serving config -- paper/ink palette shared with the briefs
 assets/favicon.png                  # Generated browser-tab icon (page_icon on every page)
 static/og-image.png                 # Generated link-preview card image (see note below)
+static/chokepoint_basemap.png       # Real QGIS map render -- Chokepoint Exposure Map's basemap (see note below)
 patch_og_tags.py                    # Patches GA/OG tags/cold-start loader into Streamlit's shell (see note below)
 tests/                              # pytest suite -- see "Running tests" below
 .github/workflows/refresh_worldbank_data.yml
@@ -384,9 +386,27 @@ An earlier version of this page was prototyped with folium/Leaflet for a real in
 folium's `_repr_html_()` loads Leaflet, jQuery, and Bootstrap from `cdn.jsdelivr.net`/`code.jquery.com` in
 the visitor's browser at render time -- exactly the runtime CDN dependency `src/mapping.py`'s own choropleth
 already ruled out (see above). `src/chokepoint_mapping.py` instead draws the buffer rings and markers as
-plain `go.Scatter` traces, with faint country outlines reused from the same bundled
-`data/geo/region_countries.geojson` the Regional Dashboard's map already uses -- zero runtime network calls,
-consistent with the rest of this project's Render-reliability constraint.
+plain `go.Scatter` traces -- zero runtime network calls, consistent with the rest of this project's
+Render-reliability constraint.
+
+**The basemap itself is a real QGIS map render, not a raw vector outline.** An earlier version drew country
+borders as thin `go.Scatter` line traces straight from the bundled GeoJSON -- functional, but visually flat,
+and identical in style to every other map in this portfolio. `src/data_pipeline/generate_qgis_basemap.py`
+instead renders the same `data/geo/region_countries.geojson` through actual QGIS (`QgsMapSettings` +
+`QgsMapRendererParallelJob`, with anti-aliasing on), styled in this project's own paper/ink palette
+(`src/ui.py`) -- land as a warm cream fill with a crisp coastline, water as a quiet cool contrast -- and
+writes the result to `static/chokepoint_basemap.png` at the exact lon/lat extent the data traces are
+plotted in. `src/chokepoint_mapping.py` base64-encodes that PNG and places it via Plotly's
+`add_layout_image()`, so the QGIS render and the data markers line up pixel-for-pixel with no runtime
+dependency on QGIS or any external tile service. Regenerate after changing the region extent or palette:
+
+```
+QT_QPA_PLATFORM=offscreen python3 src/data_pipeline/generate_qgis_basemap.py
+```
+
+Markers get a soft white halo underneath (`_halo()` in `chokepoint_mapping.py`) and a navy outline instead
+of the original plain white one -- against a raw transparent background a white marker border was fine, but
+against the new cream land fill it nearly disappeared.
 
 Only 5 of the 12 countries with a tracked AI hub (Saudi Arabia, Qatar, UAE, Oman, Syria) have a verified
 submarine cable landing station in `data/curated/cable_landing_stations.csv` -- the rest show hub-to-

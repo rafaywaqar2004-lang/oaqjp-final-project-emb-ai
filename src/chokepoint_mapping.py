@@ -1,13 +1,23 @@
-"""Builds the chokepoint exposure figure: AI hubs, chokepoints, cable landing
-stations, and geodesic buffer rings, all drawn as plain plotly go.Scatter
-traces in lon/lat Cartesian space.
+"""Builds the chokepoint exposure figure: a real QGIS-rendered basemap with
+AI hubs, chokepoints, cable landing stations, and geodesic buffer rings
+plotted on top as plotly go.Scatter traces in the same lon/lat Cartesian
+space the basemap was rendered at.
 
 Deliberately not folium/Leaflet: this project's existing map (mapping.py)
 already ruled out any renderer with a runtime CDN/network dependency, to
 keep it reliably self-contained on Render -- see that module's own
 docstring. This follows the same constraint at render time.
 
-The buffer rings themselves are real QGIS output, not computed here or at
+The basemap itself is a real QGIS render, not Plotly line traces:
+src/data_pipeline/generate_qgis_basemap.py renders
+data/geo/region_countries.geojson (the same bundled boundaries the
+Regional Dashboard's own choropleth uses) via QgsMapSettings +
+QgsMapRendererParallelJob, styled in this project's own paper/ink palette,
+to static/chokepoint_basemap.png -- anti-aliased polygon fills, not raw
+vector outlines. Checked into the repo as a build-time asset; QGIS itself
+is not a runtime dependency of the deployed app.
+
+The buffer rings are also real QGIS output, not computed here or at
 request time: src/data_pipeline/generate_qgis_geodata.py runs PyQGIS's own
 QgsGeometry.buffer() engine (offline, via QGIS installed locally) and
 writes data/computed/qgis_chokepoint_buffers.geojson, which this module
@@ -19,11 +29,14 @@ value tests/test_qgis_geodata.py checks the QGIS output against.
 """
 from __future__ import annotations
 
+import base64
+from pathlib import Path
+
 import plotly.graph_objects as go
 import pandas as pd
 
 from geo_analysis import geodesic_buffer_ring
-from ui import BLUE, GOLD, GREEN, RED
+from ui import BLUE, GOLD, GREEN, NAVY, RED
 
 CHOKEPOINT_COLORS = {
     "hormuz": RED,
@@ -33,28 +46,23 @@ CHOKEPOINT_COLORS = {
 
 BUFFER_RADII_KM = [250, 500, 1000]
 
+# Must match generate_qgis_basemap.py's LON_RANGE/LAT_RANGE exactly, or the
+# image will not line up with the data traces plotted on it.
+BASEMAP_LON_RANGE = (20, 70)
+BASEMAP_LAT_RANGE = (5, 42)
+BASEMAP_PATH = Path(__file__).resolve().parents[1] / "static" / "chokepoint_basemap.png"
 
-def _country_outline_traces(geojson: dict) -> list[go.Scatter]:
-    """Faint country outlines for geographic orientation, reusing the same
-    data/geo/region_countries.geojson the Regional Dashboard's own map
-    already draws from -- not a new data source, just a lighter render of
-    an already-verified layer, purely for reference (no fill/hover)."""
-    traces = []
-    for feature in geojson["features"]:
-        geometry = feature["geometry"]
-        rings = [geometry["coordinates"][0]] if geometry["type"] == "Polygon" else [poly[0] for poly in geometry["coordinates"]]
-        for ring in rings:
-            traces.append(
-                go.Scatter(
-                    x=[pt[0] for pt in ring],
-                    y=[pt[1] for pt in ring],
-                    mode="lines",
-                    line=dict(color="#c3c0b3", width=0.7),
-                    hoverinfo="skip",
-                    showlegend=False,
-                )
-            )
-    return traces
+
+def _basemap_data_uri() -> str | None:
+    """Base64-encodes the QGIS-rendered basemap PNG as a data URI so Plotly
+    can place it via add_layout_image without depending on Streamlit's
+    static-file serving being configured/reachable -- works identically in
+    local dev and production. Returns None if the basemap hasn't been
+    generated yet."""
+    if not BASEMAP_PATH.exists():
+        return None
+    encoded = base64.b64encode(BASEMAP_PATH.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 def _buffer_ring_coords(chokepoint_row, radius_km: float, qgis_buffers: dict | None) -> tuple[list[float], list[float]]:
@@ -73,7 +81,6 @@ def build_exposure_figure(
     chokepoints: pd.DataFrame,
     cable_stations: pd.DataFrame,
     show_buffers: bool = True,
-    geojson: dict | None = None,
     qgis_buffers: dict | None = None,
 ) -> go.Figure:
     """qgis_buffers: the FeatureCollection loaded from
@@ -83,14 +90,24 @@ def build_exposure_figure(
     """
     fig = go.Figure()
 
-    if geojson is not None:
-        for trace in _country_outline_traces(geojson):
-            fig.add_trace(trace)
+    basemap_uri = _basemap_data_uri()
+    if basemap_uri is not None:
+        fig.add_layout_image(
+            dict(
+                source=basemap_uri,
+                xref="x", yref="y",
+                x=BASEMAP_LON_RANGE[0], y=BASEMAP_LAT_RANGE[1],
+                sizex=BASEMAP_LON_RANGE[1] - BASEMAP_LON_RANGE[0],
+                sizey=BASEMAP_LAT_RANGE[1] - BASEMAP_LAT_RANGE[0],
+                xanchor="left", yanchor="top",
+                sizing="stretch", layer="below",
+            )
+        )
 
     if show_buffers:
         for _, cp in chokepoints.iterrows():
             color = CHOKEPOINT_COLORS.get(cp["chokepoint_id"], "#555555")
-            for radius_km in BUFFER_RADII_KM:
+            for i, radius_km in enumerate(BUFFER_RADII_KM):
                 lons, lats = _buffer_ring_coords(cp, radius_km, qgis_buffers)
                 fig.add_trace(
                     go.Scatter(
@@ -99,8 +116,8 @@ def build_exposure_figure(
                         mode="lines",
                         fill="toself",
                         fillcolor=color,
-                        opacity=0.06,
-                        line=dict(color=color, width=1),
+                        opacity=0.10 if i == 0 else 0.07,
+                        line=dict(color=color, width=1.1, dash="solid" if i == 0 else "dot"),
                         hoverinfo="text",
                         text=f"{cp['name']} -- {radius_km}km geodesic buffer (QGIS-generated)",
                         name=f"{cp['name']} {radius_km}km",
@@ -108,6 +125,17 @@ def build_exposure_figure(
                     )
                 )
 
+    # A soft white halo underneath each marker layer -- otherwise a plain
+    # white marker outline (the original styling) all but disappears
+    # against the basemap's own pale cream/paper land fill.
+    def _halo(x, y, size):
+        return go.Scatter(
+            x=x, y=y, mode="markers",
+            marker=dict(size=size, color="rgba(255,255,255,0.85)", line=dict(width=0)),
+            hoverinfo="skip", showlegend=False,
+        )
+
+    fig.add_trace(_halo(chokepoints["lon"], chokepoints["lat"], 22))
     fig.add_trace(
         go.Scatter(
             x=chokepoints["lon"],
@@ -117,7 +145,7 @@ def build_exposure_figure(
                 size=16,
                 symbol="triangle-up",
                 color=[CHOKEPOINT_COLORS.get(cid, "#555555") for cid in chokepoints["chokepoint_id"]],
-                line=dict(width=1, color="white"),
+                line=dict(width=1.3, color=NAVY),
             ),
             hoverinfo="text",
             hovertext=[f"<b>{row['name']}</b><br>{row['description']}<br><br><i>{row['significance']}</i>" for _, row in chokepoints.iterrows()],
@@ -126,12 +154,13 @@ def build_exposure_figure(
         )
     )
 
+    fig.add_trace(_halo(cable_stations["lon"], cable_stations["lat"], 12))
     fig.add_trace(
         go.Scatter(
             x=cable_stations["lon"],
             y=cable_stations["lat"],
             mode="markers",
-            marker=dict(size=8, symbol="circle", color=GREEN, line=dict(width=1, color="white")),
+            marker=dict(size=8, symbol="circle", color=GREEN, line=dict(width=1, color=NAVY)),
             hoverinfo="text",
             hovertext=[
                 f"<b>{row['name']}, {row['country']}</b><br>Cable systems: {row['cable_systems']}<br>Operator: {row['operator']}"
@@ -142,12 +171,13 @@ def build_exposure_figure(
         )
     )
 
+    fig.add_trace(_halo(hubs["lon"], hubs["lat"], 16))
     fig.add_trace(
         go.Scatter(
             x=hubs["lon"],
             y=hubs["lat"],
             mode="markers",
-            marker=dict(size=11, symbol="star", color=GOLD, line=dict(width=1, color="white")),
+            marker=dict(size=11, symbol="star", color=GOLD, line=dict(width=1, color=NAVY)),
             hoverinfo="text",
             hovertext=[
                 f"<b>{row['hub_name']}</b> ({row['country']})<br>{row['label']}<br>{row.get('amount_label', '')}"
@@ -158,8 +188,8 @@ def build_exposure_figure(
         )
     )
 
-    fig.update_xaxes(visible=False, showgrid=False, zeroline=False, range=[20, 70])
-    fig.update_yaxes(visible=False, showgrid=False, zeroline=False, scaleanchor="x", scaleratio=1, range=[5, 42])
+    fig.update_xaxes(visible=False, showgrid=False, zeroline=False, range=list(BASEMAP_LON_RANGE), constrain="domain")
+    fig.update_yaxes(visible=False, showgrid=False, zeroline=False, scaleanchor="x", scaleratio=1, range=list(BASEMAP_LAT_RANGE))
     fig.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
