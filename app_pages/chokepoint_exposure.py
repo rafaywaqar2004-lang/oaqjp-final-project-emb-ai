@@ -14,16 +14,23 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from chokepoint_mapping import build_exposure_figure  # noqa: E402
-from geo_analysis import compute_hub_chokepoint_distances, country_concentration, nearest_chokepoint_per_hub  # noqa: E402
+from geo_analysis import country_concentration, exposure_band, nearest_chokepoint_per_hub  # noqa: E402
 from ui import inject_base_css, page_header, footer  # noqa: E402
 
 CURATED_DIR = Path(__file__).resolve().parents[1] / "data" / "curated"
+COMPUTED_DIR = Path(__file__).resolve().parents[1] / "data" / "computed"
 GEOJSON_PATH = Path(__file__).resolve().parents[1] / "data" / "geo" / "region_countries.geojson"
 
 
 @st.cache_data(ttl=3600)
 def load_geojson() -> dict:
     with open(GEOJSON_PATH) as f:
+        return json.load(f)
+
+
+@st.cache_data(ttl=3600)
+def load_qgis_buffers() -> dict:
+    with open(COMPUTED_DIR / "qgis_chokepoint_buffers.geojson") as f:
         return json.load(f)
 
 
@@ -40,6 +47,18 @@ def load_chokepoints() -> pd.DataFrame:
 @st.cache_data(ttl=3600)
 def load_cable_landing_stations() -> pd.DataFrame:
     return pd.read_csv(CURATED_DIR / "cable_landing_stations.csv")
+
+
+@st.cache_data(ttl=3600)
+def load_qgis_distances() -> pd.DataFrame:
+    """The hub-to-chokepoint distance matrix as computed by real QGIS
+    (QgsDistanceArea, ellipsoidal WGS84) -- see
+    src/data_pipeline/generate_qgis_geodata.py. exposure_band is added
+    here from the same banding function the pyproj cross-check tests use,
+    not recomputed differently."""
+    df = pd.read_csv(COMPUTED_DIR / "qgis_hub_chokepoint_distances.csv")
+    df["exposure_band"] = df["distance_km"].apply(exposure_band)
+    return df
 
 
 def main() -> None:
@@ -63,18 +82,28 @@ def main() -> None:
     )
 
     show_buffers = st.checkbox("Show 250 / 500 / 1000km geodesic buffer rings", value=True)
-    fig = build_exposure_figure(hubs, chokepoints, cable_stations, show_buffers=show_buffers, geojson=load_geojson())
+    fig = build_exposure_figure(
+        hubs, chokepoints, cable_stations,
+        show_buffers=show_buffers, geojson=load_geojson(), qgis_buffers=load_qgis_buffers(),
+    )
     st.plotly_chart(fig, use_container_width=True)
+    st.caption(
+        "Buffer rings are real QGIS output -- generated offline by "
+        "`src/data_pipeline/generate_qgis_geodata.py` via PyQGIS's own geometry engine "
+        "(`QgsGeometry.buffer()` in a locally-centered azimuthal-equidistant projection), not "
+        "approximated at render time. See the Methodology section below."
+    )
 
     st.divider()
     st.subheader("Country exposure breakdown")
     st.caption(
-        "Geodesic distance (WGS84 ellipsoid, via pyproj) from each tracked AI hub to each chokepoint. "
+        "Geodesic distance from each tracked AI hub to each chokepoint, computed by real QGIS "
+        "(`QgsDistanceArea`, ellipsoidal WGS84 -- the engine behind QGIS's own Measure tool). "
         "No traffic-share or dependency percentage is invented here -- this is distance only, computed "
         "from the same verified lat/lon values shown on the map above."
     )
 
-    distances = compute_hub_chokepoint_distances(hubs, chokepoints)
+    distances = load_qgis_distances()
     nearest = nearest_chokepoint_per_hub(distances)
 
     countries = sorted(hubs["country"].unique())
@@ -111,10 +140,17 @@ def main() -> None:
 **What this is.** A geodesic proximity analysis between two verified datasets: this tracker's 14 AI
 infrastructure hubs (reused unchanged, each already cited on the Regional Dashboard) and three physical
 chokepoints -- Strait of Hormuz, Bab-el-Mandeb, Suez Canal -- plus five real submarine cable landing
-stations. For every (hub, chokepoint) pair, the true ellipsoidal (WGS84) geodesic distance is computed via
-`pyproj.Geod` -- the same method QGIS's own "Distance matrix" and "Geodesic buffer" processing algorithms
-use, not a flat-projection approximation. The buffer rings on the map are true geodesic circles built the
-same way.
+stations. The distance matrix and buffer rings shown above are **real QGIS output**, not a re-implementation
+of its math: `src/data_pipeline/generate_qgis_geodata.py` runs actual PyQGIS -- `QgsDistanceArea` in
+ellipsoidal (WGS84) mode for every hub-to-chokepoint distance (the same engine behind QGIS's own "Measure"
+tool), and `QgsGeometry.buffer()` for the rings, applied in a custom azimuthal-equidistant projection
+centered on each chokepoint so the buffer is a true geodesic circle rather than a flat-projection
+approximation. This is an offline/build-time step -- its output is checked into
+`data/computed/qgis_hub_chokepoint_distances.csv` and `qgis_chokepoint_buffers.geojson` and simply read by
+this page, the standard GIS pattern of doing heavy geoprocessing once rather than requiring QGIS itself
+(roughly 1GB of dependencies) as a runtime dependency of this app. A separate, independently-implemented
+`pyproj`-based calculation (`src/geo_analysis.py`) is kept and tested against this QGIS output
+(`tests/test_qgis_geodata.py`) as a cross-check, not as the production source.
 
 **What this is not.** Not a cable-routing model -- proximity to a chokepoint is not the same as a hub's
 actual network traffic being routed through it; real routing depends on which specific cable systems an

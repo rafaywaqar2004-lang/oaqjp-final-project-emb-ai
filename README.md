@@ -283,13 +283,14 @@ src/
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
-  geo_analysis.py                   # Geodesic distance/buffer math (pyproj) backing the Chokepoint Exposure Map
-  chokepoint_mapping.py             # Chokepoint Exposure Map's own dependency-free go.Scatter renderer (see note below)
+  geo_analysis.py                   # pyproj geodesic distance/buffer math -- independent cross-check for the real QGIS output below, not the production source
+  chokepoint_mapping.py             # Chokepoint Exposure Map's dependency-free go.Scatter renderer; draws the checked-in QGIS buffer rings (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a country brief AND the regional executive assessment to PDF via reportlab
   ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, chart-color tokens, footer
   data_pipeline/fetch_worldbank.py        # World Bank layer -- non-oil diversification proxy, FDI net inflows
   data_pipeline/fetch_candidate_events.py # Candidate-events queue -- Federal Register (BIS) + OFAC Recent Actions, stdlib-only
+  data_pipeline/generate_qgis_geodata.py  # Offline PyQGIS step -- real QGIS distance matrix + buffer rings for the Chokepoint Exposure Map (see note below)
 data/
   curated/                          # Manually researched, cited, dated
     policy_events.csv               # The Policy Event Tracker's sourced event record (incl. direction column)
@@ -303,6 +304,8 @@ data/
     investment_flows.csv             # 24 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
+    qgis_hub_chokepoint_distances.csv  # Real QGIS (QgsDistanceArea) output -- see note below; regenerate via src/data_pipeline/generate_qgis_geodata.py
+    qgis_chokepoint_buffers.geojson    # Real QGIS (QgsGeometry.buffer()) output -- same script
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
@@ -348,20 +351,42 @@ researched, this is what distinguishes "not tracked at all" (light, unbordered g
 data was too thin to score" (the darker, bordered gray still used if any of the 17 develops a real data
 gap) -- two different situations the map shouldn't make look the same.
 
-### The Chokepoint Exposure Map: real geodesic math, not folium/Leaflet
+### The Chokepoint Exposure Map: real QGIS output, generated offline
 
-The Chokepoint Exposure Map computes the true ellipsoidal (WGS84) distance from every tracked AI hub to
-three physical chokepoints -- Strait of Hormuz, Bab-el-Mandeb, Suez Canal -- via `pyproj.Geod`, the same
-method QGIS's own "Distance matrix" and "Geodesic buffer" processing algorithms use. An earlier version of
-this page was prototyped with folium/Leaflet for a real interactive basemap, but folium's `_repr_html_()`
-loads Leaflet, jQuery, and Bootstrap from `cdn.jsdelivr.net`/`code.jquery.com` in the visitor's browser at
-render time -- exactly the runtime CDN dependency `src/mapping.py`'s own choropleth already ruled out (see
-above). `src/chokepoint_mapping.py` instead draws the same buffer rings and markers as plain `go.Scatter`
-traces, with faint country outlines reused from the same bundled `data/geo/region_countries.geojson` the
-Regional Dashboard's map already uses -- zero new runtime network calls, consistent with the rest of this
-project's Render-reliability constraint. `src/geo_analysis.py` (the actual buffer/distance computation) has
-no such constraint either way -- it's pure `pyproj`/`numpy` math with no network calls regardless of how
-the result is rendered.
+The distance matrix and buffer rings on this page are **real QGIS output**, not a re-implementation of its
+math in another library. `src/data_pipeline/generate_qgis_geodata.py` runs actual PyQGIS: `QgsDistanceArea`
+in ellipsoidal (WGS84) mode computes every hub-to-chokepoint distance (the same engine behind QGIS's own
+"Measure" tool), and `QgsGeometry.buffer()` -- the same GEOS-backed engine QGIS's own "native:buffer"
+processing algorithm calls -- generates the buffer rings, applied in a custom azimuthal-equidistant
+projection centered on each chokepoint so the result is a true geodesic circle rather than a flat-projection
+approximation. This is an offline/build-time step: its output is checked into
+`data/computed/qgis_hub_chokepoint_distances.csv` and `qgis_chokepoint_buffers.geojson`, and the Streamlit
+page just reads those files -- the standard GIS pattern of doing heavy geoprocessing once rather than
+requiring QGIS itself (roughly 1GB of Qt/GDAL/GRASS dependencies) as a runtime dependency of an app on
+Render's free tier. To regenerate after editing `ai_hubs.csv` or `chokepoints.csv`, install QGIS
+(`apt-get install qgis` on Debian/Ubuntu) and run:
+
+```
+QT_QPA_PLATFORM=offscreen python3 src/data_pipeline/generate_qgis_geodata.py
+```
+
+(QGIS's apt package is built against a specific Python minor version -- if the default `python3` errors on
+`import qgis.core`, run the same command with the Python binary QGIS's own bindings were installed for,
+e.g. `/usr/bin/python3.12`.)
+
+`src/geo_analysis.py`'s independently-implemented `pyproj`-based calculation is kept as a cross-check, not
+the production source: `tests/test_qgis_geodata.py` asserts the checked-in QGIS output agrees with it to
+well under 1km on every hub-chokepoint pair, and that every buffer ring point sits at its stated radius from
+the chokepoint. `src/chokepoint_mapping.py` falls back to a live `pyproj` computation only when no QGIS
+buffer file is supplied (e.g. in a unit test) -- the deployed app always uses the checked-in QGIS file.
+
+An earlier version of this page was prototyped with folium/Leaflet for a real interactive basemap, but
+folium's `_repr_html_()` loads Leaflet, jQuery, and Bootstrap from `cdn.jsdelivr.net`/`code.jquery.com` in
+the visitor's browser at render time -- exactly the runtime CDN dependency `src/mapping.py`'s own choropleth
+already ruled out (see above). `src/chokepoint_mapping.py` instead draws the buffer rings and markers as
+plain `go.Scatter` traces, with faint country outlines reused from the same bundled
+`data/geo/region_countries.geojson` the Regional Dashboard's map already uses -- zero runtime network calls,
+consistent with the rest of this project's Render-reliability constraint.
 
 Only 5 of the 12 countries with a tracked AI hub (Saudi Arabia, Qatar, UAE, Oman, Syria) have a verified
 submarine cable landing station in `data/curated/cable_landing_stations.csv` -- the rest show hub-to-

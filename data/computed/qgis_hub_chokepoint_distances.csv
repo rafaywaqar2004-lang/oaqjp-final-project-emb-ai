@@ -1,0 +1,43 @@
+hub_name,country,chokepoint_id,chokepoint_name,distance_km
+NEOM (DataVolt AI factory),Saudi Arabia,hormuz,Strait of Hormuz,2105.6
+NEOM (DataVolt AI factory),Saudi Arabia,bab_el_mandeb,Bab-el-Mandeb Strait,1899.8
+NEOM (DataVolt AI factory),Saudi Arabia,suez_canal,Suez Canal (northern end / Port Said),414.36
+Ashdod (Ofek data center),Israel,hormuz,Strait of Hormuz,2197.98
+Ashdod (Ofek data center),Israel,bab_el_mandeb,Bab-el-Mandeb Strait,2306.7
+Ashdod (Ofek data center),Israel,suez_canal,Suez Canal (northern end / Port Said),250.49
+Mevo Carmel (near Yokneam),Israel,hormuz,Strait of Hormuz,2173.07
+Mevo Carmel (near Yokneam),Israel,bab_el_mandeb,Bab-el-Mandeb Strait,2376.34
+Mevo Carmel (near Yokneam),Israel,suez_canal,Suez Canal (northern end / Port Said),340.14
+Kiryat Tivon,Israel,hormuz,Strait of Hormuz,2172.23
+Kiryat Tivon,Israel,bab_el_mandeb,Bab-el-Mandeb Strait,2381.34
+Kiryat Tivon,Israel,suez_canal,Suez Canal (northern end / Port Said),345.89
+Cairo (Maadi Technology Park),Egypt,hormuz,Strait of Hormuz,2499.19
+Cairo (Maadi Technology Park),Egypt,bab_el_mandeb,Bab-el-Mandeb Strait,2292.31
+Cairo (Maadi Technology Park),Egypt,suez_canal,Suez Canal (northern end / Port Said),133.21
+Baghdad,Iraq,hormuz,Strait of Hormuz,1386.19
+Baghdad,Iraq,bab_el_mandeb,Bab-el-Mandeb Strait,2298.53
+Baghdad,Iraq,suez_canal,Suez Canal (northern end / Port Said),1171.4
+Al-Risha gas field (eastern Jordan),Jordan,hormuz,Strait of Hormuz,1905.28
+Al-Risha gas field (eastern Jordan),Jordan,bab_el_mandeb,Bab-el-Mandeb Strait,2271.89
+Al-Risha gas field (eastern Jordan),Jordan,suez_canal,Suez Canal (northern end / Port Said),572.36
+Tartus,Syria,hormuz,Strait of Hormuz,2171.54
+Tartus,Syria,bab_el_mandeb,Bab-el-Mandeb Strait,2582.41
+Tartus,Syria,suez_canal,Suez Canal (northern end / Port Said),570.31
+Istanbul,Turkey,hormuz,Strait of Hormuz,2988.06
+Istanbul,Turkey,bab_el_mandeb,Bab-el-Mandeb Strait,3447.08
+Istanbul,Turkey,suez_canal,Suez Canal (northern end / Port Said),1182.67
+"Masdar City, Abu Dhabi (Khazna AUH6)",United Arab Emirates,hormuz,Strait of Hormuz,306.39
+"Masdar City, Abu Dhabi (Khazna AUH6)",United Arab Emirates,bab_el_mandeb,Bab-el-Mandeb Strait,1769.38
+"Masdar City, Abu Dhabi (Khazna AUH6)",United Arab Emirates,suez_canal,Suez Canal (northern end / Port Said),2301.87
+Doha,Qatar,hormuz,Strait of Hormuz,518.55
+Doha,Qatar,bab_el_mandeb,Bab-el-Mandeb Strait,1648.79
+Doha,Qatar,suez_canal,Suez Canal (northern end / Port Said),1977.5
+Saar,Bahrain,hormuz,Strait of Hormuz,604.03
+Saar,Bahrain,bab_el_mandeb,Bab-el-Mandeb Strait,1670.37
+Saar,Bahrain,suez_canal,Suez Canal (northern end / Port Said),1847.32
+Barka (near Muscat),Oman,hormuz,Strait of Hormuz,351.95
+Barka (near Muscat),Oman,bab_el_mandeb,Bab-el-Mandeb Strait,1967.86
+Barka (near Muscat),Oman,suez_canal,Suez Canal (northern end / Port Said),2641.06
+Karachi Technopolis,Pakistan,hormuz,Strait of Hormuz,1070.87
+Karachi Technopolis,Pakistan,bab_el_mandeb,Bab-el-Mandeb Strait,2834.87
+Karachi Technopolis,Pakistan,suez_canal,Suez Canal (northern end / Port Said),3462.48
