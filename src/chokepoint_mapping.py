@@ -5,10 +5,17 @@ traces in lon/lat Cartesian space.
 Deliberately not folium/Leaflet: this project's existing map (mapping.py)
 already ruled out any renderer with a runtime CDN/network dependency, to
 keep it reliably self-contained on Render -- see that module's own
-docstring. This follows the same constraint: geo_analysis.py computes real
-geodesic buffer rings (pyproj, pure computation, no network calls) and this
-module renders them the same zero-runtime-network way the existing
-choropleth does.
+docstring. This follows the same constraint at render time.
+
+The buffer rings themselves are real QGIS output, not computed here or at
+request time: src/data_pipeline/generate_qgis_geodata.py runs PyQGIS's own
+QgsGeometry.buffer() engine (offline, via QGIS installed locally) and
+writes data/computed/qgis_chokepoint_buffers.geojson, which this module
+just reads and draws -- the standard GIS pattern of doing heavy
+geoprocessing once and serving the precomputed result. geo_analysis.py's
+pyproj-based geodesic_buffer_ring() is kept only as a fallback for tests
+that don't have the QGIS file on hand, and as the independently-computed
+value tests/test_qgis_geodata.py checks the QGIS output against.
 """
 from __future__ import annotations
 
@@ -50,13 +57,30 @@ def _country_outline_traces(geojson: dict) -> list[go.Scatter]:
     return traces
 
 
+def _buffer_ring_coords(chokepoint_row, radius_km: float, qgis_buffers: dict | None) -> tuple[list[float], list[float]]:
+    if qgis_buffers is not None:
+        for feature in qgis_buffers["features"]:
+            props = feature["properties"]
+            if props["chokepoint_id"] == chokepoint_row["chokepoint_id"] and props["radius_km"] == radius_km:
+                coords = feature["geometry"]["coordinates"][0]
+                return [pt[0] for pt in coords], [pt[1] for pt in coords]
+        raise KeyError(f"No QGIS buffer ring found for {chokepoint_row['chokepoint_id']} at {radius_km}km")
+    return geodesic_buffer_ring(chokepoint_row["lon"], chokepoint_row["lat"], radius_km)
+
+
 def build_exposure_figure(
     hubs: pd.DataFrame,
     chokepoints: pd.DataFrame,
     cable_stations: pd.DataFrame,
     show_buffers: bool = True,
     geojson: dict | None = None,
+    qgis_buffers: dict | None = None,
 ) -> go.Figure:
+    """qgis_buffers: the FeatureCollection loaded from
+    data/computed/qgis_chokepoint_buffers.geojson (real QGIS output). When
+    omitted -- e.g. in a unit test that doesn't need the actual file -- the
+    buffer rings fall back to a live pyproj computation instead.
+    """
     fig = go.Figure()
 
     if geojson is not None:
@@ -67,7 +91,7 @@ def build_exposure_figure(
         for _, cp in chokepoints.iterrows():
             color = CHOKEPOINT_COLORS.get(cp["chokepoint_id"], "#555555")
             for radius_km in BUFFER_RADII_KM:
-                lons, lats = geodesic_buffer_ring(cp["lon"], cp["lat"], radius_km)
+                lons, lats = _buffer_ring_coords(cp, radius_km, qgis_buffers)
                 fig.add_trace(
                     go.Scatter(
                         x=lons,
@@ -78,7 +102,7 @@ def build_exposure_figure(
                         opacity=0.06,
                         line=dict(color=color, width=1),
                         hoverinfo="text",
-                        text=f"{cp['name']} -- {radius_km}km geodesic buffer",
+                        text=f"{cp['name']} -- {radius_km}km geodesic buffer (QGIS-generated)",
                         name=f"{cp['name']} {radius_km}km",
                         showlegend=False,
                     )
