@@ -38,6 +38,15 @@ an authoritative government assessment. Where public data was too thin to respon
 that gap is shown explicitly (`"insufficient public data"`) rather than filled with an estimate presented
 as fact -- the same principle the MENASA Risk Monitor applies to Iran-sanctions data gaps.
 
+The underlying methodology is open-source intelligence (OSINT) research, not proprietary or classified
+data: every curated figure across this tracker traces to a named, linked public source -- government
+releases (BIS, DOJ, EIA, IMF), company/press announcements, congressional bill text, and reputable news
+reporting -- gathered and cross-verified the way an analyst would build a sourced brief, never invented.
+The Chokepoint Exposure Map (see "Infrastructure" in the app) adds a geospatial layer to that same
+discipline: verified coordinates and cited infrastructure facts (EIA, IMF, Wikipedia/Wikidata,
+submarinenetworks.com) run through real geodesic distance/buffer analysis (`pyproj`), the same underlying
+computation QGIS's own processing tools use.
+
 ## Country set
 
 **Gulf (6):** Saudi Arabia, United Arab Emirates, Qatar, Bahrain, Kuwait, Oman
@@ -258,6 +267,7 @@ app_pages/
   sources_data.py                   # Research data catalog -- every dataset, computed live, with CSV downloads
   sanctions_exposure.py             # Sanctions Exposure Score: summary table, heatmap, ranked bar, positioning scatter, admin data editor
   investment_flows.py               # Sovereign AI Investment Flow Tracker: Sankey, quarterly/sector charts, deal table, Capital Alignment Ratio, admin data editor
+  chokepoint_exposure.py            # Chokepoint Exposure Map: geodesic distance from every AI hub to 3 physical chokepoints, buffer rings, methodology
 src/
   constants.py                      # Country list, ISO3 codes, World Bank indicator codes
   scoring.py                        # Composite scoring -- the methodology above, in code
@@ -273,22 +283,29 @@ src/
   data_catalog.py                   # Builds the Sources & Data page's dataset registry from the actual files
   data_validation.py                # Structural sanity checks (duplicates, out-of-range scores, malformed dates, ...)
   mapping.py                        # Custom choropleth renderer (see note below)
+  geo_analysis.py                   # pyproj geodesic distance/buffer math -- independent cross-check for the real QGIS output below, not the production source
+  chokepoint_mapping.py             # Chokepoint Exposure Map's dependency-free go.Scatter renderer; draws the checked-in QGIS buffer rings (see note below)
   country_brief.py                  # Templates a BLUF + key-judgments brief from cited data (no LLM call)
   pdf_export.py                     # Renders a country brief AND the regional executive assessment to PDF via reportlab
   ui.py                             # Design tokens, page header, KPI/evidence/key-findings/watch cards, chart-color tokens, footer
   data_pipeline/fetch_worldbank.py        # World Bank layer -- non-oil diversification proxy, FDI net inflows
   data_pipeline/fetch_candidate_events.py # Candidate-events queue -- Federal Register (BIS) + OFAC Recent Actions, stdlib-only
+  data_pipeline/generate_qgis_geodata.py  # Offline PyQGIS step -- real QGIS distance matrix + buffer rings for the Chokepoint Exposure Map (see note below)
 data/
   curated/                          # Manually researched, cited, dated
     policy_events.csv               # The Policy Event Tracker's sourced event record (incl. direction column)
     major_cities.csv                # Map reference layer: one city per country, geographic orientation only
     ai_hubs.csv                     # Map reference layer: named, cited AI/compute/telecom infrastructure sites
+    chokepoints.csv                 # Chokepoint Exposure Map: Strait of Hormuz, Bab-el-Mandeb, Suez Canal -- cited coordinates + significance
+    cable_landing_stations.csv      # Chokepoint Exposure Map: real submarine cable landing stations (5 of 12 hub countries verified)
     watch_indicators.csv            # Watch Next's leading indicators, each tied to an already-cited data point
     non_oil_diversification.csv     # Manually researched non-oil GDP share (8 countries; 9 marked not-applicable)
     sanctions_data.csv               # BIS Entity List / OFAC / EU / CAATSA exposure per country -- most fields RESEARCH_NEEDED pending further sourcing
     investment_flows.csv             # 24 tracked Gulf-state sovereign-fund/government-directed AI capital flows, by destination bloc
   worldbank/                        # Auto-refreshed by GitHub Actions
   computed/                         # Recomputed composite_scores.csv
+    qgis_hub_chokepoint_distances.csv  # Real QGIS (QgsDistanceArea) output -- see note below; regenerate via src/data_pipeline/generate_qgis_geodata.py
+    qgis_chokepoint_buffers.geojson    # Real QGIS (QgsGeometry.buffer()) output -- same script
   geo/region_countries.geojson      # Bundled country boundaries for all 17 tracked countries (see note below)
 briefs/
   gulf-ai-ambitions-and-geopolitical-risk.md   # Standalone region-wide written analytic brief
@@ -333,6 +350,48 @@ scored) -- kept for the same reason: if a future country is added to the map's g
 researched, this is what distinguishes "not tracked at all" (light, unbordered gray) from "tracked but the
 data was too thin to score" (the darker, bordered gray still used if any of the 17 develops a real data
 gap) -- two different situations the map shouldn't make look the same.
+
+### The Chokepoint Exposure Map: real QGIS output, generated offline
+
+The distance matrix and buffer rings on this page are **real QGIS output**, not a re-implementation of its
+math in another library. `src/data_pipeline/generate_qgis_geodata.py` runs actual PyQGIS: `QgsDistanceArea`
+in ellipsoidal (WGS84) mode computes every hub-to-chokepoint distance (the same engine behind QGIS's own
+"Measure" tool), and `QgsGeometry.buffer()` -- the same GEOS-backed engine QGIS's own "native:buffer"
+processing algorithm calls -- generates the buffer rings, applied in a custom azimuthal-equidistant
+projection centered on each chokepoint so the result is a true geodesic circle rather than a flat-projection
+approximation. This is an offline/build-time step: its output is checked into
+`data/computed/qgis_hub_chokepoint_distances.csv` and `qgis_chokepoint_buffers.geojson`, and the Streamlit
+page just reads those files -- the standard GIS pattern of doing heavy geoprocessing once rather than
+requiring QGIS itself (roughly 1GB of Qt/GDAL/GRASS dependencies) as a runtime dependency of an app on
+Render's free tier. To regenerate after editing `ai_hubs.csv` or `chokepoints.csv`, install QGIS
+(`apt-get install qgis` on Debian/Ubuntu) and run:
+
+```
+QT_QPA_PLATFORM=offscreen python3 src/data_pipeline/generate_qgis_geodata.py
+```
+
+(QGIS's apt package is built against a specific Python minor version -- if the default `python3` errors on
+`import qgis.core`, run the same command with the Python binary QGIS's own bindings were installed for,
+e.g. `/usr/bin/python3.12`.)
+
+`src/geo_analysis.py`'s independently-implemented `pyproj`-based calculation is kept as a cross-check, not
+the production source: `tests/test_qgis_geodata.py` asserts the checked-in QGIS output agrees with it to
+well under 1km on every hub-chokepoint pair, and that every buffer ring point sits at its stated radius from
+the chokepoint. `src/chokepoint_mapping.py` falls back to a live `pyproj` computation only when no QGIS
+buffer file is supplied (e.g. in a unit test) -- the deployed app always uses the checked-in QGIS file.
+
+An earlier version of this page was prototyped with folium/Leaflet for a real interactive basemap, but
+folium's `_repr_html_()` loads Leaflet, jQuery, and Bootstrap from `cdn.jsdelivr.net`/`code.jquery.com` in
+the visitor's browser at render time -- exactly the runtime CDN dependency `src/mapping.py`'s own choropleth
+already ruled out (see above). `src/chokepoint_mapping.py` instead draws the buffer rings and markers as
+plain `go.Scatter` traces, with faint country outlines reused from the same bundled
+`data/geo/region_countries.geojson` the Regional Dashboard's map already uses -- zero runtime network calls,
+consistent with the rest of this project's Render-reliability constraint.
+
+Only 5 of the 12 countries with a tracked AI hub (Saudi Arabia, Qatar, UAE, Oman, Syria) have a verified
+submarine cable landing station in `data/curated/cable_landing_stations.csv` -- the rest show hub-to-
+chokepoint geodesic distance only, an honest gap rather than an estimated cable relationship. See that
+page's own in-app Methodology section for the full scope and limitations.
 
 ### Visual design: matching the standalone briefs, not default Streamlit
 

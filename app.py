@@ -19,6 +19,9 @@ pg = st.navigation(
         "Overview": [
             st.Page("app_pages/regional_dashboard.py", title="Regional Dashboard", default=True),
         ],
+        "Infrastructure": [
+            st.Page("app_pages/chokepoint_exposure.py", title="Chokepoint Exposure Map"),
+        ],
         "Country Intelligence": [
             st.Page("app_pages/country_comparison.py", title="Country Comparison"),
             st.Page("app_pages/country_deep_dive.py", title="Country Deep Dive"),
