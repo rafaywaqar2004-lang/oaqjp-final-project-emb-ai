@@ -14,13 +14,14 @@ source and decided it belongs, never because an API returned it.
 """
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from candidate_review import load_candidates, load_review_log, pending_candidates, record_review  # noqa: E402
+from candidate_review import CANDIDATES_PATH, load_candidates, load_review_log, pending_candidates, record_review  # noqa: E402
 from constants import CURATED_DIR, COUNTRIES  # noqa: E402
 from ui import inject_base_css, page_header, kpi_card, kpi_row, footer, GRAY  # noqa: E402
 
@@ -119,6 +120,14 @@ def main() -> None:
         "is part of this tracker's data until a human reviews it and submits the form on a specific candidate "
         "-- an item appearing here is not itself a verified fact, only a lead worth checking."
     )
+
+    if CANDIDATES_PATH.exists():
+        last_fetched = datetime.fromtimestamp(CANDIDATES_PATH.stat().st_mtime, tz=timezone.utc)
+        st.caption(
+            f"Last automated scan: **{last_fetched.strftime('%Y-%m-%d %H:%M UTC')}** "
+            "(the GitHub Actions workflow runs daily -- this is when it last found something to write, "
+            "read directly from this file's own last-modified time, not a hardcoded claim)."
+        )
 
     candidates = _candidates()
     if candidates.empty:
